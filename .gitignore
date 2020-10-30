@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+# Datafiles
+*.txt
+temperature*
+uy*
+vtkdata/
