@@ -5,12 +5,10 @@ details on the approach and the numerics can be found in [[1]](#1).
 
 ## Code Overview
 
-The flowmap algorithm is used to find steady solutions to the 2D Boussinesq equations. In addition to this, a simple
-optimization is performed to find the maximum Nu at a given Ra by varying the "size of the box"; that is, by restricting the
-size of permitted structures.
-
-The optimization is done by looping over various values of the wavenumber $\alpha=2\pi/L$, sensing when a maximum has been crossed in Nu,
-and fitting a parabola around that maximum.
+The flowmap algorithm is used to find steady solutions to the 2D Boussinesq equations. The Nusselt number is computed at each
+steady solution for a given $Ra$ and $Pr$. At each $(Ra, Pr)$ pair, steady solutions are computed in different box sizes,
+$L$. The size of the domain (box) in $x$ is given by $L=2\pi/\alpha$ where $\alpha$ is the wavenumber that sets the scale of
+the solution in $x$. The solution in box size $L$ that maximizes the Nusselt number is referred to as the optimal solution. 
 
 ### Input File Structure
 | Line #   | Column 1      | Column 2                  | Column 3                          |
