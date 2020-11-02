@@ -1,15 +1,15 @@
 # Optimal Solutions in Rayleigh-Benard Convection
 
-This code solves the 2D Boussinesq equations between two infinite plates. The wall-normal direction is discretized using
-non-uniform finite differences. The x-direction uses a Fourier basis.
+This code finds exact, steady solutions that optimize vertical heat transport in 2D Rayleigh-Benard convection. Specific
+details on the approach and the numerics can be found in [[1]](#1).
 
 ## Code Overview
 
-The flowmap algorithm is used to find steady solutions to the 2D Boussinesq equations.  In addition to this, a simple
+The flowmap algorithm is used to find steady solutions to the 2D Boussinesq equations. In addition to this, a simple
 optimization is performed to find the maximum Nu at a given Ra by varying the "size of the box"; that is, by restricting the
 size of permitted structures.
 
-The optimization is done by simply looping over various values of $\alpha$, sensing when a maximum has been crossed in Nu,
+The optimization is done by looping over various values of the wavenumber $\alpha=2\pi/L$, sensing when a maximum has been crossed in Nu,
 and fitting a parabola around that maximum.
 
 ### Input File Structure
@@ -37,3 +37,9 @@ The results are written out in various formats:
 * `vtkdata/`: Solution fields are written out in VTK format at each Ra for solutions optimizing heat transport
 * `uy`, `temperature`: Vertical velocity and temperature fields in binary format. Used for restarts. Note that `ux` can be
 computed from `uy` in 2D from the continuity equation.
+
+## References
+<a id="1">[1]</a> 
+Sondak, D., Smith, L.M., Waleffe, F. (2015). 
+Optimal heat transport solutions for Rayleigh-Benard convection
+Journal of Fluid Mechanics, 784, 656-595.
