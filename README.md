@@ -36,6 +36,16 @@ The results are written out in various formats:
 * `uy`, `temperature`: Vertical velocity and temperature fields in binary format. Used for restarts. Note that `ux` can be
 computed from `uy` in 2D from the continuity equation.
 
+## Contributing to the Project
+Contributions to the code are very welcome. To contribute, please do the following:
+1. Create a new issue
+2. Move that issue to "In Progress" on the Kanban board
+3. Create a new branch
+4. Push your changes on that branch
+5. When you're ready, make PR to `main`
+6. After making the PR, link the issue with that PR
+7. Continue making changes on that branch until they are approved to be merged to `main`
+
 ## References
 <a id="1">[1]</a> 
 Sondak, D., Smith, L.M., Waleffe, F. (2015). 
