@@ -81,7 +81,15 @@ do nli = 1,nl_max
       write(*,*) "Found a steady state at nonlinear iteration number ", nli-1
       write(*,*) "The nonlinear norm is ", norm_GT
       write(*,*) "Total number of GMRES iterations is", int(iter_gmres_ave *(nli-1))
-      write(*,*) "The number of GMRES iterations per nonlinear step is ", iter_gmres_ave
+      
+      if (nli!=1) then
+          write(*,*) "The number of GMRES iterations per nonlinear step is ", iter_gmres_ave
+      else
+          write(*,*) "The number of GMRES iterations per nonlinear step is ", "None" !Divided somthing by zero
+      end if
+          
+
+      
       write(*,*) " "
 
       flush(6)
