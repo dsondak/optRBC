@@ -41,8 +41,15 @@ Contributions to the code are very welcome. To contribute, please do the followi
 1. Create a new issue
 2. Move that issue to "In Progress" on the Kanban board
 3. Create a new branch
-4. Push your changes on that branch
+    1. To create a branch locally do `git checkout -b <new_branch_name>`
+    2. To push this branch to the main repo do `git push --set-upstream origin <new_branch_name>`
+        * This is only necessary the first time you create a branch.
+4. Make changes to the code on your branch and push your changes when they're ready 
+    1. `git commit` locally
+    2. `git push` to push your new changes
+    3. **Recommendation:** Only push changes that compile
 5. When you're ready, make PR to `main`
+    * Assign a reviewer
 6. After making the PR, link the issue with that PR
 7. Continue making changes on that branch until they are approved to be merged to `main`
 
