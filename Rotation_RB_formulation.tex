@@ -1,0 +1,89 @@
+\documentclass[12pt, a4paper]{article}
+\bibliographystyle{plain}
+
+%% Language and font encodings
+\usepackage[english]{babel}
+\usepackage[utf8x]{inputenc}
+\usepackage[T1]{fontenc}
+
+\usepackage{mathrsfs}
+\usepackage{amsfonts}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+%% Sets page size and margins
+\usepackage[a4paper,top=3cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+%% Useful packages
+\usepackage{amsmath, bm}
+\usepackage{graphicx}
+%\usepackage[colorinlistoftodos]{todonotes}
+%\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+\usepackage{color}
+
+\DeclareGraphicsExtensions{.pdf,.png,.jpg}
+
+\usepackage{epsfig}
+\usepackage{epstopdf}
+%\usepackage[dvipsnames]{xcolor}
+%\usepackage{CJKutf8}
+
+\title{Stability analysis of combined thermal and shear motions}
+\author{}
+
+\begin{document}
+\maketitle
+
+%\begin{abstract}
+%Your abstract.
+%\end{abstract}
+
+\section{Equations of motion and non-dimensionalization}
+Rotating Rayleigh-B{\'e}nard convection over a doubly periodic rectangular box $\textbf{x}=(x,y,z)\in [-L_x, L_x]\times[-L_y, L_y]\times[-h, h]$ in $\mathbb{R}^3$ is described by the Boussinesq approximation \cite{Chan61}
+\begin{align}\label{continuity}
+\nabla\cdot\textbf{u}=0,
+\end{align}
+\begin{align}\label{momentum}
+\frac{\partial\textbf{u}}{\partial t}+\textbf{u}\cdot\nabla\textbf{u}+\nabla p= \nu\nabla^2\textbf{u}+\alpha g T ~\widehat{\bf{z}}-2\bf{\Omega}\times\textbf{u},
+\end{align}
+\begin{align}\label{thermal}
+\frac{\partial T}{\partial t}+ \textbf{u}\cdot\nabla T=\kappa\nabla^2 T,
+\end{align}
+for the velocity field $\textbf{u}(\textbf{x},t)=(u, v, w)$, the pressure field $p$, and the temperature field $T$. Material properties of the fluid include the thermal expansion coefficient $\alpha$, the kinematic  viscocity $\nu$, and the thermal diffusivity $\kappa$. Here $\widehat{z}$ is the unit vector along the $z-$ (center) axis, $g$ is the gravitational acceleration, and ${\bm{\Omega}} = \Omega ~\widehat{\bf{z}}$ is the angular velocity of the system around the center axis pointing against gravity. Note that both fluid density and centrifugal force are constant terms and they have been absorbed into the pressure term. 
+
+We follow \cite{David15} for non-dimensionalizing the equations. Applying following scales
+\begin{align}\label{scales}
+\textbf{x}\to \frac{1}{h}\textbf{x},~ t\to\frac{1}{t_f}t,~ \textbf{u} = \frac{t_f}{h}\textbf{u},~ p = \left(\frac{t_f}{h}\right)^2p,~ T\to\frac{2}{\Delta T}T,
+\end{align}
+to \eqref{continuity}, \eqref{momentum} and \eqref{thermal} to obtain
+\begin{align}\label{continuity1}
+\nabla\cdot\textbf{u}=0,
+\end{align}
+\begin{align}\label{momentum1}
+\frac{\partial\textbf{u}}{\partial t}+\textbf{u}\cdot\nabla\textbf{u}+\nabla p= \sqrt{\frac{16Pr}{Ra}}\nabla^2\textbf{u}+T \widehat{\bf{z}}-\frac{2}{Ek}\sqrt{\frac{Pr}{Ra}}\bf{\widehat{z}}\times\textbf{u},
+\end{align}
+\begin{align}\label{thermal1}
+\frac{\partial T}{\partial t}+ \textbf{u}\cdot\nabla T=\sqrt{\frac{16}{Ra Pr}}\nabla^2 T,
+\end{align}
+where $Pr = \frac{\nu}{\kappa}$, $Ra = \frac{\alpha g \Delta T H^3}{\nu \kappa}$ and $Ek = \frac{\nu}{\Omega H^2}$ are the Prandtl number, Rayleigh number and Ekman number, respectively.
+
+Let $\bm{\omega}=\nabla\times\textbf{u}$, taking curl on both sides of \eqref{momentum1}  and using \eqref{continuity1} to obtain 
+\begin{align}\label{curl1}
+\frac{\partial\bm{\omega}}{\partial t}+\bm{u}\cdot\nabla\bm{\omega}-\bm{\omega}\cdot\nabla\bm{u}=\sqrt{\frac{16Pr}{Ra}}\nabla^2\bm{\omega}+\nabla\times T\widehat{\bm{z}}+\frac{2}{Ek}\sqrt{\frac{Pr}{Ra}}\frac{\partial\bm{u}}{\partial z}
+\end{align}
+
+Taking curl on both sides of \eqref{curl1}, using $\bm{u}\cdot\nabla\bm{\omega} = \textbf{u}\times(\nabla^2\bm{u})+\left(\bm{u}\cdot\frac{\partial\bm{\omega}}{\partial x}, \bm{u}\cdot\frac{\partial\bm{\omega}}{\partial y}, \bm{u}\cdot\frac{\partial\bm{\omega}}{\partial z}\right)$ and \eqref{continuity1} to obtain
+\begin{align}\label{curl2}
+\nonumber&~~~\frac{\nabla^2\bm{u}}{\partial t}-(\nabla^2\bm{u})\cdot\nabla\bm{u}+\bm{u}\cdot\nabla(\nabla^2\bm{u})-\nabla\times\begin{bmatrix}\bm{u}\cdot\frac{\partial\bm{\omega}}{\partial x}\\\\\bm{u}\cdot\frac{\partial\bm{\omega}}{\partial y}\\\\\bm{u}\cdot\frac{\partial\bm{\omega}}{\partial z}\end{bmatrix}+\nabla\times(\bm{\omega}\cdot\nabla\bm{u})
+\\&~=\sqrt{\frac{16Pr}{Ra}}\nabla^2\nabla^2\bm{u}+\begin{bmatrix}-\frac{\partial^2T}{\partial z\partial x}\\\\-\frac{\partial^2T}{\partial z\partial y}\\\\\frac{\partial^2T}{\partial x^2}+\frac{\partial^2T}{\partial y^2}\end{bmatrix}-\frac{2}{Ek}\sqrt{\frac{Pr}{Ra}}\frac{\partial\bm{\omega}}{\partial z}.
+\end{align}
+
+
+Equations \eqref{continuity1}, \eqref{curl2} and \eqref{thermal1} are the non-dimensionalized equations for the rotating flow.
+
+
+
+  \bibliography{references}   % Use the BibTeX file ``References.bib''.
+
+
+\end{document}
