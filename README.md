@@ -32,7 +32,7 @@ fitting a parabola to three points. The code continues until a maximum Nu is fou
 
 The results are written out in various formats:
 * `Nu.txt`: Contains the Ra, Nu, optimal wavenumber, and optimal box size
-* `vtkdata/`: Solution fields are written out in VTK format at each Ra for solutions optimizing heat transport
+* `vtkdata/`: Solution fields are written out in VTK format at each Ra for solutions optimizing heat transport (Note: Need to create vtkdata directory before running code)
 * `uy`, `temperature`: Vertical velocity and temperature fields in binary format. Used for restarts. Note that `ux` can be
 computed from `uy` in 2D from the continuity equation.
 
