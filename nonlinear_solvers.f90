@@ -76,14 +76,20 @@ do nli = 1,nl_max
 
       iter_gmres_ave = real(iter_gmres_ave, kind=dp) / real((nli-1), kind=dp)
       iter_nl = nli-1
-
-      write(*,*) " "
-      write(*,*) "Found a steady state at nonlinear iteration number ", nli-1
-      write(*,*) "The nonlinear norm is ", norm_GT
-      write(*,*) "Total number of GMRES iterations is", int(iter_gmres_ave *(nli-1))
-      write(*,*) "The number of GMRES iterations per nonlinear step is ", iter_gmres_ave
-      write(*,*) " "
-
+      if (iter_nl /= 0) then
+        write(*,*) " "
+        write(*,*) "Found a steady state at nonlinear iteration number ", nli-1
+        write(*,*) "The nonlinear norm is ", norm_GT
+        write(*,*) "Total number of GMRES iterations is", int(iter_gmres_ave *(nli-1))
+        write(*,*) "The number of GMRES iterations per nonlinear step is ", iter_gmres_ave
+        write(*,*) " "
+      end if
+      if (iter_nl == 0) then
+              write(*,*) " "
+              write(*,*) "Parabolic Fit has found local max of alpha"
+              write(*,*) "The nonlinear norm is ", norm_GT
+              write(*,*) " "
+      end if
       flush(6)
 
       call nusselt(Nu, .true.)
