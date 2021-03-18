@@ -1,4 +1,4 @@
-program Ra_loop
+program time_loop
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -428,32 +428,33 @@ Raloop: do ii = 1, nRa
             call packx(x0)
 
             ! Get solution with flow map
-            call flow_map(Nu, nl_iter_data, temp)
+            !call flow_map(Nu, nl_iter_data, temp)
+            call imex_rk(1)
 
             write(*,*) " "
             flush(6)
 
-            if (save_restart) then
-               call write_restart(.false.) ! false = Fourier space
-            end if
-            
-            if (wvtk) then
-               call write_to_vtk(int(Ra), .false.) ! false = Fourier space
-            end if
-
-            ! Increment Ra
-            Ra = dRa * Ra
+!            if (save_restart) then
+!               call write_restart(.false.) ! false = Fourier space
+!            end if
+!            
+!            if (wvtk) then
+!               call write_to_vtk(int(Ra), .false.) ! false = Fourier space
+!            end if
+!
+!            ! Increment Ra
+!            Ra = dRa * Ra
 
         end do Raloop
         close(unit=8000)
 
-if (save_restart) then
-   call write_restart(.false.) ! false = Fourier space
-end if
-
-if (wvtk) then
-   call write_to_vtk(int(Ra), .false.) ! false = Fourier space
-end if
+!if (save_restart) then
+!   call write_restart(.false.) ! false = Fourier space
+!end if
+!
+!if (wvtk) then
+!   call write_to_vtk(int(Ra), .false.) ! false = Fourier space
+!end if
 
 write(*,*) " "
 write(*,*) "Done."
@@ -463,7 +464,7 @@ write(*,*) "Done."
 3000 format(E25.16E3,E25.16E3,E25.16E3         )
 4000 format(E25.16E3,E25.16E3,E25.16E3,E25.16E3)
 
-end program Ra_loop
+end program time_loop
 
 !::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 subroutine init_fields(ex_Tptrb, fTexist,Ra)

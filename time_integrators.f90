@@ -70,7 +70,7 @@ do ! while (time < t_final)
       time = time + dt
    end if
 
-!   write(*,*) "time = ", time, "dt = ", dt
+   write(*,*) "time = ", time, "dt = ", dt
 
    nti = nti + 1
 
@@ -97,7 +97,8 @@ do ! while (time < t_final)
       K1_T(:,it)   = tmp_K_T
       ! Compute u1 from v1
       if (kx(it) /= 0.0_dp) then
-         uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         !uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         uxi(:,it) = CI*d1y(tmp_uy)/kx(it)
       else if (kx(it) == 0.0_dp) then
          uxi(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
@@ -126,7 +127,8 @@ do ! while (time < t_final)
       K2_T(:,it)   = tmp_K_T
       ! Compute u1 from v1
       if (kx(it) /= 0.0_dp) then
-         uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         !uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         uxi(:,it) = CI*d1y(tmp_uy)/kx(it)
       else if (kx(it) == 0.0_dp) then
          uxi(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
@@ -155,7 +157,8 @@ do ! while (time < t_final)
       K3_T(:,it)   = tmp_K_T
       ! Compute u1 from v1
       if (kx(it) /= 0.0_dp) then
-         uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         !uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         uxi(:,it) = CI*d1y(tmp_uy)/kx(it)
       else if (kx(it) == 0.0_dp) then
          uxi(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
@@ -185,7 +188,8 @@ do ! while (time < t_final)
       uy(:,it) = tmp_uy
       ! Solve for u
       if (kx(it) /= 0.0_dp) then
-         ux(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         !ux(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         ux(:,it) = CI*d1y(tmp_uy)/kx(it)
       else if (kx(it) == 0.0_dp) then
          ux(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
@@ -385,7 +389,8 @@ do i=1,Nx
    ! Compute D2(ux)
    nlphi(:,i) = -kx(i)**2.0_dp*uxi(:,i) + d2y(uxi(:,i))
 end do
-nlT = -CI*nlT
+!nlT = -CI*nlT
+nlT = CI*nlT
 
 do j = 1,Ny
    ! Bring everything to physical space
