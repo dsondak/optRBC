@@ -9,36 +9,23 @@ use write_pack
 use interpolation_pack
 use allocate_vars
 use statistics
-use jacobians
-use gmres_pack
 use mesh_pack
 use time_integrators
-use nonlinear_solvers
 
 implicit none
 
 integer                                                :: ntokens, ios
 integer                                                :: Nxc, Nyc, Nzc
-integer                                                :: nRa, ii, jj, n_flm, alphai
-integer                                                :: ext
-integer, parameter                                     :: alphai_max = 3
+integer                                                :: nRa, ii, jj
 integer                                                :: refine_flag_x, refine_flag_y, refine_flag_z
 integer                                                :: vtk_flag, rstrt_flag, opt_flag
-integer                                                :: nl_iter_data
-integer, parameter                                     :: iprint = 1
-integer,                                dimension(1)   :: imin
-logical                                                :: wvtk, save_restart, calc_opt, physical
+logical                                                :: wvtk, save_restart, calc_opt
 logical                                                :: refine_x, refine_y, refine_z, refine_xy
 logical                                                :: fTexist, fuyexist
 logical                                                :: ex_Tptrb
-real(dp)                                               :: temp, eta
-real(dp)                                               :: gmres_iter_data
+real(dp)                                               :: temp
 real(dp)                                               :: dxc
 real(dp)                                               :: Ra, dRa, Nu, dalpha
-real(dp)                                               :: Lmax, Numax, alphamax
-real(dp),                               dimension(3)   :: Nui, Li
-real(dp),                  allocatable, dimension(:)   :: Nus, Ras, Especu, EspecT
-real(dp),                  allocatable, dimension(:)   :: Numaxs, Lmaxs
 real(dp),                  allocatable, dimension(:)   :: xpc, ypc, zpc
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:,:) :: uyc, Tc
 character(10)                                          :: citer
@@ -143,17 +130,6 @@ iplannlphi = fftw_plan_dft_1d(Nx,tnlphi,tnlphi, FFTW_BACKWARD,FFTW_ESTIMATE)
 
 call global_params
 call global_allocations
-
-! Allocate some local arrays
-allocate(Especu(kmax), EspecT(kmax), stat=alloc_err)
-allocate(Nus(nRa), Ras(nRa), stat=alloc_err)
-allocate(Numaxs(nRa), Lmaxs(nRa), stat=alloc_err)
-call check_alloc_err(alloc_err)
-
-Nus   = 0.0_dp
-Ras   = 0.0_dp
-Especu = 0.0_dp
-EspecT = 0.0_dp
 
 inquire(file="uy", exist=fuyexist)
 if (fuyexist) then
@@ -319,6 +295,7 @@ else if (refine_y) then
    end if
 end if
 
+! Fourier modes
 do ii = 1,Nx/2
    kx_modes(ii) = real(ii,kind=dp) - 1.0_dp
 end do
@@ -335,29 +312,6 @@ end if
 ! Initialize fields.
 call init_fields(ex_Tptrb, fTexist, Ra)
 call init_to_fourier(ex_Tptrb)
-
-! Allocate space for flow map variables
-n_flm = 2*2*Ny*Nx ! # of fields X real/imag X Ny X Nx
-
-! Form x0 and GT (flow map)
-allocate(x0(n_flm), GT(n_flm), stat=alloc_err)
-if (alloc_err /= 0) then
-   write(*,*) "ERROR:  Allocation of x0 and GT incomplete."
-   stop
-end if
-x0      = 0.0_dp
-GT      = 0.0_dp
-
-! p points to the boundaries.  Will be used to ensure that
-! Delta_x is zero on the boundaries.
-b_pntr(1)  = 1
-b_pntr(2)  = Ny
-b_pntr(3)  = Ny+1
-b_pntr(4)  = 2*Ny
-b_pntr(5)  = 2*Ny+1
-b_pntr(6)  = 3*Ny
-b_pntr(7)  = 3*Ny+1
-b_pntr(8)  = 4*Ny
 
 write(*,'(A70)')                  ' '
 write(*,'(A70)')                  '*********************************************************************|'
@@ -377,9 +331,6 @@ write(*,'(A69,A)')                '                                             
 write(*,'(10X,A32,ES16.8,11X,A)') 'Prandtl number  (Pr)                    = ', Pr,                    '|'
 write(*,'(10X,A32,ES16.8,11X,A)') 'Initial Rayleigh number (Ra)            = ', Ra,                    '|'
 write(*,'(10X,A32,ES16.8,11X,A)') 'Initial Reynolds number (Re)            = ', sqrt(Ra/(16.0_dp*Pr)), '|'
-write(*,'(10X,A32,ES16.8,11X,A)') 'Ra Gradation (dRa)                      = ', dRa,                   '|'
-write(*,'(10X,A32,I5,    21X,A)') 'Number of steps (nRa)                   = ', nRa,                   '|'
-write(*,'(10X,A32,ES16.8,11X,A)') 'Final Rayleigh Number                   = ', (dRa**(nRa-1))*Ra,     '|'
 write(*,'(A69,A)')                '                                                                  ','|'
 write(*,'(A70)')                  '*********************************************************************|'
 write(*,'(5X,A,42X,A)')           'PHYSICAL PROBLEM SIZE:',                                            '|'
@@ -403,58 +354,16 @@ write(*,'(A70)')                  '                                             
 flush(6)
 
 open(unit=8000, file="Nu_data.txt", action="write", status="unknown", position="append")
-Raloop: do ii = 1, nRa
 
-            Ras(ii) = Ra
-            Ra_global = Ra
+! Get nu0 and kappa0
+call global_params_Ra(Ra)
 
-            if (mod((ii-1),iprint) == 0) then
-               if (ii == 1) then
-                  write(*,*) " "
-                  write(*,*) "Ra, dt = ", Ra, dt
-                  write(*,*) " "
-               else
-                  write(*,*) " "
-                  write(*,*)"::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::"
-                  write(*,*) "Ra, dt = ", Ra, dt
-                  write(*,*) " "
-               end if
-            end if
+! Get solution with time integration
+call imex_rk(1)
 
-            ! Get nu0 and kappa0
-            call global_params_Ra(Ra)
-
-            ! Populate x0
-            call packx(x0)
-
-            ! Get solution with flow map
-            !call flow_map(Nu, nl_iter_data, temp)
-            call imex_rk(1)
-
-            write(*,*) " "
-            flush(6)
-
-!            if (save_restart) then
-!               call write_restart(.false.) ! false = Fourier space
-!            end if
-!            
-!            if (wvtk) then
-!               call write_to_vtk(int(Ra), .false.) ! false = Fourier space
-!            end if
-!
-!            ! Increment Ra
-!            Ra = dRa * Ra
-
-        end do Raloop
-        close(unit=8000)
-
-!if (save_restart) then
-!   call write_restart(.false.) ! false = Fourier space
-!end if
-!
-!if (wvtk) then
-!   call write_to_vtk(int(Ra), .false.) ! false = Fourier space
-!end if
+write(*,*) " "
+flush(6)
+close(unit=8000)
 
 write(*,*) " "
 write(*,*) "Done."
@@ -562,95 +471,3 @@ do ii = 1,Nx
 end do
 
 end subroutine init_to_fourier
-!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-subroutine fit_parab(xstar,ystar, x, y)
-
-use global
-use write_pack
-
-implicit none
-
-real(dp), dimension(3), intent(in)  :: x, y
-real(dp), intent(out)               :: xstar, ystar
-real(dp)                            :: den1, den2, den3
-real(dp)                            :: c1, c2, c3
-real(dp)                            :: x1,x2,x3,y1,y2,y3
-
-x1 = x(1)
-x2 = x(2)
-x3 = x(3)
-
-y1 = y(1)
-y2 = y(2)
-y3 = y(3)
-
-den1 = (x1 - x2) * (x1 - x3)
-den2 = (x2 - x1) * (x2 - x3)
-den3 = (x3 - x1) * (x3 - x2)
-
-c1 = y1 / den1 + y2 / den2 + y3 / den3
-
-c2 = y1 * (x2 + x3) / den1 + &
-&    y2 * (x1 + x3) / den2 + &
-&    y3 * (x1 + x2) / den3
-
-c3 = y1 * x2 * x3 / den1 + &
-&    y2 * x1 * x3 / den2 + &
-&    y3 * x1 * x2 / den3
-
-xstar = c2 / (2.0_dp * c1)
-ystar = c1 * xstar**2.0_dp - c2 * xstar + c3
-
-end subroutine fit_parab
-
-! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-subroutine calc_optimal(ave_num_gmres, alphain)
-
-use global
-use mesh_pack
-use nonlinear_solvers
-
-implicit none
-
-integer               :: jj
-integer               :: num_nonlinear
-real(dp)              :: temp
-real(dp), intent(in)  :: alphain
-real(dp), intent(out) :: ave_num_gmres
-
-alpha = alphain
-
-xR =  pi / alpha
-xL = -pi / alpha
-Lx = xR - xL
-
-if (Nx == 1) then
-   dx = 1.0_dp
-else
-   dx = Lx / (real(Nx,kind=dp))
-end if
-
-kx = alpha * kx_modes
-
-call cosine_mesh(xp,yp,zp, Nx,Ny,Nz) ! get coordinates
-
-! Calculate phi and ux from uy
-do jj = 1,Nx
-   if (kx(jj) /= 0.0_dp) then
-      tmp_uy = uy(:,jj)
-      !ux(:,jj) = -CI*d1y(tmp_uy)/kx(jj)
-      ux(:,jj) = CI*d1y(tmp_uy)/kx(jj)
-   else if (kx(jj) == 0.0_dp) then
-      ux(:,jj) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
-   end if
-      phi(:,jj) = -kx(jj)**2.0_dp*uy(:,jj) + d2y(uy(:,jj))
-end do
-
-! Populate x0
-call packx(x0)
-
-! Get solution with flow map
-call flow_map(temp, num_nonlinear, ave_num_gmres)
-
-end subroutine calc_optimal
