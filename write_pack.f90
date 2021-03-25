@@ -110,8 +110,8 @@ write(2, "(a)") "# vtk DataFile Version 3.1"
 write(2, "(a)") "Thermal Convection Data"
 write(2, "(a)") "ASCII"
 write(2, "(a)") "DATASET STRUCTURED_GRID"
-write(2, "(a, 3I5.1)"), "DIMENSIONS", Nx+1, Ny, Nz
-write(2, "(a, I15.1, a6)"), "POINTS", n, "float"
+write(2, "(a, 3I5.1)") "DIMENSIONS", Nx+1, Ny, Nz
+write(2, "(a, I15.1, a6)") "POINTS", n, "float"
 
 do kk = 1,Nz
    do jj = 1,Ny
@@ -126,7 +126,7 @@ do kk = 1,Nz
 end do
 
 write(2,"(a)") " "
-write(2,"(a, a, I15.1)"), "POINT_DATA", " ", n 
+write(2,"(a, a, I15.1)") "POINT_DATA", " ", n 
 write(2,"(a, a, a, a, a)") "SCALARS", " ", "Temperature", " ", "float"
 write(2,"(a, a, a)") "LOOKUP_TABLE", " ", "default"
 
