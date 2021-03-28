@@ -33,6 +33,8 @@ character(9)                                           :: fiter
 character(80)                                          :: line
 character(80)                                          :: tokens(80)
 
+integer :: iret 
+
 open(2,file="input.data", status="old")
 do ii = 1,7
    read(2,'(A)') line
@@ -110,6 +112,11 @@ end do
 close(unit=2)
 
 ! Create FFT plans
+iret = fftw_init_threads()
+! Uncomment below to check if init_threads working (should be nonzero)
+! PRINT *, "iret: ", iret 
+call fftw_plan_with_nthreads(256)
+
 planuy = fftw_plan_dft_1d(Nx,tuy,tuy, FFTW_FORWARD,FFTW_ESTIMATE)
 iplanuy = fftw_plan_dft_1d(Nx,tuy,tuy, FFTW_BACKWARD,FFTW_ESTIMATE)
 
