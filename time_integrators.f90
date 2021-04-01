@@ -13,7 +13,7 @@ real(dp) :: time, dtmax, dtmin, dt_old, dt_ramp, dt_final
 
 contains
 
-subroutine imex_rk(vtk_print)
+subroutine imex_rk(vtk_print, save_nusselt)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!  This progam solves the equations of thermal convection using a Fourier
@@ -25,10 +25,12 @@ subroutine imex_rk(vtk_print)
 implicit none
 
 integer, optional, intent(in)  :: vtk_print
+logical, optional, intent(in)  :: save_nusselt
 
 integer                        :: nti
 integer                        :: nprint
 logical                        :: wvtk
+real(dp)                       :: nusselt_num
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -58,6 +60,9 @@ dt_ramp = 1.1_dp
 dt_old = dt
 
 nti = 0
+
+! Format for writing out single values.
+1000 format(E25.16E3)
 
 ! Time integration
 do ! while (time < t_final)
@@ -205,6 +210,13 @@ do ! while (time < t_final)
       if (mod(nti,vtk_print) == 0) then
          call write_to_vtk(nti, .false.) ! false = Fourier space
       end if
+   end if
+
+   ! Calculate nusselt number.
+   if (save_nusselt) then
+      call nusselt(nusselt_num, .true.) ! true = Fourier space
+      write(8000, fmt=1000) nusselt_num
+      flush(8000)
    end if
 
 end do ! time loop

@@ -359,7 +359,7 @@ open(unit=8000, file="Nu_data.txt", action="write", status="unknown", position="
 call global_params_Ra(Ra)
 
 ! Get solution with time integration
-call imex_rk(1)
+call imex_rk(1, .true.) ! true causes writing of nusselt number.
 
 write(*,*) " "
 flush(6)
