@@ -20,6 +20,7 @@ subroutine global_allocations
 
     allocate(nlT(Ny,Nx), stat=alloc_err)
     allocate(nlphi(Ny,Nx), stat=alloc_err)
+    allocate(Tkappa(Ny,Nx), stat=alloc_err)
 
     allocate(phi1(Ny,Nx), phi2(Ny,Nx), stat=alloc_err)
     allocate(V1(Ny,Nx), V2(Ny,Nx), stat=alloc_err)

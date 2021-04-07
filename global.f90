@@ -67,6 +67,8 @@ complex(C_DOUBLE_COMPLEX), allocatable :: tT(:), tuy(:), tux(:), tnlT(:), tnlphi
 complex(C_DOUBLE_COMPLEX), allocatable :: tphi(:)
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:,:) :: Tptrb
 
+
+
 real(dp), allocatable, dimension(:) :: x0, GT
 real(dp), allocatable, dimension(:) :: xp, yp, zp
 real(dp), allocatable, dimension(:) :: kx, kz
@@ -86,7 +88,7 @@ integer, dimension(8) :: b_pntr ! points to boundary terms
 integer               :: alloc_err, dealloc_err
 
 ! Time integrator variables and arrays
-complex(C_DOUBLE_COMPLEX), allocatable, dimension(:,:) :: phii, uyi, uxi, Ti
+complex(C_DOUBLE_COMPLEX), allocatable, dimension(:,:) :: phii, uyi, uxi, Ti, Tkappa
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:,:) :: K1_phi, K1_T
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:,:) :: K2_phi, K2_T
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:,:) :: K3_phi, K3_T
