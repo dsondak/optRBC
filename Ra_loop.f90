@@ -101,7 +101,7 @@ do ii = 1,7
         case (7)
           call value(tokens(1), vtk_flag, ios)
           call value(tokens(2), rstrt_flag, ios)
-          call value(tokens(2), opt_flag, ios)
+          call value(tokens(3), opt_flag, ios)
           if (vtk_flag == 1) then
              wvtk = .true.
           else

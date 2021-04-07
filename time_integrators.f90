@@ -13,7 +13,7 @@ real(dp) :: time, dtmax, dtmin, dt_old, dt_ramp, dt_final
 
 contains
 
-subroutine imex_rk(vtk_print)
+subroutine imex_rk(vtk_print, save_nusselt)
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!  This progam solves the equations of thermal convection using a Fourier
@@ -25,10 +25,12 @@ subroutine imex_rk(vtk_print)
 implicit none
 
 integer, optional, intent(in)  :: vtk_print
+logical, optional, intent(in)  :: save_nusselt
 
 integer                        :: nti
 integer                        :: nprint
 logical                        :: wvtk
+real(dp)                       :: nusselt_num
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -59,6 +61,9 @@ dt_old = dt
 
 nti = 0
 
+! Format for writing out single values.
+1000 format(E25.16E3)
+
 ! Time integration
 do ! while (time < t_final)
 
@@ -70,7 +75,7 @@ do ! while (time < t_final)
       time = time + dt
    end if
 
-!   write(*,*) "time = ", time, "dt = ", dt
+   !write(*,*) "time = ", time, "dt = ", dt
 
    nti = nti + 1
 
@@ -97,7 +102,8 @@ do ! while (time < t_final)
       K1_T(:,it)   = tmp_K_T
       ! Compute u1 from v1
       if (kx(it) /= 0.0_dp) then
-         uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         !uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         uxi(:,it) = CI*d1y(tmp_uy)/kx(it)
       else if (kx(it) == 0.0_dp) then
          uxi(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
@@ -126,7 +132,8 @@ do ! while (time < t_final)
       K2_T(:,it)   = tmp_K_T
       ! Compute u1 from v1
       if (kx(it) /= 0.0_dp) then
-         uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         !uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         uxi(:,it) = CI*d1y(tmp_uy)/kx(it)
       else if (kx(it) == 0.0_dp) then
          uxi(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
@@ -155,7 +162,8 @@ do ! while (time < t_final)
       K3_T(:,it)   = tmp_K_T
       ! Compute u1 from v1
       if (kx(it) /= 0.0_dp) then
-         uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         !uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         uxi(:,it) = CI*d1y(tmp_uy)/kx(it)
       else if (kx(it) == 0.0_dp) then
          uxi(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
@@ -185,7 +193,8 @@ do ! while (time < t_final)
       uy(:,it) = tmp_uy
       ! Solve for u
       if (kx(it) /= 0.0_dp) then
-         ux(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         !ux(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         ux(:,it) = CI*d1y(tmp_uy)/kx(it)
       else if (kx(it) == 0.0_dp) then
          ux(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
@@ -201,6 +210,13 @@ do ! while (time < t_final)
       if (mod(nti,vtk_print) == 0) then
          call write_to_vtk(nti, .false.) ! false = Fourier space
       end if
+   end if
+
+   ! Calculate nusselt number.
+   if (save_nusselt) then
+      call nusselt(nusselt_num, .true.) ! true = Fourier space
+      write(8000, fmt=1000) nusselt_num
+      flush(8000)
    end if
 
 end do ! time loop
@@ -385,7 +401,8 @@ do i=1,Nx
    ! Compute D2(ux)
    nlphi(:,i) = -kx(i)**2.0_dp*uxi(:,i) + d2y(uxi(:,i))
 end do
-nlT = -CI*nlT
+!nlT = -CI*nlT
+nlT = CI*nlT
 
 do j = 1,Ny
    ! Bring everything to physical space
@@ -440,22 +457,26 @@ nlphi = nlphi / real(Nx,kind=dp)
 select case (stage)
    case (1)
       do i = 1,Nx
-        K1hat_phi(:,i) = K1hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
+        !K1hat_phi(:,i) = K1hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
+        K1hat_phi(:,i) = K1hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
       end do
       K1hat_T = -nlT
    case (2)
       do i = 1,Nx
-        K2hat_phi(:,i) = K2hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
+        !K2hat_phi(:,i) = K2hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
+        K2hat_phi(:,i) = K2hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
       end do
       K2hat_T = -nlT
    case (3)
       do i = 1,Nx
-        K3hat_phi(:,i) = K3hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
+        !K3hat_phi(:,i) = K3hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
+        K3hat_phi(:,i) = K3hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
       end do
       K3hat_T = -nlT
    case (4)
       do i = 1,Nx
-        K4hat_phi(:,i) = K4hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
+        !K4hat_phi(:,i) = K4hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
+        K4hat_phi(:,i) = K4hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
       end do
       K4hat_T = -nlT
 end select
