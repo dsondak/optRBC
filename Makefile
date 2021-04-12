@@ -1,8 +1,8 @@
 FC=gfortran
 FFLAGS= -c -O3
 
-LIBFLAGS2 = -L/usr/local/fftw/lib
-LDFLAGS   = -I/usr/local/fftw/include
+LIBFLAGS2 = -L/usr/local/Cellar/fftw/3.3.9/lib
+LDFLAGS   = -I/usr/local/Cellar/fftw/3.3.9/include
 
 #MAIN = Ra_loop
 #MAIN = Ra_loop_no_opt
@@ -14,7 +14,7 @@ PROGRAMS = $(MAIN).exe
 all: $(PROGRAMS)
 
 $(PROGRAMS) : $(OBJECTS)
-	$(FC) $(LDFLAGS) -o $(PROGRAMS) $(OBJECTS) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
+	$(FC) $(LDFLAGS) -o $(PROGRAMS) $(OBJECTS) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm -lfftw3_threads --enable-threads
 
 fftw.o : fftw.f90
 	$(FC) $(FFLAGS) fftw.f90
