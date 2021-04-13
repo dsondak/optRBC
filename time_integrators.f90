@@ -435,6 +435,7 @@ write(*,*) " - - l2 timing: ", finish-start, "(s)"
 nlT = CI*nlT
 
 start = OMP_GET_WTIME()
+!$OMP PARALLEL DO num_threads(8) private(tnlT, tnlphi, tT, tux, tuy, tphi) schedule(dynamic)
 do j = 1,Ny
    ! Bring everything to physical space
    tnlT   = nlT(j,:)
@@ -456,6 +457,7 @@ do j = 1,Ny
    uyi(j,:)  = tuy
    phii(j,:) = tphi
 end do
+!$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
 write(*,*) " - - l3 timing: ", finish-start, "(s)"
 
