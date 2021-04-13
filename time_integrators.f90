@@ -397,7 +397,9 @@ subroutine calc_explicit(stage)
 
 integer             :: i, j
 integer, intent(in) :: stage
+real(dp)            :: start, finish
 
+start = OMP_GET_WTIME()
 select case(stage)
    case (1)
       do i = 1,Nx
@@ -416,16 +418,23 @@ select case(stage)
          K4hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
 end select
+finish = OMP_GET_WTIME()
+write(*,*) " - - l1 timing: ", finish-start, "(s)"
 
+start = OMP_GET_WTIME()
 do i=1,Nx
    ! Compute dx(T) in Fourier space
    nlT  (:,i) =  kx(i)*Ti(:,i)
    ! Compute D2(ux)
    nlphi(:,i) = -kx(i)**2.0_dp*uxi(:,i) + d2y(uxi(:,i))
 end do
+finish = OMP_GET_WTIME()
+write(*,*) " - - l2 timing: ", finish-start, "(s)"
+
 !nlT = -CI*nlT
 nlT = CI*nlT
 
+start = OMP_GET_WTIME()
 do j = 1,Ny
    ! Bring everything to physical space
    tnlT   = nlT(j,:)
@@ -447,8 +456,11 @@ do j = 1,Ny
    uyi(j,:)  = tuy
    phii(j,:) = tphi
 end do
+finish = OMP_GET_WTIME()
+write(*,*) " - - l3 timing: ", finish-start, "(s)"
 
 ! Calculate nonlinear term
+start = OMP_GET_WTIME()
 do i = 1,Nx
    ! Temperature
    tmp_T = Ti(:,i)
@@ -456,8 +468,11 @@ do i = 1,Nx
    ! phi
    nlphi(:,i) = uxi(:,i)*phii(:,i) - uyi(:,i)*nlphi(:,i) 
 end do
+finish = OMP_GET_WTIME()
+write(*,*) " - - l4 timing: ", finish-start, "(s)"
 
 ! Bring nonlinear terms back to Fourier space
+start = OMP_GET_WTIME()
 do j = 1,Ny
    tnlT   = nlT(j,:)
    tnlphi = nlphi(j,:)
@@ -473,9 +488,13 @@ do j = 1,Ny
    nlT(j,:)   = tnlT
    nlphi(j,:) = tnlphi
 end do
+finish = OMP_GET_WTIME()
+write(*,*) " - - l5 timing: ", finish-start, "(s)"
+
 nlT   = nlT   / real(Nx,kind=dp)
 nlphi = nlphi / real(Nx,kind=dp)
 
+start = OMP_GET_WTIME()
 select case (stage)
    case (1)
       do i = 1,Nx
@@ -502,6 +521,8 @@ select case (stage)
       end do
       K4hat_T = -nlT
 end select
+finish = OMP_GET_WTIME()
+write(*,*) " - - l6 timing: ", finish-start, "(s)"
 
 end subroutine calc_explicit
 
