@@ -6,6 +6,7 @@ use write_pack
 use allocate_vars
 use bc_setup
 use statistics
+use omp_lib
 
 integer  :: it, jt, kkt
 integer  :: info
@@ -31,7 +32,11 @@ integer                        :: nti
 integer                        :: nprint
 logical                        :: wvtk
 real(dp)                       :: nusselt_num
-
+real(dp)                       :: start, finish
+real(dp)                       :: start_overall, finish_overall
+integer                        :: nthreads, myid
+integer, EXTERNAL              :: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
+real(dp), EXTERNAL             :: OMP_GET_WTIME
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 if (present(vtk_print)) then
@@ -66,6 +71,7 @@ nti = 0
 
 ! Time integration
 do ! while (time < t_final)
+   start_overall = OMP_GET_WTIME()
 
    dt_final = t_final - time
 
@@ -86,7 +92,10 @@ do ! while (time < t_final)
    Ti   = T
    uxi  = ux
    uyi  = uy
+   start = OMP_GET_WTIME()
    call calc_explicit(1)
+   finish = OMP_GET_WTIME()
+   write(*,*) " - calc_explicit(1) timing: ", finish-start, "(s)"
    do it = 1,Nx ! kx loop
       ! Compute phi1 and T1
       call calc_vari(tmp_phi, tmp_T, acoeffs(1,1), 1)
@@ -112,7 +121,10 @@ do ! while (time < t_final)
       uyi (:,it) = tmp_uy
    end do
    ! Compute K2hat
+   start = OMP_GET_WTIME()
    call calc_explicit(2)
+   finish = OMP_GET_WTIME()
+   write(*,*) " - calc_explicit(2) timing: ", finish-start, "(s)"
 
    !:::::::::::
    ! STAGE 2 ::
@@ -142,7 +154,10 @@ do ! while (time < t_final)
       uyi (:,it) = tmp_uy
    end do
    ! Compute K3hat
+   start = OMP_GET_WTIME()
    call calc_explicit(3)
+   finish = OMP_GET_WTIME()
+   write(*,*) " - calc_explicit(3) timing: ", finish-start, "(s)"
 
    !:::::::::::
    ! STAGE 3 ::
@@ -172,7 +187,10 @@ do ! while (time < t_final)
       uyi (:,it) = tmp_uy
    end do
    ! Compute K4hat
+   start = OMP_GET_WTIME()
    call calc_explicit(4)
+   finish = OMP_GET_WTIME()
+   write(*,*) " - calc_explicit(4) timing: ", finish-start, "(s)"
 
    ! UPDATE SOLUTIONS
 
@@ -205,7 +223,8 @@ do ! while (time < t_final)
    end if
 
    !call update_dt
-
+   ! Don't write vtk for now.
+   wvtk = .false.
    if (wvtk) then
       if (mod(nti,vtk_print) == 0) then
          call write_to_vtk(nti, .false.) ! false = Fourier space
@@ -218,6 +237,9 @@ do ! while (time < t_final)
       write(8000, fmt=1000) nusselt_num
       flush(8000)
    end if
+  
+   finish_overall = OMP_GET_WTIME()
+   write(*,*) "overall timing: ", finish_overall-start_overall, "(s)"
 
 end do ! time loop
 
