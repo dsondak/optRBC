@@ -435,7 +435,7 @@ write(*,*) " - - l2 timing: ", finish-start, "(s)"
 nlT = CI*nlT
 
 start = OMP_GET_WTIME()
-!$OMP PARALLEL DO num_threads(8) private(tnlT, tnlphi, tT, tux, tuy, tphi) schedule(dynamic)
+!$OMP PARALLEL DO num_threads(16) private(tnlT, tnlphi, tT, tux, tuy, tphi) schedule(dynamic)
 do j = 1,Ny
    ! Bring everything to physical space
    tnlT   = nlT(j,:)
