@@ -96,16 +96,16 @@ do ! while (time < t_final)
    call calc_explicit(1)
    finish = OMP_GET_WTIME()
    write(*,*) " - calc_explicit(1) timing: ", finish-start, "(s)"
+   start = OMP_GET_WTIME()
    do it = 1,Nx ! kx loop
       ! Compute phi1 and T1
       call calc_vari(tmp_phi, tmp_T, acoeffs(1,1), 1)
-      ! Compute v1 from phi1 
+      ! Compute v1 from phi1
       call calc_vi(tmp_uy, tmp_phi)
       ! BOUNDAY CONDITIONS!
       call update_bcs(tmp_phi1,tmp_uy1, tmp_phi,tmp_uy)
       tmp_phi = tmp_phi1
       tmp_uy  = tmp_uy1
-      ! Compute K1_T and K1_phi
       call calc_implicit(tmp_K_phi,tmp_K_T, tmp_phi,tmp_T)
       K1_phi(:,it) = tmp_K_phi
       K1_T(:,it)   = tmp_K_T
@@ -120,6 +120,8 @@ do ! while (time < t_final)
       Ti  (:,it) = tmp_T
       uyi (:,it) = tmp_uy
    end do
+   finish = OMP_GET_WTIME()
+   write(*,*) " - stage 1 mid timing: ", finish-start, "(s)"
    ! Compute K2hat
    start = OMP_GET_WTIME()
    call calc_explicit(2)
@@ -129,10 +131,11 @@ do ! while (time < t_final)
    !:::::::::::
    ! STAGE 2 ::
    !:::::::::::
+   start = OMP_GET_WTIME()
    do it = 1,Nx ! kx loop
       ! Compute phi2 and T2
       call calc_vari(tmp_phi, tmp_T, acoeffs(2,2), 2)
-      ! Compute v1 from phi1 
+      ! Compute v1 from phi1
       call calc_vi(tmp_uy, tmp_phi)
       ! BOUNDAY CONDITIONS!
       call update_bcs(tmp_phi1,tmp_uy1, tmp_phi,tmp_uy)
@@ -153,6 +156,8 @@ do ! while (time < t_final)
       Ti  (:,it) = tmp_T
       uyi (:,it) = tmp_uy
    end do
+   finish = OMP_GET_WTIME()
+   write(*,*) " - stage 2 mid timing: ", finish-start, "(s)"
    ! Compute K3hat
    start = OMP_GET_WTIME()
    call calc_explicit(3)
@@ -162,6 +167,7 @@ do ! while (time < t_final)
    !:::::::::::
    ! STAGE 3 ::
    !:::::::::::
+   start = OMP_GET_WTIME()
    do it = 1,Nx ! kx loop
       ! Compute phi3 and T3
       call calc_vari(tmp_phi, tmp_T, acoeffs(3,3), 3)
@@ -186,6 +192,8 @@ do ! while (time < t_final)
       Ti  (:,it) = tmp_T
       uyi (:,it) = tmp_uy
    end do
+   finish = OMP_GET_WTIME()
+   write(*,*) " - stage 3 mid timing: ", finish-start, "(s)"
    ! Compute K4hat
    start = OMP_GET_WTIME()
    call calc_explicit(4)
@@ -194,6 +202,7 @@ do ! while (time < t_final)
 
    ! UPDATE SOLUTIONS
 
+   start = OMP_GET_WTIME()
    ! Get phi
    phi(2:Ny-1,:) = phi(2:Ny-1,:) + dt*(b(1)*(K1_phi(2:Ny-1,:) + K2hat_phi(2:Ny-1,:)) + &
                   &                    b(2)*(K2_phi(2:Ny-1,:) + K3hat_phi(2:Ny-1,:)) + &
@@ -205,7 +214,9 @@ do ! while (time < t_final)
                   &                   b(3)*(K3_T(2:Ny-1,:) + K4hat_T(2:Ny-1,:)))
 
    ! Get ux and uy
+   !$OMP PARALLEL DO num_threads(8) private(tmp_uy) schedule(dynamic)
    do it = 1,Nx
+      !$OMP CRITICAL
       ! Solve for v
       call calc_vi(tmp_uy, phi(:,it))
       uy(:,it) = tmp_uy
@@ -216,7 +227,12 @@ do ! while (time < t_final)
       else if (kx(it) == 0.0_dp) then
          ux(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
+      !$OMP END CRITICAL 
    end do
+   !$OMP END PARALLEL DO
+   finish = OMP_GET_WTIME()
+   write(*,*) " - update sols timing: ", finish-start, "(s)"
+   
 
    if (time == t_final) then
       exit
@@ -237,7 +253,7 @@ do ! while (time < t_final)
       write(8000, fmt=1000) nusselt_num
       flush(8000)
    end if
-  
+
    finish_overall = OMP_GET_WTIME()
    write(*,*) "overall timing: ", finish_overall-start_overall, "(s)"
 
@@ -311,7 +327,7 @@ select case (stage)
 
     call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
     Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-    ! Set temperature boundary conditions 
+    ! Set temperature boundary conditions
     Tout(1) = T(1,it)
     Tout(Ny) = T(Ny,it)
 
@@ -336,7 +352,7 @@ select case (stage)
 
     call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
     Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-    ! Set temperature boundary conditions 
+    ! Set temperature boundary conditions
     Tout(1) = T(1,it)
     Tout(Ny) = T(Ny,it)
 
@@ -359,13 +375,13 @@ select case (stage)
 
     phi_rhs(:,1) = real(Fphi)
     phi_rhs(:,2) = aimag(Fphi)
- 
+
     T_rhs  (:,1) = real(FT)
     T_rhs  (:,2) = aimag(FT)
 
     call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
     Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-    ! Set temperature boundary conditions 
+    ! Set temperature boundary conditions
     Tout(1) = T(1,it)
     Tout(Ny) = T(Ny,it)
 
@@ -399,38 +415,38 @@ integer             :: i, j
 integer, intent(in) :: stage
 real(dp)            :: start, finish
 
-start = OMP_GET_WTIME()
+! start = OMP_GET_WTIME()
 select case(stage)
    case (1)
-      !$OMP PARALLEL DO num_threads(8)
+      !$OMP PARALLEL DO num_threads(8) schedule(dynamic)
       do i = 1,Nx
          K1hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
       !$OMP END PARALLEL DO
    case (2)
-      !$OMP PARALLEL DO num_threads(8)
+      !$OMP PARALLEL DO num_threads(8) schedule(dynamic)
       do i = 1,Nx
          K2hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
       !$OMP END PARALLEL DO
    case (3)
-      !$OMP PARALLEL DO num_threads(8)
+      !$OMP PARALLEL DO num_threads(8) schedule(dynamic)
       do i = 1,Nx
          K3hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
       !$OMP END PARALLEL DO
    case (4)
-      !$OMP PARALLEL DO num_threads(8)
+      !$OMP PARALLEL DO num_threads(8) schedule(dynamic)
       do i = 1,Nx
          K4hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
       !$OMP END PARALLEL DO
 end select
-finish = OMP_GET_WTIME()
-write(*,*) " - - l1 timing: ", finish-start, "(s)"
+! finish = OMP_GET_WTIME()
+! write(*,*) " - - l1 timing: ", finish-start, "(s)"
 
-start = OMP_GET_WTIME()
-!$OMP PARALLEL DO num_threads(8)
+! start = OMP_GET_WTIME()
+!$OMP PARALLEL DO num_threads(8) schedule(dynamic)
 do i=1,Nx
    ! Compute dx(T) in Fourier space
    nlT  (:,i) =  kx(i)*Ti(:,i)
@@ -438,13 +454,13 @@ do i=1,Nx
    nlphi(:,i) = -kx(i)**2.0_dp*uxi(:,i) + d2y(uxi(:,i))
 end do
 !$OMP END PARALLEL DO
-finish = OMP_GET_WTIME()
-write(*,*) " - - l2 timing: ", finish-start, "(s)"
+! finish = OMP_GET_WTIME()
+! write(*,*) " - - l2 timing: ", finish-start, "(s)"
 
 !nlT = -CI*nlT
 nlT = CI*nlT
 
-start = OMP_GET_WTIME()
+! start = OMP_GET_WTIME()
 !$OMP PARALLEL DO num_threads(8) private(tnlT, tnlphi, tT, tux, tuy, tphi) schedule(dynamic)
 do j = 1,Ny
    ! Bring everything to physical space
@@ -468,25 +484,25 @@ do j = 1,Ny
    phii(j,:) = tphi
 end do
 !$OMP END PARALLEL DO
-finish = OMP_GET_WTIME()
-write(*,*) " - - l3 timing: ", finish-start, "(s)"
+! finish = OMP_GET_WTIME()
+! write(*,*) " - - l3 timing: ", finish-start, "(s)"
 
 ! Calculate nonlinear term
-start = OMP_GET_WTIME()
-!$OMP PARALLEL DO num_threads(8) private(tmp_T)
+! start = OMP_GET_WTIME()
+!$OMP PARALLEL DO num_threads(8) private(tmp_T) schedule(dynamic)
 do i = 1,Nx
    ! Temperature
    tmp_T = Ti(:,i)
    nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T)
    ! phi
-   nlphi(:,i) = uxi(:,i)*phii(:,i) - uyi(:,i)*nlphi(:,i) 
+   nlphi(:,i) = uxi(:,i)*phii(:,i) - uyi(:,i)*nlphi(:,i)
 end do
 !$OMP END PARALLEL DO
-finish = OMP_GET_WTIME()
-write(*,*) " - - l4 timing: ", finish-start, "(s)"
+! finish = OMP_GET_WTIME()
+! write(*,*) " - - l4 timing: ", finish-start, "(s)"
 
 ! Bring nonlinear terms back to Fourier space
-start = OMP_GET_WTIME()
+! start = OMP_GET_WTIME()
 !$OMP PARALLEL DO num_threads(8) private(tnlT, tnlphi) schedule(dynamic)
 do j = 1,Ny
    tnlT   = nlT(j,:)
@@ -504,16 +520,16 @@ do j = 1,Ny
    nlphi(j,:) = tnlphi
 end do
 !$OMP END PARALLEL DO
-finish = OMP_GET_WTIME()
-write(*,*) " - - l5 timing: ", finish-start, "(s)"
+! finish = OMP_GET_WTIME()
+! write(*,*) " - - l5 timing: ", finish-start, "(s)"
 
 nlT   = nlT   / real(Nx,kind=dp)
 nlphi = nlphi / real(Nx,kind=dp)
 
-start = OMP_GET_WTIME()
+! start = OMP_GET_WTIME()
 select case (stage)
    case (1)
-      !$OMP PARALLEL DO num_threads(8)
+      !$OMP PARALLEL DO num_threads(8) schedule(dynamic)
       do i = 1,Nx
         !K1hat_phi(:,i) = K1hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K1hat_phi(:,i) = K1hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
@@ -521,7 +537,7 @@ select case (stage)
       !$OMP END PARALLEL DO
       K1hat_T = -nlT
    case (2)
-      !$OMP PARALLEL DO num_threads(8)
+      !$OMP PARALLEL DO num_threads(8) schedule(dynamic)
       do i = 1,Nx
         !K2hat_phi(:,i) = K2hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K2hat_phi(:,i) = K2hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
@@ -529,7 +545,7 @@ select case (stage)
       !$OMP END PARALLEL DO
       K2hat_T = -nlT
    case (3)
-      !$OMP PARALLEL DO num_threads(8)
+      !$OMP PARALLEL DO num_threads(8) schedule(dynamic)
       do i = 1,Nx
         !K3hat_phi(:,i) = K3hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K3hat_phi(:,i) = K3hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
@@ -537,7 +553,7 @@ select case (stage)
       !$OMP END PARALLEL DO
       K3hat_T = -nlT
    case (4)
-      !$OMP PARALLEL DO num_threads(8)
+      !$OMP PARALLEL DO num_threads(8) schedule(dynamic)
       do i = 1,Nx
         !K4hat_phi(:,i) = K4hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K4hat_phi(:,i) = K4hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
@@ -545,8 +561,8 @@ select case (stage)
       !$OMP END PARALLEL DO
       K4hat_T = -nlT
 end select
-finish = OMP_GET_WTIME()
-write(*,*) " - - l6 timing: ", finish-start, "(s)"
+! finish = OMP_GET_WTIME()
+! write(*,*) " - - l6 timing: ", finish-start, "(s)"
 
 end subroutine calc_explicit
 
