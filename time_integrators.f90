@@ -435,7 +435,7 @@ write(*,*) " - - l2 timing: ", finish-start, "(s)"
 nlT = CI*nlT
 
 start = OMP_GET_WTIME()
-!$OMP PARALLEL DO num_threads(16) private(tnlT, tnlphi, tT, tux, tuy, tphi) schedule(dynamic)
+!$OMP PARALLEL DO num_threads(8) private(tnlT, tnlphi, tT, tux, tuy, tphi) schedule(dynamic)
 do j = 1,Ny
    ! Bring everything to physical space
    tnlT   = nlT(j,:)
@@ -475,6 +475,7 @@ write(*,*) " - - l4 timing: ", finish-start, "(s)"
 
 ! Bring nonlinear terms back to Fourier space
 start = OMP_GET_WTIME()
+!$OMP PARALLEL DO num_threads(8) private(tnlT, tnlphi) schedule(dynamic)
 do j = 1,Ny
    tnlT   = nlT(j,:)
    tnlphi = nlphi(j,:)
@@ -490,6 +491,7 @@ do j = 1,Ny
    nlT(j,:)   = tnlT
    nlphi(j,:) = tnlphi
 end do
+!$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
 write(*,*) " - - l5 timing: ", finish-start, "(s)"
 
