@@ -422,12 +422,14 @@ finish = OMP_GET_WTIME()
 write(*,*) " - - l1 timing: ", finish-start, "(s)"
 
 start = OMP_GET_WTIME()
+!$OMP PARALLEL DO num_threads(8)
 do i=1,Nx
    ! Compute dx(T) in Fourier space
    nlT  (:,i) =  kx(i)*Ti(:,i)
    ! Compute D2(ux)
    nlphi(:,i) = -kx(i)**2.0_dp*uxi(:,i) + d2y(uxi(:,i))
 end do
+!$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
 write(*,*) " - - l2 timing: ", finish-start, "(s)"
 
@@ -463,6 +465,7 @@ write(*,*) " - - l3 timing: ", finish-start, "(s)"
 
 ! Calculate nonlinear term
 start = OMP_GET_WTIME()
+!$OMP PARALLEL DO num_threads(8) private(tmp_T)
 do i = 1,Nx
    ! Temperature
    tmp_T = Ti(:,i)
@@ -470,6 +473,7 @@ do i = 1,Nx
    ! phi
    nlphi(:,i) = uxi(:,i)*phii(:,i) - uyi(:,i)*nlphi(:,i) 
 end do
+!$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
 write(*,*) " - - l4 timing: ", finish-start, "(s)"
 
