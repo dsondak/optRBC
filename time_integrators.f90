@@ -402,21 +402,29 @@ real(dp)            :: start, finish
 start = OMP_GET_WTIME()
 select case(stage)
    case (1)
+      !$OMP PARALLEL DO num_threads(8)
       do i = 1,Nx
          K1hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
+      !$OMP END PARALLEL DO
    case (2)
+      !$OMP PARALLEL DO num_threads(8)
       do i = 1,Nx
          K2hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
+      !$OMP END PARALLEL DO
    case (3)
+      !$OMP PARALLEL DO num_threads(8)
       do i = 1,Nx
          K3hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
+      !$OMP END PARALLEL DO
    case (4)
+      !$OMP PARALLEL DO num_threads(8)
       do i = 1,Nx
          K4hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
+      !$OMP END PARALLEL DO
 end select
 finish = OMP_GET_WTIME()
 write(*,*) " - - l1 timing: ", finish-start, "(s)"
@@ -505,28 +513,36 @@ nlphi = nlphi / real(Nx,kind=dp)
 start = OMP_GET_WTIME()
 select case (stage)
    case (1)
+      !$OMP PARALLEL DO num_threads(8)
       do i = 1,Nx
         !K1hat_phi(:,i) = K1hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K1hat_phi(:,i) = K1hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
       end do
+      !$OMP END PARALLEL DO
       K1hat_T = -nlT
    case (2)
+      !$OMP PARALLEL DO num_threads(8)
       do i = 1,Nx
         !K2hat_phi(:,i) = K2hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K2hat_phi(:,i) = K2hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
       end do
+      !$OMP END PARALLEL DO
       K2hat_T = -nlT
    case (3)
+      !$OMP PARALLEL DO num_threads(8)
       do i = 1,Nx
         !K3hat_phi(:,i) = K3hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K3hat_phi(:,i) = K3hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
       end do
+      !$OMP END PARALLEL DO
       K3hat_T = -nlT
    case (4)
+      !$OMP PARALLEL DO num_threads(8)
       do i = 1,Nx
         !K4hat_phi(:,i) = K4hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K4hat_phi(:,i) = K4hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
       end do
+      !$OMP END PARALLEL DO
       K4hat_T = -nlT
 end select
 finish = OMP_GET_WTIME()
