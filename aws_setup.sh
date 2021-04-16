@@ -1,4 +1,3 @@
-git clone https://github.com/dsondak/optRBC.git
 sudo apt install make
 sudo apt-get install software-properties-common
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
