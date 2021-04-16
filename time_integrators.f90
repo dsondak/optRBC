@@ -37,6 +37,7 @@ real(dp)                       :: start_overall, finish_overall
 integer                        :: nthreads, myid
 integer, EXTERNAL              :: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
 real(dp), EXTERNAL             :: OMP_GET_WTIME
+complex(C_DOUBLE_COMPLEX), dimension(1275) :: phi_sub
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 if (present(vtk_print)) then
@@ -97,6 +98,7 @@ do ! while (time < t_final)
    finish = OMP_GET_WTIME()
    write(*,*) " - calc_explicit(1) timing: ", finish-start, "(s)"
    start = OMP_GET_WTIME()
+!   !$OMP PARALLEL DO num_threads(8) private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
    do it = 1,Nx ! kx loop
       ! Compute phi1 and T1
       call calc_vari(tmp_phi, tmp_T, acoeffs(1,1), 1)
@@ -120,6 +122,7 @@ do ! while (time < t_final)
       Ti  (:,it) = tmp_T
       uyi (:,it) = tmp_uy
    end do
+!   !$OMP END PARALLEL DO
    finish = OMP_GET_WTIME()
    write(*,*) " - stage 1 mid timing: ", finish-start, "(s)"
    ! Compute K2hat
@@ -214,11 +217,13 @@ do ! while (time < t_final)
                   &                   b(3)*(K3_T(2:Ny-1,:) + K4hat_T(2:Ny-1,:)))
 
    ! Get ux and uy
-   !$OMP PARALLEL DO num_threads(8) private(tmp_uy) schedule(dynamic)
+!   !$OMP PARALLEL DO num_threads(8) private(tmp_uy, it, phi_sub) schedule(dynamic)
    do it = 1,Nx
-      !$OMP CRITICAL
+!      !$OMP CRITICAL
       ! Solve for v
-      call calc_vi(tmp_uy, phi(:,it))
+      ! write(*,*) SHAPE(phi)
+      phi_sub = phi(:,it)
+      call calc_vi(tmp_uy, phi_sub)
       uy(:,it) = tmp_uy
       ! Solve for u
       if (kx(it) /= 0.0_dp) then
@@ -227,9 +232,9 @@ do ! while (time < t_final)
       else if (kx(it) == 0.0_dp) then
          ux(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
-      !$OMP END CRITICAL 
+!      !$OMP END CRITICAL
    end do
-   !$OMP END PARALLEL DO
+!   !$OMP END PARALLEL DO
    finish = OMP_GET_WTIME()
    write(*,*) " - update sols timing: ", finish-start, "(s)"
    
