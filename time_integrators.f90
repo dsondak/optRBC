@@ -97,21 +97,21 @@ do ! while (time < t_final)
    finish = OMP_GET_WTIME()
    write(*,*) " - calc_explicit(1) timing: ", finish-start, "(s)"
    start = OMP_GET_WTIME()
-  !$OMP PARALLEL DO num_threads(8) private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
+   !$OMP PARALLEL DO num_threads(8) private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
    do it = 1,Nx ! kx loop
       ! Compute phi1 and T1
       call calc_vari_mod(tmp_phi, tmp_T, acoeffs(1,1), 1,&
-                         kx(it), phi(2:Ny-1,it),&
-                         K1hat_phi(2:Ny-1,it),K2hat_phi(2:Ny-1,it),K3hat_phi(2:Ny-1,it),&
-                         K1hat_T(2:Ny-1,it),K2hat_T(2:Ny-1,it),K3hat_T(2:Ny-1,it),&
-                         K1_phi(2:Ny-1,it), K2_phi(2:Ny-1,it), K1_T(2:Ny-1,it), K2_T(2:Ny-1,it),&
-                         T(:,it))
+                           kx(it), phi(2:Ny-1,it),&
+                           K1hat_phi(2:Ny-1,it),K2hat_phi(2:Ny-1,it),K3hat_phi(2:Ny-1,it),&
+                           K1hat_T(2:Ny-1,it),K2hat_T(2:Ny-1,it),K3hat_T(2:Ny-1,it),&
+                           K1_phi(2:Ny-1,it), K2_phi(2:Ny-1,it), K1_T(2:Ny-1,it), K2_T(2:Ny-1,it),&
+                           T(:,it))
       ! Compute v1 from phi1
       call calc_vi_mod(tmp_uy, tmp_phi, kx(it))
       ! BOUNDAY CONDITIONS!
       call update_bcs_mod(tmp_phi1,tmp_uy1, tmp_phi,tmp_uy,dyv1_T(it),dyv2_T(it),&
-                          dyv1_B(it),dyv2_B(it),&
-                          V1(:,it),V2(:,it),phi1(:,it),phi2(:,it))
+                           dyv1_B(it),dyv2_B(it),&
+                           V1(:,it),V2(:,it),phi1(:,it),phi2(:,it))
       tmp_phi = tmp_phi1
       tmp_uy  = tmp_uy1
       call calc_implicit_mod(tmp_K_phi,tmp_K_T, tmp_phi,tmp_T, kx(it))
@@ -128,7 +128,7 @@ do ! while (time < t_final)
       Ti  (:,it) = tmp_T
       uyi (:,it) = tmp_uy
    end do
-  !$OMP END PARALLEL DO
+   !$OMP END PARALLEL DO
    finish = OMP_GET_WTIME()
    write(*,*) " - stage 1 mid timing: ", finish-start, "(s)"
    ! Compute K2hat
@@ -145,17 +145,17 @@ do ! while (time < t_final)
    do it = 1,Nx ! kx loop
       ! Compute phi2 and T2
       call calc_vari_mod(tmp_phi, tmp_T, acoeffs(2,2), 2,&
-                         kx(it), phi(2:Ny-1,it),&
-                         K1hat_phi(2:Ny-1,it),K2hat_phi(2:Ny-1,it),K3hat_phi(2:Ny-1,it),&
-                         K1hat_T(2:Ny-1,it),K2hat_T(2:Ny-1,it),K3hat_T(2:Ny-1,it),&
-                         K1_phi(2:Ny-1,it), K2_phi(2:Ny-1,it), K1_T(2:Ny-1,it), K2_T(2:Ny-1,it),&
-                         T(:,it))
+                           kx(it), phi(2:Ny-1,it),&
+                           K1hat_phi(2:Ny-1,it),K2hat_phi(2:Ny-1,it),K3hat_phi(2:Ny-1,it),&
+                           K1hat_T(2:Ny-1,it),K2hat_T(2:Ny-1,it),K3hat_T(2:Ny-1,it),&
+                           K1_phi(2:Ny-1,it), K2_phi(2:Ny-1,it), K1_T(2:Ny-1,it), K2_T(2:Ny-1,it),&
+                           T(:,it))
       ! Compute v1 from phi1
       call calc_vi_mod(tmp_uy, tmp_phi, kx(it))
       ! BOUNDAY CONDITIONS!
       call update_bcs_mod(tmp_phi1,tmp_uy1, tmp_phi,tmp_uy,dyv1_T(it),dyv2_T(it),&
-                          dyv1_B(it),dyv2_B(it),&
-                          V1(:,it),V2(:,it),phi1(:,it),phi2(:,it))
+                           dyv1_B(it),dyv2_B(it),&
+                           V1(:,it),V2(:,it),phi1(:,it),phi2(:,it))
       tmp_phi = tmp_phi1
       tmp_uy  = tmp_uy1
       ! Compute K2_T and K2_phi
@@ -189,17 +189,17 @@ do ! while (time < t_final)
    do it = 1,Nx ! kx loop
       ! Compute phi3 and T3
       call calc_vari_mod(tmp_phi, tmp_T, acoeffs(3,3), 3,&
-                         kx(it), phi(2:Ny-1,it),&
-                         K1hat_phi(2:Ny-1,it),K2hat_phi(2:Ny-1,it),K3hat_phi(2:Ny-1,it),&
-                         K1hat_T(2:Ny-1,it),K2hat_T(2:Ny-1,it),K3hat_T(2:Ny-1,it),&
-                         K1_phi(2:Ny-1,it), K2_phi(2:Ny-1,it), K1_T(2:Ny-1,it), K2_T(2:Ny-1,it),&
-                         T(:,it))
+                           kx(it), phi(2:Ny-1,it),&
+                           K1hat_phi(2:Ny-1,it),K2hat_phi(2:Ny-1,it),K3hat_phi(2:Ny-1,it),&
+                           K1hat_T(2:Ny-1,it),K2hat_T(2:Ny-1,it),K3hat_T(2:Ny-1,it),&
+                           K1_phi(2:Ny-1,it), K2_phi(2:Ny-1,it), K1_T(2:Ny-1,it), K2_T(2:Ny-1,it),&
+                           T(:,it))
       ! Compute v1 from phi1
       call calc_vi_mod(tmp_uy, tmp_phi, kx(it))
       ! BOUNDAY CONDITIONS!
       call update_bcs_mod(tmp_phi1,tmp_uy1, tmp_phi,tmp_uy,dyv1_T(it),dyv2_T(it),&
-                          dyv1_B(it),dyv2_B(it),&
-                          V1(:,it),V2(:,it),phi1(:,it),phi2(:,it))
+                           dyv1_B(it),dyv2_B(it),&
+                           V1(:,it),V2(:,it),phi1(:,it),phi2(:,it))
       tmp_phi = tmp_phi1
       tmp_uy  = tmp_uy1
       ! Compute K3_T and K3_phi
@@ -337,90 +337,90 @@ do jt = 3,Ny-1
 end do
 
 select case (stage)
-   case(1)
-      Fphi     = phi(2:Ny-1,it) + dt*ahatcoeffs(2,1)*K1hat_phi(2:Ny-1,it)
-      FT       = T  (2:Ny-1,it) + dt*ahatcoeffs(2,1)*K1hat_T  (2:Ny-1,it)
-      FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T(1,it) ! b/c Ti(y_1) = T(y_1)
-      FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T(Ny,it) ! b/c Ti(Ny) = T(Ny)
+  case(1)
+    Fphi     = phi(2:Ny-1,it) + dt*ahatcoeffs(2,1)*K1hat_phi(2:Ny-1,it)
+    FT       = T  (2:Ny-1,it) + dt*ahatcoeffs(2,1)*K1hat_T  (2:Ny-1,it)
+    FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T(1,it) ! b/c Ti(y_1) = T(y_1)
+    FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T(Ny,it) ! b/c Ti(Ny) = T(Ny)
 
-      phi_rhs(:,1) = real(Fphi)
-      phi_rhs(:,2) = aimag(Fphi)
+    phi_rhs(:,1) = real(Fphi)
+    phi_rhs(:,2) = aimag(Fphi)
 
-      T_rhs  (:,1) = real(FT)
-      T_rhs  (:,2) = aimag(FT)
+    T_rhs  (:,1) = real(FT)
+    T_rhs  (:,2) = aimag(FT)
 
-      call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
-      Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-      ! Set temperature boundary conditions
-      Tout(1) = T(1,it)
-      Tout(Ny) = T(Ny,it)
+    call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
+    Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
+    ! Set temperature boundary conditions 
+    Tout(1) = T(1,it)
+    Tout(Ny) = T(Ny,it)
 
-      call dgtsv(Ny-2, 2, dlphi, dphi, duphi, phi_rhs, Ny-2, info)
-      phiout(2:Ny-1) = cmplx(phi_rhs(:,1), phi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
+    call dgtsv(Ny-2, 2, dlphi, dphi, duphi, phi_rhs, Ny-2, info)
+    phiout(2:Ny-1) = cmplx(phi_rhs(:,1), phi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
 
-   case(2)
-      Fphi = phi(2:Ny-1,it) + dt*(acoeffs(2,1)*K1_phi(2:Ny-1,it)       + &
-            &                     ahatcoeffs(3,1)*K1hat_phi(2:Ny-1,it) + &
-            &                     ahatcoeffs(3,2)*K2hat_phi(2:Ny-1,it))
-      FT   = T  (2:Ny-1,it) + dt*(acoeffs(2,1)*K1_T  (2:Ny-1,it)       + &
-            &                     ahatcoeffs(3,1)*K1hat_T  (2:Ny-1,it) + &
-            &                     ahatcoeffs(3,2)*K2hat_T  (2:Ny-1,it))
-      FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T(1,it) ! b/c Ti(y_1) = T(y_1)
-      FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T(Ny,it) ! b/c Ti(Ny) = T(Ny)
+  case(2)
+    Fphi = phi(2:Ny-1,it) + dt*(acoeffs(2,1)*K1_phi(2:Ny-1,it)       + &
+          &                     ahatcoeffs(3,1)*K1hat_phi(2:Ny-1,it) + &
+          &                     ahatcoeffs(3,2)*K2hat_phi(2:Ny-1,it))
+    FT   = T  (2:Ny-1,it) + dt*(acoeffs(2,1)*K1_T  (2:Ny-1,it)       + &
+          &                     ahatcoeffs(3,1)*K1hat_T  (2:Ny-1,it) + &
+          &                     ahatcoeffs(3,2)*K2hat_T  (2:Ny-1,it))
+    FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T(1,it) ! b/c Ti(y_1) = T(y_1)
+    FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T(Ny,it) ! b/c Ti(Ny) = T(Ny)
 
-      phi_rhs(:,1) = real(Fphi)
-      phi_rhs(:,2) = aimag(Fphi)
+    phi_rhs(:,1) = real(Fphi)
+    phi_rhs(:,2) = aimag(Fphi)
 
-      T_rhs  (:,1) = real(FT)
-      T_rhs  (:,2) = aimag(FT)
+    T_rhs  (:,1) = real(FT)
+    T_rhs  (:,2) = aimag(FT)
 
-      call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
-      Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-      ! Set temperature boundary conditions
-      Tout(1) = T(1,it)
-      Tout(Ny) = T(Ny,it)
+    call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
+    Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
+    ! Set temperature boundary conditions 
+    Tout(1) = T(1,it)
+    Tout(Ny) = T(Ny,it)
 
-      call dgtsv(Ny-2, 2, dlphi, dphi, duphi, phi_rhs, Ny-2, info)
-      phiout(2:Ny-1) = cmplx(phi_rhs(:,1), phi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
+    call dgtsv(Ny-2, 2, dlphi, dphi, duphi, phi_rhs, Ny-2, info)
+    phiout(2:Ny-1) = cmplx(phi_rhs(:,1), phi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
 
-   case(3)
-      Fphi = phi(2:Ny-1,it) + dt*(acoeffs(3,1)*K1_phi(2:Ny-1,it)       + &
-                                 &acoeffs(3,2)*K2_phi(2:Ny-1,it)       + &
-                                 &ahatcoeffs(4,1)*K1hat_phi(2:Ny-1,it) + &
-                                 &ahatcoeffs(4,2)*K2hat_phi(2:Ny-1,it) + &
-                                 &ahatcoeffs(4,3)*K3hat_phi(2:Ny-1,it))
-      FT   = T  (2:Ny-1,it) + dt*(acoeffs(3,1)*K1_T  (2:Ny-1,it)       + &
-                                 &acoeffs(3,2)*K2_T  (2:Ny-1,it)       + &
-                                 &ahatcoeffs(4,1)*K1hat_T  (2:Ny-1,it) + &
-                                 &ahatcoeffs(4,2)*K2hat_T  (2:Ny-1,it) + &
-                                 &ahatcoeffs(4,3)*K3hat_T  (2:Ny-1,it))
-      FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T(1,it) ! b/c Ti(y_1) = T(y_1)
-      FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T(Ny,it) ! b/c Ti(Ny) = T(Ny)
+  case(3)
+    Fphi = phi(2:Ny-1,it) + dt*(acoeffs(3,1)*K1_phi(2:Ny-1,it)       + &
+                                &acoeffs(3,2)*K2_phi(2:Ny-1,it)       + &
+                                &ahatcoeffs(4,1)*K1hat_phi(2:Ny-1,it) + &
+                                &ahatcoeffs(4,2)*K2hat_phi(2:Ny-1,it) + &
+                                &ahatcoeffs(4,3)*K3hat_phi(2:Ny-1,it))
+    FT   = T  (2:Ny-1,it) + dt*(acoeffs(3,1)*K1_T  (2:Ny-1,it)       + &
+                                &acoeffs(3,2)*K2_T  (2:Ny-1,it)       + &
+                                &ahatcoeffs(4,1)*K1hat_T  (2:Ny-1,it) + &
+                                &ahatcoeffs(4,2)*K2hat_T  (2:Ny-1,it) + &
+                                &ahatcoeffs(4,3)*K3hat_T  (2:Ny-1,it))
+    FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T(1,it) ! b/c Ti(y_1) = T(y_1)
+    FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T(Ny,it) ! b/c Ti(Ny) = T(Ny)
 
-      phi_rhs(:,1) = real(Fphi)
-      phi_rhs(:,2) = aimag(Fphi)
+    phi_rhs(:,1) = real(Fphi)
+    phi_rhs(:,2) = aimag(Fphi)
 
-      T_rhs  (:,1) = real(FT)
-      T_rhs  (:,2) = aimag(FT)
+    T_rhs  (:,1) = real(FT)
+    T_rhs  (:,2) = aimag(FT)
 
-      call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
-      Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-      ! Set temperature boundary conditions
-      Tout(1) = T(1,it)
-      Tout(Ny) = T(Ny,it)
+    call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
+    Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
+    ! Set temperature boundary conditions 
+    Tout(1) = T(1,it)
+    Tout(Ny) = T(Ny,it)
 
-      call dgtsv(Ny-2, 2, dlphi, dphi, duphi, phi_rhs, Ny-2, info)
-      phiout(2:Ny-1) = cmplx(phi_rhs(:,1), phi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
+    call dgtsv(Ny-2, 2, dlphi, dphi, duphi, phi_rhs, Ny-2, info)
+    phiout(2:Ny-1) = cmplx(phi_rhs(:,1), phi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
 
 end select
 
 end subroutine calc_vari
 !:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::!
 subroutine calc_vari_mod(phiout,Tout, aii, stage, kx_it, phi_in, &
-                         k1hat_phi_in, k2hat_phi_in, k3hat_phi_in,&
-                         k1hat_T_in, k2hat_T_in, k3hat_T_in,&
-                         k1_phi_in, k2_phi_in, k1_T_in, k2_T_in,&
-                         T_in)
+                           k1hat_phi_in, k2hat_phi_in, k3hat_phi_in,&
+                           k1hat_T_in, k2hat_T_in, k3hat_T_in,&
+                           k1_phi_in, k2_phi_in, k1_T_in, k2_T_in,&
+                           T_in)
 
    real(dp),                                               intent(in)  :: aii
    integer,                                                intent(in)  :: stage
@@ -442,7 +442,7 @@ subroutine calc_vari_mod(phiout,Tout, aii, stage, kx_it, phi_in, &
    real(dp),                  allocatable, dimension(:,:)            :: phi_rhs, T_rhs
    real(dp),                  allocatable, dimension(:)              :: dphi, duphi, dlphi
    real(dp),                  allocatable, dimension(:)              :: ddT, duT, dlT
-   
+
    allocate(dphi(Ny-2), ddT(Ny-2), stat=alloc_err)
    call check_alloc_err(alloc_err)
    allocate(duphi(Ny-3), dlphi(Ny-3), duT(Ny-3), dlT(Ny-3), stat=alloc_err)
@@ -453,7 +453,7 @@ subroutine calc_vari_mod(phiout,Tout, aii, stage, kx_it, phi_in, &
    call check_alloc_err(alloc_err)
    allocate(phi_rhs(Ny-2,2), T_rhs(Ny-2,2), stat=alloc_err)
    call check_alloc_err(alloc_err)
-   
+
    dphi    = 0.0_dp
    ddT     = 0.0_dp
    duphi   = 0.0_dp
@@ -466,45 +466,45 @@ subroutine calc_vari_mod(phiout,Tout, aii, stage, kx_it, phi_in, &
    FT      = (0.0_dp, 0.0_dp)
    phiout  = (0.0_dp, 0.0_dp)
    Tout    = (0.0_dp, 0.0_dp)
-   
+
    ! LHS Matrix (tridiagonal, not necessarily symmetric)
    do jt = 2,Ny-1
       ddT (jt-1) = 1.0_dp - kappa0*dt*aii*(-kx_it**2.0_dp + g2(jt))
       dphi(jt-1) = 1.0_dp - nu0   *dt*aii*(-kx_it**2.0_dp + g2(jt))
    end do
-   
+
    do jt = 2,Ny-2
       duT  (jt-1) = -kappa0*dt*g3(jt)*aii
       duphi(jt-1) = -nu0   *dt*g3(jt)*aii
    end do
-   
+
    do jt = 3,Ny-1
       dlT  (jt-2) = -kappa0*dt*g1(jt)*aii
       dlphi(jt-2) = -nu0   *dt*g1(jt)*aii
    end do
-   
+
    select case (stage)
       case(1)
          Fphi     = phi_in + dt*ahatcoeffs(2,1)*k1hat_phi_in
          FT       = T_in(2:Ny-1) + dt*ahatcoeffs(2,1)*k1hat_T_in
          FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T_in(1) ! b/c Ti(y_1) = T(y_1)
          FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T_in(Ny) ! b/c Ti(Ny) = T(Ny)
-   
+
          phi_rhs(:,1) = real(Fphi)
          phi_rhs(:,2) = aimag(Fphi)
-   
+
          T_rhs  (:,1) = real(FT)
          T_rhs  (:,2) = aimag(FT)
-   
+
          call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
          Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
          ! Set temperature boundary conditions
          Tout(1) = T_in(1)
          Tout(Ny) = T_in(Ny)
-   
+
          call dgtsv(Ny-2, 2, dlphi, dphi, duphi, phi_rhs, Ny-2, info)
          phiout(2:Ny-1) = cmplx(phi_rhs(:,1), phi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-   
+
       case(2)
          Fphi = phi_in + dt*(acoeffs(2,1)*k1_phi_in       + &
                &                     ahatcoeffs(3,1)*k1hat_phi_in + &
@@ -514,22 +514,22 @@ subroutine calc_vari_mod(phiout,Tout, aii, stage, kx_it, phi_in, &
                &                     ahatcoeffs(3,2)*k2hat_T_in)
          FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T_in(1) ! b/c Ti(y_1) = T(y_1)
          FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T_in(Ny) ! b/c Ti(Ny) = T(Ny)
-   
+
          phi_rhs(:,1) = real(Fphi)
          phi_rhs(:,2) = aimag(Fphi)
-   
+
          T_rhs  (:,1) = real(FT)
          T_rhs  (:,2) = aimag(FT)
-   
+
          call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
          Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
          ! Set temperature boundary conditions
          Tout(1) = T_in(1)
          Tout(Ny) = T_in(Ny)
-   
+
          call dgtsv(Ny-2, 2, dlphi, dphi, duphi, phi_rhs, Ny-2, info)
          phiout(2:Ny-1) = cmplx(phi_rhs(:,1), phi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-   
+
       case(3)
          Fphi = phi_in + dt*(acoeffs(3,1)*k1_phi_in       + &
                                     &acoeffs(3,2)*k2_phi_in       + &
@@ -543,24 +543,24 @@ subroutine calc_vari_mod(phiout,Tout, aii, stage, kx_it, phi_in, &
                                     &ahatcoeffs(4,3)*k3hat_T_in)
          FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T_in(1) ! b/c Ti(y_1) = T(y_1)
          FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T_in(Ny) ! b/c Ti(Ny) = T(Ny)
-   
+
          phi_rhs(:,1) = real(Fphi)
          phi_rhs(:,2) = aimag(Fphi)
-   
+
          T_rhs  (:,1) = real(FT)
          T_rhs  (:,2) = aimag(FT)
-   
+
          call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
          Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
          ! Set temperature boundary conditions
          Tout(1) = T_in(1)
          Tout(Ny) = T_in(Ny)
-   
+
          call dgtsv(Ny-2, 2, dlphi, dphi, duphi, phi_rhs, Ny-2, info)
          phiout(2:Ny-1) = cmplx(phi_rhs(:,1), phi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-   
+
    end select
-   
+
 end subroutine calc_vari_mod
 !:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::!
 subroutine calc_implicit(Kphi,KT, phiin,Tin)
@@ -585,16 +585,16 @@ subroutine calc_implicit_mod(Kphi,KT, phiin,Tin, kx_it)
    complex(C_DOUBLE_COMPLEX),              dimension(:), intent(in)  :: phiin, Tin
    complex(C_DOUBLE_COMPLEX), allocatable, dimension(:), intent(out) :: Kphi, KT
    real(dp),                                               intent(in)  :: kx_it
-   
+
    allocate(Kphi(Ny), KT(Ny), stat=alloc_err)
    call check_alloc_err(alloc_err)
-   
+
    Kphi = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
    KT   = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
-   
+
    Kphi = nu0   *(-kx_it**2.0_dp*phiin + d2y(phiin))
    KT   = kappa0*(-kx_it**2.0_dp*Tin   + d2y(Tin))
-   
+
 end subroutine calc_implicit_mod
 
 !:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::!
@@ -906,27 +906,27 @@ subroutine update_bcs_mod(phiout,vout, phiin,vin,dyv1_T_it,dyv2_T_it,dyv1_B_it,d
    complex(dp)                                                        :: dyV_T, dyV_B
    real(dp),                                                intent(in)  :: dyv1_T_it,dyv2_T_it,dyv1_B_it,dyv2_B_it
    real(dp),              dimension(:),  intent(in)  :: V1_in, V2_in, phi1_in, phi2_in
-   
+
    allocate(phiout(Ny), vout(Ny), stat=alloc_err)
    call check_alloc_err(alloc_err)
    phiout = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
    vout   = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
    C      = 0.0_dp
-   
+
    C(1,1) = dyv1_T_it
    C(1,2) = dyv2_T_it
    C(2,1) = dyv1_B_it
    C(2,2) = dyv2_B_it
-   
+
    detC = C(1,1)*C(2,2) - C(1,2)*C(2,1)
-   
+
    dyV_T = h1(Ny)*vin(Ny-2) + h2(Ny)*vin(Ny-1) + h3(Ny)*vin(Ny)
    dyV_B = h1(1)*vin(1) + h2(1)*vin(2) + h3(1)*vin(3)
-   
+
    ! Need to negate b/c want to solve Cx = -c12.
    c1 = -dyV_T
    c2 = -dyV_B
-   
+
    ! Find c1 and c2.
    if (detC == 0.0_dp) then
       c1 = (0.0_dp, 0.0_dp)
@@ -936,11 +936,11 @@ subroutine update_bcs_mod(phiout,vout, phiin,vin,dyv1_T_it,dyv2_T_it,dyv1_B_it,d
       c2  = (C(1,1)*c2 - C(2,1)*c1) / detC
       c1  = c1t
    end if
-   
+
    ! Update uy and Phi.
    vout   = vin   + c1*V1_in   + c2*V2_in
    phiout = phiin + c1*phi1_in + c2*phi2_in
-   
+
 end subroutine update_bcs_mod
 
 !:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
