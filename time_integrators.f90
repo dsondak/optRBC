@@ -604,7 +604,7 @@ integer             :: i, j
 integer, intent(in) :: stage
 real(dp)            :: start, finish
 
-! start = OMP_GET_WTIME()
+start = OMP_GET_WTIME()
 select case(stage)
    case (1)
       !$OMP PARALLEL DO num_threads(8) schedule(dynamic)
@@ -631,10 +631,10 @@ select case(stage)
       end do
       !$OMP END PARALLEL DO
 end select
-! finish = OMP_GET_WTIME()
-! write(*,*) " - - l1 timing: ", finish-start, "(s)"
+finish = OMP_GET_WTIME()
+write(*,*) " - - l1 timing: ", finish-start, "(s)"
 
-! start = OMP_GET_WTIME()
+start = OMP_GET_WTIME()
 !$OMP PARALLEL DO num_threads(8) schedule(dynamic)
 do i=1,Nx
    ! Compute dx(T) in Fourier space
@@ -643,13 +643,13 @@ do i=1,Nx
    nlphi(:,i) = -kx(i)**2.0_dp*uxi(:,i) + d2y(uxi(:,i))
 end do
 !$OMP END PARALLEL DO
-! finish = OMP_GET_WTIME()
-! write(*,*) " - - l2 timing: ", finish-start, "(s)"
+finish = OMP_GET_WTIME()
+write(*,*) " - - l2 timing: ", finish-start, "(s)"
 
 !nlT = -CI*nlT
 nlT = CI*nlT
 
-! start = OMP_GET_WTIME()
+start = OMP_GET_WTIME()
 !$OMP PARALLEL DO num_threads(8) private(tnlT, tnlphi, tT, tux, tuy, tphi) schedule(dynamic)
 do j = 1,Ny
    ! Bring everything to physical space
@@ -673,11 +673,11 @@ do j = 1,Ny
    phii(j,:) = tphi
 end do
 !$OMP END PARALLEL DO
-! finish = OMP_GET_WTIME()
-! write(*,*) " - - l3 timing: ", finish-start, "(s)"
+finish = OMP_GET_WTIME()
+write(*,*) " - - l3 timing: ", finish-start, "(s)"
 
 ! Calculate nonlinear term
-! start = OMP_GET_WTIME()
+start = OMP_GET_WTIME()
 !$OMP PARALLEL DO num_threads(8) private(tmp_T) schedule(dynamic)
 do i = 1,Nx
    ! Temperature
@@ -687,11 +687,11 @@ do i = 1,Nx
    nlphi(:,i) = uxi(:,i)*phii(:,i) - uyi(:,i)*nlphi(:,i)
 end do
 !$OMP END PARALLEL DO
-! finish = OMP_GET_WTIME()
-! write(*,*) " - - l4 timing: ", finish-start, "(s)"
+finish = OMP_GET_WTIME()
+write(*,*) " - - l4 timing: ", finish-start, "(s)"
 
 ! Bring nonlinear terms back to Fourier space
-! start = OMP_GET_WTIME()
+start = OMP_GET_WTIME()
 !$OMP PARALLEL DO num_threads(8) private(tnlT, tnlphi) schedule(dynamic)
 do j = 1,Ny
    tnlT   = nlT(j,:)
@@ -709,13 +709,13 @@ do j = 1,Ny
    nlphi(j,:) = tnlphi
 end do
 !$OMP END PARALLEL DO
-! finish = OMP_GET_WTIME()
-! write(*,*) " - - l5 timing: ", finish-start, "(s)"
+finish = OMP_GET_WTIME()
+write(*,*) " - - l5 timing: ", finish-start, "(s)"
 
 nlT   = nlT   / real(Nx,kind=dp)
 nlphi = nlphi / real(Nx,kind=dp)
 
-! start = OMP_GET_WTIME()
+start = OMP_GET_WTIME()
 select case (stage)
    case (1)
       !$OMP PARALLEL DO num_threads(8) schedule(dynamic)
@@ -750,8 +750,8 @@ select case (stage)
       !$OMP END PARALLEL DO
       K4hat_T = -nlT
 end select
-! finish = OMP_GET_WTIME()
-! write(*,*) " - - l6 timing: ", finish-start, "(s)"
+finish = OMP_GET_WTIME()
+write(*,*) " - - l6 timing: ", finish-start, "(s)"
 
 end subroutine calc_explicit
 
