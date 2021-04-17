@@ -37,8 +37,7 @@ real(dp)                       :: start_overall, finish_overall
 integer                        :: nthreads, myid
 integer, EXTERNAL              :: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
 real(dp), EXTERNAL             :: OMP_GET_WTIME
-complex(C_DOUBLE_COMPLEX), dimension(1275)  :: phi_it
-real(dp)                       :: kx_it
+complex(C_DOUBLE_COMPLEX), dimension(1275) :: phi_sub
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 if (present(vtk_print)) then
@@ -218,10 +217,13 @@ do ! while (time < t_final)
                   &                   b(3)*(K3_T(2:Ny-1,:) + K4hat_T(2:Ny-1,:)))
 
    ! Get ux and uy
-   !$OMP PARALLEL DO num_threads(8) private(tmp_uy, it) schedule(dynamic)
+!   !$OMP PARALLEL DO num_threads(8) private(tmp_uy, it, phi_sub) schedule(dynamic)
    do it = 1,Nx
+!      !$OMP CRITICAL
       ! Solve for v
-      call calc_vi_mod(tmp_uy, phi(:,it), kx(it))
+      ! write(*,*) SHAPE(phi)
+      phi_sub = phi(:,it)
+      call calc_vi(tmp_uy, phi_sub)
       uy(:,it) = tmp_uy
       ! Solve for u
       if (kx(it) /= 0.0_dp) then
@@ -230,11 +232,12 @@ do ! while (time < t_final)
       else if (kx(it) == 0.0_dp) then
          ux(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
+!      !$OMP END CRITICAL
    end do
-   !$OMP END PARALLEL DO
+!   !$OMP END PARALLEL DO
    finish = OMP_GET_WTIME()
    write(*,*) " - update sols timing: ", finish-start, "(s)"
-
+   
 
    if (time == t_final) then
       exit
@@ -315,80 +318,80 @@ do jt = 3,Ny-1
 end do
 
 select case (stage)
-   case(1)
-      Fphi     = phi(2:Ny-1,it) + dt*ahatcoeffs(2,1)*K1hat_phi(2:Ny-1,it)
-      FT       = T  (2:Ny-1,it) + dt*ahatcoeffs(2,1)*K1hat_T  (2:Ny-1,it)
-      FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T(1,it) ! b/c Ti(y_1) = T(y_1)
-      FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T(Ny,it) ! b/c Ti(Ny) = T(Ny)
+  case(1)
+    Fphi     = phi(2:Ny-1,it) + dt*ahatcoeffs(2,1)*K1hat_phi(2:Ny-1,it)
+    FT       = T  (2:Ny-1,it) + dt*ahatcoeffs(2,1)*K1hat_T  (2:Ny-1,it)
+    FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T(1,it) ! b/c Ti(y_1) = T(y_1)
+    FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T(Ny,it) ! b/c Ti(Ny) = T(Ny)
 
-      phi_rhs(:,1) = real(Fphi)
-      phi_rhs(:,2) = aimag(Fphi)
+    phi_rhs(:,1) = real(Fphi)
+    phi_rhs(:,2) = aimag(Fphi)
 
-      T_rhs  (:,1) = real(FT)
-      T_rhs  (:,2) = aimag(FT)
+    T_rhs  (:,1) = real(FT)
+    T_rhs  (:,2) = aimag(FT)
 
-      call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
-      Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-      ! Set temperature boundary conditions
-      Tout(1) = T(1,it)
-      Tout(Ny) = T(Ny,it)
+    call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
+    Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
+    ! Set temperature boundary conditions
+    Tout(1) = T(1,it)
+    Tout(Ny) = T(Ny,it)
 
-      call dgtsv(Ny-2, 2, dlphi, dphi, duphi, phi_rhs, Ny-2, info)
-      phiout(2:Ny-1) = cmplx(phi_rhs(:,1), phi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
+    call dgtsv(Ny-2, 2, dlphi, dphi, duphi, phi_rhs, Ny-2, info)
+    phiout(2:Ny-1) = cmplx(phi_rhs(:,1), phi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
 
-   case(2)
-      Fphi = phi(2:Ny-1,it) + dt*(acoeffs(2,1)*K1_phi(2:Ny-1,it)       + &
-            &                     ahatcoeffs(3,1)*K1hat_phi(2:Ny-1,it) + &
-            &                     ahatcoeffs(3,2)*K2hat_phi(2:Ny-1,it))
-      FT   = T  (2:Ny-1,it) + dt*(acoeffs(2,1)*K1_T  (2:Ny-1,it)       + &
-            &                     ahatcoeffs(3,1)*K1hat_T  (2:Ny-1,it) + &
-            &                     ahatcoeffs(3,2)*K2hat_T  (2:Ny-1,it))
-      FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T(1,it) ! b/c Ti(y_1) = T(y_1)
-      FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T(Ny,it) ! b/c Ti(Ny) = T(Ny)
+  case(2)
+    Fphi = phi(2:Ny-1,it) + dt*(acoeffs(2,1)*K1_phi(2:Ny-1,it)       + &
+          &                     ahatcoeffs(3,1)*K1hat_phi(2:Ny-1,it) + &
+          &                     ahatcoeffs(3,2)*K2hat_phi(2:Ny-1,it))
+    FT   = T  (2:Ny-1,it) + dt*(acoeffs(2,1)*K1_T  (2:Ny-1,it)       + &
+          &                     ahatcoeffs(3,1)*K1hat_T  (2:Ny-1,it) + &
+          &                     ahatcoeffs(3,2)*K2hat_T  (2:Ny-1,it))
+    FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T(1,it) ! b/c Ti(y_1) = T(y_1)
+    FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T(Ny,it) ! b/c Ti(Ny) = T(Ny)
 
-      phi_rhs(:,1) = real(Fphi)
-      phi_rhs(:,2) = aimag(Fphi)
+    phi_rhs(:,1) = real(Fphi)
+    phi_rhs(:,2) = aimag(Fphi)
 
-      T_rhs  (:,1) = real(FT)
-      T_rhs  (:,2) = aimag(FT)
+    T_rhs  (:,1) = real(FT)
+    T_rhs  (:,2) = aimag(FT)
 
-      call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
-      Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-      ! Set temperature boundary conditions
-      Tout(1) = T(1,it)
-      Tout(Ny) = T(Ny,it)
+    call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
+    Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
+    ! Set temperature boundary conditions
+    Tout(1) = T(1,it)
+    Tout(Ny) = T(Ny,it)
 
-      call dgtsv(Ny-2, 2, dlphi, dphi, duphi, phi_rhs, Ny-2, info)
-      phiout(2:Ny-1) = cmplx(phi_rhs(:,1), phi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
+    call dgtsv(Ny-2, 2, dlphi, dphi, duphi, phi_rhs, Ny-2, info)
+    phiout(2:Ny-1) = cmplx(phi_rhs(:,1), phi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
 
-   case(3)
-      Fphi = phi(2:Ny-1,it) + dt*(acoeffs(3,1)*K1_phi(2:Ny-1,it)       + &
-                                 &acoeffs(3,2)*K2_phi(2:Ny-1,it)       + &
-                                 &ahatcoeffs(4,1)*K1hat_phi(2:Ny-1,it) + &
-                                 &ahatcoeffs(4,2)*K2hat_phi(2:Ny-1,it) + &
-                                 &ahatcoeffs(4,3)*K3hat_phi(2:Ny-1,it))
-      FT   = T  (2:Ny-1,it) + dt*(acoeffs(3,1)*K1_T  (2:Ny-1,it)       + &
-                                 &acoeffs(3,2)*K2_T  (2:Ny-1,it)       + &
-                                 &ahatcoeffs(4,1)*K1hat_T  (2:Ny-1,it) + &
-                                 &ahatcoeffs(4,2)*K2hat_T  (2:Ny-1,it) + &
-                                 &ahatcoeffs(4,3)*K3hat_T  (2:Ny-1,it))
-      FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T(1,it) ! b/c Ti(y_1) = T(y_1)
-      FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T(Ny,it) ! b/c Ti(Ny) = T(Ny)
+  case(3)
+    Fphi = phi(2:Ny-1,it) + dt*(acoeffs(3,1)*K1_phi(2:Ny-1,it)       + &
+                               &acoeffs(3,2)*K2_phi(2:Ny-1,it)       + &
+                               &ahatcoeffs(4,1)*K1hat_phi(2:Ny-1,it) + &
+                               &ahatcoeffs(4,2)*K2hat_phi(2:Ny-1,it) + &
+                               &ahatcoeffs(4,3)*K3hat_phi(2:Ny-1,it))
+    FT   = T  (2:Ny-1,it) + dt*(acoeffs(3,1)*K1_T  (2:Ny-1,it)       + &
+                               &acoeffs(3,2)*K2_T  (2:Ny-1,it)       + &
+                               &ahatcoeffs(4,1)*K1hat_T  (2:Ny-1,it) + &
+                               &ahatcoeffs(4,2)*K2hat_T  (2:Ny-1,it) + &
+                               &ahatcoeffs(4,3)*K3hat_T  (2:Ny-1,it))
+    FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T(1,it) ! b/c Ti(y_1) = T(y_1)
+    FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T(Ny,it) ! b/c Ti(Ny) = T(Ny)
 
-      phi_rhs(:,1) = real(Fphi)
-      phi_rhs(:,2) = aimag(Fphi)
+    phi_rhs(:,1) = real(Fphi)
+    phi_rhs(:,2) = aimag(Fphi)
 
-      T_rhs  (:,1) = real(FT)
-      T_rhs  (:,2) = aimag(FT)
+    T_rhs  (:,1) = real(FT)
+    T_rhs  (:,2) = aimag(FT)
 
-      call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
-      Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-      ! Set temperature boundary conditions
-      Tout(1) = T(1,it)
-      Tout(Ny) = T(Ny,it)
+    call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
+    Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
+    ! Set temperature boundary conditions
+    Tout(1) = T(1,it)
+    Tout(Ny) = T(Ny,it)
 
-      call dgtsv(Ny-2, 2, dlphi, dphi, duphi, phi_rhs, Ny-2, info)
-      phiout(2:Ny-1) = cmplx(phi_rhs(:,1), phi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
+    call dgtsv(Ny-2, 2, dlphi, dphi, duphi, phi_rhs, Ny-2, info)
+    phiout(2:Ny-1) = cmplx(phi_rhs(:,1), phi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
 
 end select
 
@@ -533,32 +536,32 @@ select case (stage)
    case (1)
       !$OMP PARALLEL DO num_threads(8) schedule(dynamic)
       do i = 1,Nx
-         !K1hat_phi(:,i) = K1hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
-         K1hat_phi(:,i) = K1hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+        !K1hat_phi(:,i) = K1hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
+        K1hat_phi(:,i) = K1hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
       end do
       !$OMP END PARALLEL DO
       K1hat_T = -nlT
    case (2)
       !$OMP PARALLEL DO num_threads(8) schedule(dynamic)
       do i = 1,Nx
-         !K2hat_phi(:,i) = K2hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
-         K2hat_phi(:,i) = K2hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+        !K2hat_phi(:,i) = K2hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
+        K2hat_phi(:,i) = K2hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
       end do
       !$OMP END PARALLEL DO
       K2hat_T = -nlT
    case (3)
       !$OMP PARALLEL DO num_threads(8) schedule(dynamic)
       do i = 1,Nx
-         !K3hat_phi(:,i) = K3hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
-         K3hat_phi(:,i) = K3hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+        !K3hat_phi(:,i) = K3hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
+        K3hat_phi(:,i) = K3hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
       end do
       !$OMP END PARALLEL DO
       K3hat_T = -nlT
    case (4)
       !$OMP PARALLEL DO num_threads(8) schedule(dynamic)
       do i = 1,Nx
-         !K4hat_phi(:,i) = K4hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
-         K4hat_phi(:,i) = K4hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+        !K4hat_phi(:,i) = K4hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
+        K4hat_phi(:,i) = K4hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
       end do
       !$OMP END PARALLEL DO
       K4hat_T = -nlT
@@ -601,7 +604,7 @@ do j = 2,Ny-2
 end do
 
 do j = 3,Ny-1
-   dlvi(j-2) = g1(j)
+  dlvi(j-2) = g1(j)
 end do
 
 vi_rhs(:,1) = real (phiin(2:Ny-1))
@@ -614,55 +617,6 @@ vi(2:Ny-1) = cmplx(vi_rhs(:,1), vi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
 vi(Ny)  = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
 
 end subroutine calc_vi
-
-!:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-subroutine calc_vi_mod(vi, phiin, kx_it)
-
-complex(C_DOUBLE_COMPLEX), dimension(:), intent(out), allocatable :: vi
-complex(C_DOUBLE_COMPLEX), dimension(:), intent(in)  :: phiin
-real(dp), intent(in) :: kx_it
-real(dp), allocatable, dimension(:,:)               :: vi_rhs
-real(dp), allocatable, dimension(:)                 :: dvi, dlvi, duvi
-integer                                               :: j
-
-allocate(vi(Ny), stat=alloc_err)
-call check_alloc_err(alloc_err)
-allocate(vi_rhs(Ny-2,2), stat=alloc_err)
-call check_alloc_err(alloc_err)
-allocate(dvi(Ny-2), stat=alloc_err)
-call check_alloc_err(alloc_err)
-allocate(dlvi(Ny-3), duvi(Ny-3), stat=alloc_err)
-call check_alloc_err(alloc_err)
-
-vi     = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
-vi_rhs = 0.0_dp
-dvi    = 0.0_dp
-dlvi   = 0.0_dp
-duvi   = 0.0_dp
-
-do j = 2,Ny-1
-   dvi(j-1) = -kx_it**2.0_dp + g2(j)
-end do
-
-do j = 2,Ny-2
-   duvi(j-1) = g3(j)
-end do
-
-do j = 3,Ny-1
-   dlvi(j-2) = g1(j)
-end do
-
-vi_rhs(:,1) = real (phiin(2:Ny-1))
-vi_rhs(:,2) = aimag(phiin(2:Ny-1))
-
-call dgtsv(Ny-2, 2, dlvi, dvi, duvi, vi_rhs, Ny-2, info)
-
-vi(1)   = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
-vi(2:Ny-1) = cmplx(vi_rhs(:,1), vi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-vi(Ny)  = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
-
-end subroutine calc_vi_mod
-
 
 !:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 subroutine update_bcs(phiout,vout, phiin,vin)
