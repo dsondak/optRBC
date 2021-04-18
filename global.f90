@@ -38,7 +38,6 @@ real(dp) :: dt, dt_init
 integer  :: Nx
 integer  :: Ny
 integer  :: Nz
-integer  :: N_test
 
 real(dp) :: dxmin, dymin
 real(dp), parameter :: cfl = 2.0_dp
@@ -64,7 +63,7 @@ integer  :: nli_global
 ! Allocatable variables
 complex(C_DOUBLE_COMPLEX), allocatable :: T(:,:), uy(:,:), phi(:,:), ux(:,:)
 complex(C_DOUBLE_COMPLEX), allocatable :: nlT(:,:), nlphi(:,:)
-complex(C_DOUBLE_COMPLEX), allocatable :: tT(:), tuy(:), tux(:), tnlT(:), tnlphi(:), tu_in(:), tu_out(:)
+complex(C_DOUBLE_COMPLEX), allocatable :: tT(:), tuy(:), tux(:), tnlT(:), tnlphi(:)
 complex(C_DOUBLE_COMPLEX), allocatable :: tphi(:)
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:,:) :: Tptrb
 
