@@ -96,6 +96,7 @@ do ! while (time < t_final)
    call calc_explicit(1)
    finish = OMP_GET_WTIME()
    write(*,*) " - calc_explicit(1) timing: ", finish-start, "(s)"
+   start = OMP_GET_WTIME()
    do it = 1,Nx ! kx loop
       ! Compute phi1 and T1
       call calc_vari(tmp_phi, tmp_T, acoeffs(1,1), 1)
@@ -120,6 +121,8 @@ do ! while (time < t_final)
       Ti  (:,it) = tmp_T
       uyi (:,it) = tmp_uy
    end do
+   finish = OMP_GET_WTIME()
+   write(*,*) " - stage 1 mid timing: ", finish-start, "(s)"
    ! Compute K2hat
    start = OMP_GET_WTIME()
    call calc_explicit(2)
@@ -129,6 +132,7 @@ do ! while (time < t_final)
    !:::::::::::
    ! STAGE 2 ::
    !:::::::::::
+   start = OMP_GET_WTIME()
    do it = 1,Nx ! kx loop
       ! Compute phi2 and T2
       call calc_vari(tmp_phi, tmp_T, acoeffs(2,2), 2)
@@ -153,6 +157,8 @@ do ! while (time < t_final)
       Ti  (:,it) = tmp_T
       uyi (:,it) = tmp_uy
    end do
+   finish = OMP_GET_WTIME()
+   write(*,*) " - stage 2 mid timing: ", finish-start, "(s)"
    ! Compute K3hat
    start = OMP_GET_WTIME()
    call calc_explicit(3)
@@ -162,6 +168,7 @@ do ! while (time < t_final)
    !:::::::::::
    ! STAGE 3 ::
    !:::::::::::
+   start = OMP_GET_WTIME()
    do it = 1,Nx ! kx loop
       ! Compute phi3 and T3
       call calc_vari(tmp_phi, tmp_T, acoeffs(3,3), 3)
@@ -186,6 +193,8 @@ do ! while (time < t_final)
       Ti  (:,it) = tmp_T
       uyi (:,it) = tmp_uy
    end do
+   finish = OMP_GET_WTIME()
+   write(*,*) " - stage 3 mid timing: ", finish-start, "(s)"
    ! Compute K4hat
    start = OMP_GET_WTIME()
    call calc_explicit(4)
@@ -194,6 +203,7 @@ do ! while (time < t_final)
 
    ! UPDATE SOLUTIONS
 
+   start = OMP_GET_WTIME()
    ! Get phi
    phi(2:Ny-1,:) = phi(2:Ny-1,:) + dt*(b(1)*(K1_phi(2:Ny-1,:) + K2hat_phi(2:Ny-1,:)) + &
                   &                    b(2)*(K2_phi(2:Ny-1,:) + K3hat_phi(2:Ny-1,:)) + &
@@ -217,6 +227,8 @@ do ! while (time < t_final)
          ux(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
    end do
+   finish = OMP_GET_WTIME()
+   write(*,*) " - update sols timing: ", finish-start, "(s)"
 
    if (time == t_final) then
       exit
@@ -231,12 +243,15 @@ do ! while (time < t_final)
       end if
    end if
 
+   start = OMP_GET_WTIME()
    ! Calculate nusselt number.
    if (save_nusselt) then
       call nusselt(nusselt_num, .true.) ! true = Fourier space
       write(8000, fmt=1000) nusselt_num
       flush(8000)
    end if
+   finish = OMP_GET_WTIME()
+   write(*,*) " - nusselt calc timing: ", finish-start, "(s)"
   
    finish_overall = OMP_GET_WTIME()
    write(*,*) "overall timing: ", finish_overall-start_overall, "(s)"
