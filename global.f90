@@ -12,7 +12,7 @@ real(dp), parameter    :: pi = 3.141592653589793238462643383279502884197_dp
 complex(dp), parameter :: CI = (0.0_dp, 1.0_dp)
 complex(dp), parameter :: CR = (1.0_dp, 0.0_dp)
 ! Create fftw plans
-type(C_PTR)            :: planT, planPhi, planux, planuy
+type(C_PTR)            :: planT, planPhi, planux, planuy, plan
 type(C_PTR)            :: iplanT, iplanPhi, iplanux, iplanuy
 type(C_PTR)            :: plannlT, plannlphi
 type(C_PTR)            :: iplannlT, iplannlphi
@@ -38,6 +38,7 @@ real(dp) :: dt, dt_init
 integer  :: Nx
 integer  :: Ny
 integer  :: Nz
+integer  :: N_test
 
 real(dp) :: dxmin, dymin
 real(dp), parameter :: cfl = 2.0_dp
@@ -63,7 +64,7 @@ integer  :: nli_global
 ! Allocatable variables
 complex(C_DOUBLE_COMPLEX), allocatable :: T(:,:), uy(:,:), phi(:,:), ux(:,:)
 complex(C_DOUBLE_COMPLEX), allocatable :: nlT(:,:), nlphi(:,:)
-complex(C_DOUBLE_COMPLEX), allocatable :: tT(:), tuy(:), tux(:), tnlT(:), tnlphi(:)
+complex(C_DOUBLE_COMPLEX), allocatable :: tT(:), tuy(:), tux(:), tnlT(:), tnlphi(:), tu_in(:), tu_out(:)
 complex(C_DOUBLE_COMPLEX), allocatable :: tphi(:)
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:,:) :: Tptrb
 
