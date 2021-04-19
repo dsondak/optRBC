@@ -75,7 +75,7 @@ do ! while (time < t_final)
       time = time + dt
    end if
 
-   !write(*,*) "time = ", time, "dt = ", dt
+   write(*,*) "time = ", time, "dt = ", dt
 
    nti = nti + 1
 
@@ -205,7 +205,8 @@ do ! while (time < t_final)
    end if
 
    !call update_dt
-
+   ! Don't write vtk for now.
+   wvtk = .false.
    if (wvtk) then
       if (mod(nti,vtk_print) == 0) then
          call write_to_vtk(nti, .false.) ! false = Fourier space
