@@ -21,7 +21,7 @@ integer :: iret
 integer :: N_threads, N_exp, curr_threads
 complex(C_DOUBLE_COMPLEX), allocatable :: tu_in(:), tu_out(:)
 real :: start, finish
-
+type(C_PTR) :: test_plan
 ! Create FFT plans
 iret = fftw_init_threads()
 ! Uncomment below to check if init_threads working (should be nonzero)
@@ -34,7 +34,7 @@ do N_exp = 7,20
     do N_threads = 0,10
         curr_threads = 2**N_threads
         call fftw_plan_with_nthreads(curr_threads)
-        plan = fftw_plan_dft_1d(N_test,tu_in,tu_out, FFTW_FORWARD,FFTW_ESTIMATE)
+        test_plan = fftw_plan_dft_1d(N_test,tu_in,tu_out, FFTW_FORWARD,FFTW_ESTIMATE)
 
         allocate(tu_in(N_test), stat=alloc_err)
         allocate(tu_out(N_test), stat=alloc_err)
@@ -42,10 +42,10 @@ do N_exp = 7,20
         tu_out    = (0.0_dp, 0.0_dp)
 
         call cpu_time(start)
-        call fftw_execute_dft(plan, tu_in, tu_out)
+        call fftw_execute_dft(test_plan, tu_in, tu_out)
         call cpu_time(finish)
         print '("Threads = ",i5,"   Time = ",f6.3," seconds.")',curr_threads,finish-start
-        call fftw_destroy_plan(plan)
+        call fftw_destroy_plan(test_plan)
         deallocate(tu_in, tu_out)
     end do
 end do
