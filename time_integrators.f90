@@ -40,15 +40,15 @@ real(dp), EXTERNAL             :: OMP_GET_WTIME
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 if (present(vtk_print)) then
-   wvtk = .true.
-   nprint = vtk_print
+    wvtk = .true.
+    nprint = vtk_print
 else
-   wvtk = .false.
-   nprint = 100
+    wvtk = .false.
+    nprint = 100
 end if
 
 if (wvtk) then
-   call write_to_vtk(0, .false.) ! false = Fourier space
+    call write_to_vtk(0, .false.) ! false = Fourier space
 end if
 
 dt = dt_init
@@ -71,36 +71,36 @@ nti = 0
 
 ! Time integration
 do ! while (time < t_final)
-   start_overall = OMP_GET_WTIME()
+    start_overall = OMP_GET_WTIME()
 
-   dt_final = t_final - time
+    dt_final = t_final - time
 
-   if (dt_final <= dt) then
+    if (dt_final <= dt) then
       time = t_final
-   else
+    else
       time = time + dt
-   end if
+    end if
 
-   write(*,*) "time = ", time, "dt = ", dt
+    write(*,*) "time = ", time, "dt = ", dt
 
-   nti = nti + 1
+    nti = nti + 1
 
-   !:::::::::::
-   ! STAGE 1 ::
-   !:::::::::::
-   phii = phi
-   Ti   = T
-   uxi  = ux
-   uyi  = uy
-   start = OMP_GET_WTIME()
-   call calc_explicit(1)
-   finish = OMP_GET_WTIME()
-   write(*,*) " - calc_explicit(1) timing: ", finish-start, "(s)"
-   start = OMP_GET_WTIME()
-   do it = 1,Nx ! kx loop
+    !:::::::::::
+    ! STAGE 1 ::
+    !:::::::::::
+    phii = phi
+    Ti   = T
+    uxi  = ux
+    uyi  = uy
+    start = OMP_GET_WTIME()
+    call calc_explicit(1)
+    finish = OMP_GET_WTIME()
+    write(*,*) " - calc_explicit(1) timing: ", finish-start, "(s)"
+    start = OMP_GET_WTIME()
+    do it = 1,Nx ! kx loop
       ! Compute phi1 and T1
       call calc_vari(tmp_phi, tmp_T, acoeffs(1,1), 1)
-      ! Compute v1 from phi1 
+      ! Compute v1 from phi1
       call calc_vi(tmp_uy, tmp_phi)
       ! BOUNDAY CONDITIONS!
       call update_bcs(tmp_phi1,tmp_uy1, tmp_phi,tmp_uy)
@@ -112,31 +112,31 @@ do ! while (time < t_final)
       K1_T(:,it)   = tmp_K_T
       ! Compute u1 from v1
       if (kx(it) /= 0.0_dp) then
-         !uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
-         uxi(:,it) = CI*d1y(tmp_uy)/kx(it)
+          !uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+          uxi(:,it) = CI*d1y(tmp_uy)/kx(it)
       else if (kx(it) == 0.0_dp) then
-         uxi(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
+          uxi(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
       phii(:,it) = tmp_phi
       Ti  (:,it) = tmp_T
       uyi (:,it) = tmp_uy
-   end do
-   finish = OMP_GET_WTIME()
-   write(*,*) " - stage 1 mid timing: ", finish-start, "(s)"
-   ! Compute K2hat
-   start = OMP_GET_WTIME()
-   call calc_explicit(2)
-   finish = OMP_GET_WTIME()
-   write(*,*) " - calc_explicit(2) timing: ", finish-start, "(s)"
+    end do
+    finish = OMP_GET_WTIME()
+    write(*,*) " - stage 1 mid timing: ", finish-start, "(s)"
+    ! Compute K2hat
+    start = OMP_GET_WTIME()
+    call calc_explicit(2)
+    finish = OMP_GET_WTIME()
+    write(*,*) " - calc_explicit(2) timing: ", finish-start, "(s)"
 
-   !:::::::::::
-   ! STAGE 2 ::
-   !:::::::::::
-   start = OMP_GET_WTIME()
-   do it = 1,Nx ! kx loop
+    !:::::::::::
+    ! STAGE 2 ::
+    !:::::::::::
+    start = OMP_GET_WTIME()
+    do it = 1,Nx ! kx loop
       ! Compute phi2 and T2
       call calc_vari(tmp_phi, tmp_T, acoeffs(2,2), 2)
-      ! Compute v1 from phi1 
+      ! Compute v1 from phi1
       call calc_vi(tmp_uy, tmp_phi)
       ! BOUNDAY CONDITIONS!
       call update_bcs(tmp_phi1,tmp_uy1, tmp_phi,tmp_uy)
@@ -148,28 +148,28 @@ do ! while (time < t_final)
       K2_T(:,it)   = tmp_K_T
       ! Compute u1 from v1
       if (kx(it) /= 0.0_dp) then
-         !uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
-         uxi(:,it) = CI*d1y(tmp_uy)/kx(it)
+          !uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+          uxi(:,it) = CI*d1y(tmp_uy)/kx(it)
       else if (kx(it) == 0.0_dp) then
-         uxi(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
+          uxi(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
       phii(:,it) = tmp_phi
       Ti  (:,it) = tmp_T
       uyi (:,it) = tmp_uy
-   end do
-   finish = OMP_GET_WTIME()
-   write(*,*) " - stage 2 mid timing: ", finish-start, "(s)"
-   ! Compute K3hat
-   start = OMP_GET_WTIME()
-   call calc_explicit(3)
-   finish = OMP_GET_WTIME()
-   write(*,*) " - calc_explicit(3) timing: ", finish-start, "(s)"
+    end do
+    finish = OMP_GET_WTIME()
+    write(*,*) " - stage 2 mid timing: ", finish-start, "(s)"
+    ! Compute K3hat
+    start = OMP_GET_WTIME()
+    call calc_explicit(3)
+    finish = OMP_GET_WTIME()
+    write(*,*) " - calc_explicit(3) timing: ", finish-start, "(s)"
 
-   !:::::::::::
-   ! STAGE 3 ::
-   !:::::::::::
-   start = OMP_GET_WTIME()
-   do it = 1,Nx ! kx loop
+    !:::::::::::
+    ! STAGE 3 ::
+    !:::::::::::
+    start = OMP_GET_WTIME()
+    do it = 1,Nx ! kx loop
       ! Compute phi3 and T3
       call calc_vari(tmp_phi, tmp_T, acoeffs(3,3), 3)
       ! Compute v1 from phi1
@@ -184,77 +184,77 @@ do ! while (time < t_final)
       K3_T(:,it)   = tmp_K_T
       ! Compute u1 from v1
       if (kx(it) /= 0.0_dp) then
-         !uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
-         uxi(:,it) = CI*d1y(tmp_uy)/kx(it)
+          !uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+          uxi(:,it) = CI*d1y(tmp_uy)/kx(it)
       else if (kx(it) == 0.0_dp) then
-         uxi(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
+          uxi(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
       phii(:,it) = tmp_phi
       Ti  (:,it) = tmp_T
       uyi (:,it) = tmp_uy
-   end do
-   finish = OMP_GET_WTIME()
-   write(*,*) " - stage 3 mid timing: ", finish-start, "(s)"
-   ! Compute K4hat
-   start = OMP_GET_WTIME()
-   call calc_explicit(4)
-   finish = OMP_GET_WTIME()
-   write(*,*) " - calc_explicit(4) timing: ", finish-start, "(s)"
+    end do
+    finish = OMP_GET_WTIME()
+    write(*,*) " - stage 3 mid timing: ", finish-start, "(s)"
+    ! Compute K4hat
+    start = OMP_GET_WTIME()
+    call calc_explicit(4)
+    finish = OMP_GET_WTIME()
+    write(*,*) " - calc_explicit(4) timing: ", finish-start, "(s)"
 
-   ! UPDATE SOLUTIONS
+    ! UPDATE SOLUTIONS
 
-   start = OMP_GET_WTIME()
-   ! Get phi
-   phi(2:Ny-1,:) = phi(2:Ny-1,:) + dt*(b(1)*(K1_phi(2:Ny-1,:) + K2hat_phi(2:Ny-1,:)) + &
+    start = OMP_GET_WTIME()
+    ! Get phi
+    phi(2:Ny-1,:) = phi(2:Ny-1,:) + dt*(b(1)*(K1_phi(2:Ny-1,:) + K2hat_phi(2:Ny-1,:)) + &
                   &                    b(2)*(K2_phi(2:Ny-1,:) + K3hat_phi(2:Ny-1,:)) + &
                   &                    b(3)*(K3_phi(2:Ny-1,:) + K4hat_phi(2:Ny-1,:)))
 
-   ! Get temperature
-   T(2:Ny-1,:)   = T(2:Ny-1,:)  + dt*(b(1)*(K1_T(2:Ny-1,:) + K2hat_T(2:Ny-1,:)) + &
+    ! Get temperature
+    T(2:Ny-1,:)   = T(2:Ny-1,:)  + dt*(b(1)*(K1_T(2:Ny-1,:) + K2hat_T(2:Ny-1,:)) + &
                   &                   b(2)*(K2_T(2:Ny-1,:) + K3hat_T(2:Ny-1,:)) + &
                   &                   b(3)*(K3_T(2:Ny-1,:) + K4hat_T(2:Ny-1,:)))
 
-   ! Get ux and uy
-   do it = 1,Nx
+    ! Get ux and uy
+    do it = 1,Nx
       ! Solve for v
       call calc_vi(tmp_uy, phi(:,it))
       uy(:,it) = tmp_uy
       ! Solve for u
       if (kx(it) /= 0.0_dp) then
-         !ux(:,it) = -CI*d1y(tmp_uy)/kx(it)
-         ux(:,it) = CI*d1y(tmp_uy)/kx(it)
+          !ux(:,it) = -CI*d1y(tmp_uy)/kx(it)
+          ux(:,it) = CI*d1y(tmp_uy)/kx(it)
       else if (kx(it) == 0.0_dp) then
-         ux(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
+          ux(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
-   end do
-   finish = OMP_GET_WTIME()
-   write(*,*) " - update sols timing: ", finish-start, "(s)"
+    end do
+    finish = OMP_GET_WTIME()
+    write(*,*) " - update sols timing: ", finish-start, "(s)"
 
-   if (time == t_final) then
+    if (time == t_final) then
       exit
-   end if
+    end if
 
-   !call update_dt
-   ! Don't write vtk for now.
-   wvtk = .false.
-   if (wvtk) then
+    !call update_dt
+    ! Don't write vtk for now.
+    wvtk = .false.
+    if (wvtk) then
       if (mod(nti,vtk_print) == 0) then
-         call write_to_vtk(nti, .false.) ! false = Fourier space
+          call write_to_vtk(nti, .false.) ! false = Fourier space
       end if
-   end if
+    end if
 
-   start = OMP_GET_WTIME()
-   ! Calculate nusselt number.
-   if (save_nusselt) then
+    start = OMP_GET_WTIME()
+    ! Calculate nusselt number.
+    if (save_nusselt) then
       call nusselt(nusselt_num, .true.) ! true = Fourier space
       write(8000, fmt=1000) nusselt_num
       flush(8000)
-   end if
-   finish = OMP_GET_WTIME()
-   write(*,*) " - nusselt calc timing: ", finish-start, "(s)"
-  
-   finish_overall = OMP_GET_WTIME()
-   write(*,*) "overall timing: ", finish_overall-start_overall, "(s)"
+    end if
+    finish = OMP_GET_WTIME()
+    write(*,*) " - nusselt calc timing: ", finish-start, "(s)"
+
+    finish_overall = OMP_GET_WTIME()
+    write(*,*) "overall timing: ", finish_overall-start_overall, "(s)"
 
 end do ! time loop
 
@@ -297,18 +297,18 @@ Tout    = (0.0_dp, 0.0_dp)
 
 ! LHS Matrix (tridiagonal, not necessarily symmetric)
 do jt = 2,Ny-1
-   ddT (jt-1) = 1.0_dp - kappa0*dt*aii*(-kx(it)**2.0_dp + g2(jt))
-   dphi(jt-1) = 1.0_dp - nu0   *dt*aii*(-kx(it)**2.0_dp + g2(jt))
+    ddT (jt-1) = 1.0_dp - kappa0*dt*aii*(-kx(it)**2.0_dp + g2(jt))
+    dphi(jt-1) = 1.0_dp - nu0   *dt*aii*(-kx(it)**2.0_dp + g2(jt))
 end do
 
 do jt = 2,Ny-2
-   duT  (jt-1) = -kappa0*dt*g3(jt)*aii
-   duphi(jt-1) = -nu0   *dt*g3(jt)*aii
+    duT  (jt-1) = -kappa0*dt*g3(jt)*aii
+    duphi(jt-1) = -nu0   *dt*g3(jt)*aii
 end do
 
 do jt = 3,Ny-1
-   dlT  (jt-2) = -kappa0*dt*g1(jt)*aii
-   dlphi(jt-2) = -nu0   *dt*g1(jt)*aii
+    dlT  (jt-2) = -kappa0*dt*g1(jt)*aii
+    dlphi(jt-2) = -nu0   *dt*g1(jt)*aii
 end do
 
 select case (stage)
@@ -326,7 +326,7 @@ select case (stage)
 
     call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
     Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-    ! Set temperature boundary conditions 
+    ! Set temperature boundary conditions
     Tout(1) = T(1,it)
     Tout(Ny) = T(Ny,it)
 
@@ -351,7 +351,7 @@ select case (stage)
 
     call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
     Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-    ! Set temperature boundary conditions 
+    ! Set temperature boundary conditions
     Tout(1) = T(1,it)
     Tout(Ny) = T(Ny,it)
 
@@ -360,27 +360,27 @@ select case (stage)
 
   case(3)
     Fphi = phi(2:Ny-1,it) + dt*(acoeffs(3,1)*K1_phi(2:Ny-1,it)       + &
-                               &acoeffs(3,2)*K2_phi(2:Ny-1,it)       + &
-                               &ahatcoeffs(4,1)*K1hat_phi(2:Ny-1,it) + &
-                               &ahatcoeffs(4,2)*K2hat_phi(2:Ny-1,it) + &
-                               &ahatcoeffs(4,3)*K3hat_phi(2:Ny-1,it))
+                                &acoeffs(3,2)*K2_phi(2:Ny-1,it)       + &
+                                &ahatcoeffs(4,1)*K1hat_phi(2:Ny-1,it) + &
+                                &ahatcoeffs(4,2)*K2hat_phi(2:Ny-1,it) + &
+                                &ahatcoeffs(4,3)*K3hat_phi(2:Ny-1,it))
     FT   = T  (2:Ny-1,it) + dt*(acoeffs(3,1)*K1_T  (2:Ny-1,it)       + &
-                               &acoeffs(3,2)*K2_T  (2:Ny-1,it)       + &
-                               &ahatcoeffs(4,1)*K1hat_T  (2:Ny-1,it) + &
-                               &ahatcoeffs(4,2)*K2hat_T  (2:Ny-1,it) + &
-                               &ahatcoeffs(4,3)*K3hat_T  (2:Ny-1,it))
+                                &acoeffs(3,2)*K2_T  (2:Ny-1,it)       + &
+                                &ahatcoeffs(4,1)*K1hat_T  (2:Ny-1,it) + &
+                                &ahatcoeffs(4,2)*K2hat_T  (2:Ny-1,it) + &
+                                &ahatcoeffs(4,3)*K3hat_T  (2:Ny-1,it))
     FT(1)    = FT(1) + kappa0*dt*aii*g1(2)*T(1,it) ! b/c Ti(y_1) = T(y_1)
     FT(Ny-2) = FT(Ny-2) + kappa0*dt*aii*g3(Ny-1)*T(Ny,it) ! b/c Ti(Ny) = T(Ny)
 
     phi_rhs(:,1) = real(Fphi)
     phi_rhs(:,2) = aimag(Fphi)
- 
+
     T_rhs  (:,1) = real(FT)
     T_rhs  (:,2) = aimag(FT)
 
     call dgtsv(Ny-2, 2, dlT, ddT, duT, T_rhs, Ny-2, info)
     Tout(2:Ny-1) = cmplx(T_rhs(:,1), T_rhs(:,2), kind=C_DOUBLE_COMPLEX)
-    ! Set temperature boundary conditions 
+    ! Set temperature boundary conditions
     Tout(1) = T(1,it)
     Tout(Ny) = T(Ny,it)
 
@@ -416,21 +416,21 @@ real(dp)            :: start, finish
 
 start = OMP_GET_WTIME()
 select case(stage)
-   case (1)
+    case (1)
       do i = 1,Nx
-         K1hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
+          K1hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
-   case (2)
+    case (2)
       do i = 1,Nx
-         K2hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
+          K2hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
-   case (3)
+    case (3)
       do i = 1,Nx
-         K3hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
+          K3hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
-   case (4)
+    case (4)
       do i = 1,Nx
-         K4hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
+          K4hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
 end select
 finish = OMP_GET_WTIME()
@@ -438,10 +438,10 @@ write(*,*) " - - l1 timing: ", finish-start, "(s)"
 
 start = OMP_GET_WTIME()
 do i=1,Nx
-   ! Compute dx(T) in Fourier space
-   nlT  (:,i) =  kx(i)*Ti(:,i)
-   ! Compute D2(ux)
-   nlphi(:,i) = -kx(i)**2.0_dp*uxi(:,i) + d2y(uxi(:,i))
+    ! Compute dx(T) in Fourier space
+    nlT  (:,i) =  kx(i)*Ti(:,i)
+    ! Compute D2(ux)
+    nlphi(:,i) = -kx(i)**2.0_dp*uxi(:,i) + d2y(uxi(:,i))
 end do
 finish = OMP_GET_WTIME()
 write(*,*) " - - l2 timing: ", finish-start, "(s)"
@@ -450,26 +450,83 @@ write(*,*) " - - l2 timing: ", finish-start, "(s)"
 nlT = CI*nlT
 
 start = OMP_GET_WTIME()
-do j = 1,Ny
-   ! Bring everything to physical space
-   tnlT   = nlT(j,:)
-   tnlphi = nlphi(j,:)
-   tT     = Ti(j,:)
-   tux    = uxi(j,:)
-   tuy    = uyi(j,:)
-   tphi   = phii(j,:)
-   call fftw_execute_dft(iplannlT, tnlT, tnlT)
-   call fftw_execute_dft(iplannlphi, tnlphi, tnlphi)
-   call fftw_execute_dft(iplanT, tT, tT)
-   call fftw_execute_dft(iplanux, tux, tux)
-   call fftw_execute_dft(iplanuy, tuy, tuy)
-   call fftw_execute_dft(iplanphi, tphi, tphi)
-   nlT(j,:)   = tnlT
-   nlphi(j,:) = tnlphi
-   Ti(j,:)   = tT
-   uxi(j,:)  = tux
-   uyi(j,:)  = tuy
-   phii(j,:) = tphi
+do j = 1,Ny,4
+    ! Bring everything to physical space
+    tnlT   = nlT(j,:)
+    tnlphi = nlphi(j,:)
+    tT     = Ti(j,:)
+    tux    = uxi(j,:)
+    tuy    = uyi(j,:)
+    tphi   = phii(j,:)
+    call fftw_execute_dft(iplannlT, tnlT, tnlT)
+    call fftw_execute_dft(iplannlphi, tnlphi, tnlphi)
+    call fftw_execute_dft(iplanT, tT, tT)
+    call fftw_execute_dft(iplanux, tux, tux)
+    call fftw_execute_dft(iplanuy, tuy, tuy)
+    call fftw_execute_dft(iplanphi, tphi, tphi)
+    nlT(j,:)   = tnlT
+    nlphi(j,:) = tnlphi
+    Ti(j,:)   = tT
+    uxi(j,:)  = tux
+    uyi(j,:)  = tuy
+    phii(j,:) = tphi
+    ! Bring everything to physical space
+    tnlT   = nlT(j+1,:)
+    tnlphi = nlphi(j+1,:)
+    tT     = Ti(j+1,:)
+    tux    = uxi(j+1,:)
+    tuy    = uyi(j+1,:)
+    tphi   = phii(j+1,:)
+    call fftw_execute_dft(iplannlT, tnlT, tnlT)
+    call fftw_execute_dft(iplannlphi, tnlphi, tnlphi)
+    call fftw_execute_dft(iplanT, tT, tT)
+    call fftw_execute_dft(iplanux, tux, tux)
+    call fftw_execute_dft(iplanuy, tuy, tuy)
+    call fftw_execute_dft(iplanphi, tphi, tphi)
+    nlT(j+1,:)   = tnlT
+    nlphi(j+1,:) = tnlphi
+    Ti(j+1,:)   = tT
+    uxi(j+1,:)  = tux
+    uyi(j+1,:)  = tuy
+    phii(j+1,:) = tphi
+    ! Bring everything to physical space
+    tnlT   = nlT(j+2,:)
+    tnlphi = nlphi(j+2,:)
+    tT     = Ti(j+2,:)
+    tux    = uxi(j+2,:)
+    tuy    = uyi(j+2,:)
+    tphi   = phii(j+2,:)
+    call fftw_execute_dft(iplannlT, tnlT, tnlT)
+    call fftw_execute_dft(iplannlphi, tnlphi, tnlphi)
+    call fftw_execute_dft(iplanT, tT, tT)
+    call fftw_execute_dft(iplanux, tux, tux)
+    call fftw_execute_dft(iplanuy, tuy, tuy)
+    call fftw_execute_dft(iplanphi, tphi, tphi)
+    nlT(j+2,:)   = tnlT
+    nlphi(j+2,:) = tnlphi
+    Ti(j+2,:)   = tT
+    uxi(j+2,:)  = tux
+    uyi(j+2,:)  = tuy
+    phii(j+2,:) = tphi
+    ! Bring everything to physical space
+    tnlT   = nlT(j+3,:)
+    tnlphi = nlphi(j+3,:)
+    tT     = Ti(j+3,:)
+    tux    = uxi(j+3,:)
+    tuy    = uyi(j+3,:)
+    tphi   = phii(j+3,:)
+    call fftw_execute_dft(iplannlT, tnlT, tnlT)
+    call fftw_execute_dft(iplannlphi, tnlphi, tnlphi)
+    call fftw_execute_dft(iplanT, tT, tT)
+    call fftw_execute_dft(iplanux, tux, tux)
+    call fftw_execute_dft(iplanuy, tuy, tuy)
+    call fftw_execute_dft(iplanphi, tphi, tphi)
+    nlT(j+3,:)   = tnlT
+    nlphi(j+3,:) = tnlphi
+    Ti(j+3,:)   = tT
+    uxi(j+3,:)  = tux
+    uyi(j+3,:)  = tuy
+    phii(j+3,:) = tphi
 end do
 finish = OMP_GET_WTIME()
 write(*,*) " - - l3 timing: ", finish-start, "(s)"
@@ -477,11 +534,11 @@ write(*,*) " - - l3 timing: ", finish-start, "(s)"
 ! Calculate nonlinear term
 start = OMP_GET_WTIME()
 do i = 1,Nx
-   ! Temperature
-   tmp_T = Ti(:,i)
-   nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T)
-   ! phi
-   nlphi(:,i) = uxi(:,i)*phii(:,i) - uyi(:,i)*nlphi(:,i) 
+    ! Temperature
+    tmp_T = Ti(:,i)
+    nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T)
+    ! phi
+    nlphi(:,i) = uxi(:,i)*phii(:,i) - uyi(:,i)*nlphi(:,i)
 end do
 finish = OMP_GET_WTIME()
 write(*,*) " - - l4 timing: ", finish-start, "(s)"
@@ -489,19 +546,19 @@ write(*,*) " - - l4 timing: ", finish-start, "(s)"
 ! Bring nonlinear terms back to Fourier space
 start = OMP_GET_WTIME()
 do j = 1,Ny
-   tnlT   = nlT(j,:)
-   tnlphi = nlphi(j,:)
-   call fftw_execute_dft(plannlT, tnlT, tnlT)
-   call fftw_execute_dft(plannlphi, tnlphi, tnlphi)
-   ! Dealias
-   do i = 1,Nx
+    tnlT   = nlT(j,:)
+    tnlphi = nlphi(j,:)
+    call fftw_execute_dft(plannlT, tnlT, tnlT)
+    call fftw_execute_dft(plannlphi, tnlphi, tnlphi)
+    ! Dealias
+    do i = 1,Nx
       if (abs(kx(i))/alpha >= Nf/2) then
-         tnlT(i)   = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
-         tnlphi(i) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
+          tnlT(i)   = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
+          tnlphi(i) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
       end if
-   end do
-   nlT(j,:)   = tnlT
-   nlphi(j,:) = tnlphi
+    end do
+    nlT(j,:)   = tnlT
+    nlphi(j,:) = tnlphi
 end do
 finish = OMP_GET_WTIME()
 write(*,*) " - - l5 timing: ", finish-start, "(s)"
@@ -511,25 +568,25 @@ nlphi = nlphi / real(Nx,kind=dp)
 
 start = OMP_GET_WTIME()
 select case (stage)
-   case (1)
+    case (1)
       do i = 1,Nx
         !K1hat_phi(:,i) = K1hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K1hat_phi(:,i) = K1hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
       end do
       K1hat_T = -nlT
-   case (2)
+    case (2)
       do i = 1,Nx
         !K2hat_phi(:,i) = K2hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K2hat_phi(:,i) = K2hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
       end do
       K2hat_T = -nlT
-   case (3)
+    case (3)
       do i = 1,Nx
         !K3hat_phi(:,i) = K3hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K3hat_phi(:,i) = K3hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
       end do
       K3hat_T = -nlT
-   case (4)
+    case (4)
       do i = 1,Nx
         !K4hat_phi(:,i) = K4hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K4hat_phi(:,i) = K4hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
@@ -566,11 +623,11 @@ dlvi   = 0.0_dp
 duvi   = 0.0_dp
 
 do j = 2,Ny-1
-   dvi(j-1) = -kx(it)**2.0_dp + g2(j)
+    dvi(j-1) = -kx(it)**2.0_dp + g2(j)
 end do
 
 do j = 2,Ny-2
-   duvi(j-1) = g3(j)
+    duvi(j-1) = g3(j)
 end do
 
 do j = 3,Ny-1
@@ -620,12 +677,12 @@ c2 = -dyV_B
 
 ! Find c1 and c2.
 if (detC == 0.0_dp) then
-   c1 = (0.0_dp, 0.0_dp)
-   c2 = (0.0_dp, 0.0_dp)
+    c1 = (0.0_dp, 0.0_dp)
+    c2 = (0.0_dp, 0.0_dp)
 else
-   c1t = (C(2,2)*c1 - C(1,2)*c2) / detC
-   c2  = (C(1,1)*c2 - C(2,1)*c1) / detC
-   c1  = c1t
+    c1t = (C(2,2)*c1 - C(1,2)*c2) / detC
+    c2  = (C(1,1)*c2 - C(2,1)*c1) / detC
+    c1  = c1t
 end if
 
 ! Update uy and Phi.
@@ -644,38 +701,38 @@ uxi = ux
 uyi = uy
 
 do jj = 1,Ny
-   ! Bring everything to physical space
-   tux    = uxi(jj,:)
-   tuy    = uyi(jj,:)
-   call fftw_execute_dft(iplanux, tux, tux)
-   call fftw_execute_dft(iplanuy, tuy, tuy)
-   uxi(jj,:)  = tux
-   uyi(jj,:)  = tuy
+    ! Bring everything to physical space
+    tux    = uxi(jj,:)
+    tuy    = uyi(jj,:)
+    call fftw_execute_dft(iplanux, tux, tux)
+    call fftw_execute_dft(iplanuy, tuy, tuy)
+    uxi(jj,:)  = tux
+    uyi(jj,:)  = tuy
 end do
 
 dt_old = dt
 
 do jj = 1,Ny
-   do ii = 1,Nx
+    do ii = 1,Nx
       tmp = real(uxi(jj,ii)) / dxmin + real(uyi(jj,ii)) / dymin
       if (tmp > tmpmax) then
-         tmpmax = tmp
+          tmpmax = tmp
       end if
-   end do
+    end do
 end do
 
 dt = cfl / tmpmax
 
 if (dt > dt_ramp * dt_old) then
-   dt = dt_ramp * dt_old
+    dt = dt_ramp * dt_old
 else if (dt < dt_old / dt_ramp) then
-   dt = dt_old / dt_ramp
+    dt = dt_old / dt_ramp
 end if
 
 if (dt > dtmax) then
-   dt = dtmax
+    dt = dtmax
 else if (dt < dtmin) then
-   dt = dtmin
+    dt = dtmin
 end if
 
 call init_bc(acoeffs(1,1))
