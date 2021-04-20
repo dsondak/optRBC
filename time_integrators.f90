@@ -450,7 +450,7 @@ write(*,*) " - - l2 timing: ", finish-start, "(s)"
 nlT = CI*nlT
 
 start = OMP_GET_WTIME()
-do j = 1,Ny,4
+do j = 1,Ny
     ! Bring everything to physical space
     tnlT   = nlT(j,:)
     tnlphi = nlphi(j,:)
@@ -470,63 +470,6 @@ do j = 1,Ny,4
     uxi(j,:)  = tux
     uyi(j,:)  = tuy
     phii(j,:) = tphi
-    ! Bring everything to physical space
-    tnlT   = nlT(j+1,:)
-    tnlphi = nlphi(j+1,:)
-    tT     = Ti(j+1,:)
-    tux    = uxi(j+1,:)
-    tuy    = uyi(j+1,:)
-    tphi   = phii(j+1,:)
-    call fftw_execute_dft(iplannlT, tnlT, tnlT)
-    call fftw_execute_dft(iplannlphi, tnlphi, tnlphi)
-    call fftw_execute_dft(iplanT, tT, tT)
-    call fftw_execute_dft(iplanux, tux, tux)
-    call fftw_execute_dft(iplanuy, tuy, tuy)
-    call fftw_execute_dft(iplanphi, tphi, tphi)
-    nlT(j+1,:)   = tnlT
-    nlphi(j+1,:) = tnlphi
-    Ti(j+1,:)   = tT
-    uxi(j+1,:)  = tux
-    uyi(j+1,:)  = tuy
-    phii(j+1,:) = tphi
-    ! Bring everything to physical space
-    tnlT   = nlT(j+2,:)
-    tnlphi = nlphi(j+2,:)
-    tT     = Ti(j+2,:)
-    tux    = uxi(j+2,:)
-    tuy    = uyi(j+2,:)
-    tphi   = phii(j+2,:)
-    call fftw_execute_dft(iplannlT, tnlT, tnlT)
-    call fftw_execute_dft(iplannlphi, tnlphi, tnlphi)
-    call fftw_execute_dft(iplanT, tT, tT)
-    call fftw_execute_dft(iplanux, tux, tux)
-    call fftw_execute_dft(iplanuy, tuy, tuy)
-    call fftw_execute_dft(iplanphi, tphi, tphi)
-    nlT(j+2,:)   = tnlT
-    nlphi(j+2,:) = tnlphi
-    Ti(j+2,:)   = tT
-    uxi(j+2,:)  = tux
-    uyi(j+2,:)  = tuy
-    phii(j+2,:) = tphi
-    ! Bring everything to physical space
-    tnlT   = nlT(j+3,:)
-    tnlphi = nlphi(j+3,:)
-    tT     = Ti(j+3,:)
-    tux    = uxi(j+3,:)
-    tuy    = uyi(j+3,:)
-    tphi   = phii(j+3,:)
-    call fftw_execute_dft(iplannlT, tnlT, tnlT)
-    call fftw_execute_dft(iplannlphi, tnlphi, tnlphi)
-    call fftw_execute_dft(iplanT, tT, tT)
-    call fftw_execute_dft(iplanux, tux, tux)
-    call fftw_execute_dft(iplanuy, tuy, tuy)
-    call fftw_execute_dft(iplanphi, tphi, tphi)
-    nlT(j+3,:)   = tnlT
-    nlphi(j+3,:) = tnlphi
-    Ti(j+3,:)   = tT
-    uxi(j+3,:)  = tux
-    uyi(j+3,:)  = tuy
-    phii(j+3,:) = tphi
 end do
 finish = OMP_GET_WTIME()
 write(*,*) " - - l3 timing: ", finish-start, "(s)"
