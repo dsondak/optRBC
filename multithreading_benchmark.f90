@@ -25,14 +25,12 @@ type(C_PTR) :: test_plan
 ! Create FFT plans
 iret = fftw_init_threads()
 ! Uncomment below to check if init_threads working (should be nonzero)
-PRINT *, "iret: ", iret 
-
-do N_exp = 7,20
+! PRINT *, "iret: ", iret 
+do N_exp = 7,25
     N_test = 2**N_exp
     print '("Points: ",i12)', N_test
-    curr_threads = 2
-    do N_threads = 0,10
-        curr_threads = 2**N_threads
+    curr_threads = 1
+    do N_threads = 0,15
         call fftw_plan_with_nthreads(curr_threads)
         test_plan = fftw_plan_dft_1d(N_test,tu_in,tu_out, FFTW_FORWARD,FFTW_ESTIMATE)
 
@@ -44,9 +42,10 @@ do N_exp = 7,20
         call cpu_time(start)
         call fftw_execute_dft(test_plan, tu_in, tu_out)
         call cpu_time(finish)
-        print '("Threads = ",i5,"   Time = ",f6.3," seconds.")',curr_threads,finish-start
+        print '("Threads = ",i5,",   Time = ",f6.3," seconds.")',curr_threads,finish-start
         call fftw_destroy_plan(test_plan)
         deallocate(tu_in, tu_out)
+        curr_threads = curr_threads + 1
     end do
 end do
 ! Each output line contains results for an N
