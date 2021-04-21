@@ -54,7 +54,7 @@ program re_to_comp_test
     ! Now try the same but with two-sided FFTW
 
     planc_1 =  fftw_plan_dft_1d(N_points, tu_in_comp, tu_out_comp, FFTW_FORWARD, FFTW_ESTIMATE);
-    planc_2 = fftw_plan_dft_1d(N_points, tu_out_comp, tu_in_comp, FFTW_FORWARD, FFTW_ESTIMATE);
+    planc_2 = fftw_plan_dft_1d(N_points, tu_out_comp, tu_in_comp, FFTW_BACKWARD, FFTW_ESTIMATE);
 
     allocate(tu_in_comp(N_points), stat=alloc_err)
     allocate(tu_out_comp(N_points), stat=alloc_err)
