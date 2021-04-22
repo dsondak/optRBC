@@ -37,7 +37,10 @@ real(dp)                       :: start_overall, finish_overall
 integer                        :: nthreads, myid
 integer, EXTERNAL              :: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
 real(dp), EXTERNAL             :: OMP_GET_WTIME
+EXTERNAL                       :: OMP_SET_NUM_THREADS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+call OMP_SET_NUM_THREADS(8)
 
 if (present(vtk_print)) then
    wvtk = .true.
@@ -97,7 +100,7 @@ do ! while (time < t_final)
    finish = OMP_GET_WTIME()
    write(*,*) " - calc_explicit(1) timing: ", finish-start, "(s)"
    start = OMP_GET_WTIME()
-   !$OMP PARALLEL DO num_threads(16) private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
+   !$OMP PARALLEL DO  private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
    do it = 1,Nx ! kx loop
       ! Compute phi1 and T1
       call calc_vari_mod(tmp_phi, tmp_T, acoeffs(1,1), 1,&
@@ -141,7 +144,7 @@ do ! while (time < t_final)
    ! STAGE 2 ::
    !:::::::::::
    start = OMP_GET_WTIME()
-   !$OMP PARALLEL DO num_threads(16) private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
+   !$OMP PARALLEL DO  private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
    do it = 1,Nx ! kx loop
       ! Compute phi2 and T2
       call calc_vari_mod(tmp_phi, tmp_T, acoeffs(2,2), 2,&
@@ -185,7 +188,7 @@ do ! while (time < t_final)
    ! STAGE 3 ::
    !:::::::::::
    start = OMP_GET_WTIME()
-   !$OMP PARALLEL DO num_threads(16) private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
+   !$OMP PARALLEL DO private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
    do it = 1,Nx ! kx loop
       ! Compute phi3 and T3
       call calc_vari_mod(tmp_phi, tmp_T, acoeffs(3,3), 3,&
@@ -240,7 +243,7 @@ do ! while (time < t_final)
                   &                   b(3)*(K3_T(2:Ny-1,:) + K4hat_T(2:Ny-1,:)))
 
    ! Get ux and uy
-   !$OMP PARALLEL DO num_threads(16) private(tmp_uy, it) schedule(dynamic)
+   !$OMP PARALLEL DO private(tmp_uy, it) schedule(dynamic)
    do it = 1,Nx
       ! Solve for v
       call calc_vi_mod(tmp_uy, phi(:,it), kx(it))
@@ -607,25 +610,25 @@ real(dp)            :: start, finish
 start = OMP_GET_WTIME()
 select case(stage)
    case (1)
-      !$OMP PARALLEL DO num_threads(16) schedule(dynamic)
+      !$OMP PARALLEL DO schedule(dynamic)
       do i = 1,Nx
          K1hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
       !$OMP END PARALLEL DO
    case (2)
-      !$OMP PARALLEL DO num_threads(16) schedule(dynamic)
+      !$OMP PARALLEL DO schedule(dynamic)
       do i = 1,Nx
          K2hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
       !$OMP END PARALLEL DO
    case (3)
-      !$OMP PARALLEL DO num_threads(16) schedule(dynamic)
+      !$OMP PARALLEL DO schedule(dynamic)
       do i = 1,Nx
          K3hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
       !$OMP END PARALLEL DO
    case (4)
-      !$OMP PARALLEL DO num_threads(16) schedule(dynamic)
+      !$OMP PARALLEL DO schedule(dynamic)
       do i = 1,Nx
          K4hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
       end do
@@ -635,7 +638,7 @@ finish = OMP_GET_WTIME()
 write(*,*) " - - l1 timing: ", finish-start, "(s)"
 
 start = OMP_GET_WTIME()
-!$OMP PARALLEL DO num_threads(16) schedule(dynamic)
+!$OMP PARALLEL DO schedule(dynamic)
 do i=1,Nx
    ! Compute dx(T) in Fourier space
    nlT  (:,i) =  kx(i)*Ti(:,i)
@@ -650,7 +653,7 @@ write(*,*) " - - l2 timing: ", finish-start, "(s)"
 nlT = CI*nlT
 
 start = OMP_GET_WTIME()
-!$OMP PARALLEL DO num_threads(16) private(tnlT, tnlphi, tT, tux, tuy, tphi) schedule(dynamic)
+!$OMP PARALLEL DO private(tnlT, tnlphi, tT, tux, tuy, tphi) schedule(dynamic)
 do j = 1,Ny
    ! Bring everything to physical space
    tnlT   = nlT(j,:)
@@ -678,7 +681,7 @@ write(*,*) " - - l3 timing: ", finish-start, "(s)"
 
 ! Calculate nonlinear term
 start = OMP_GET_WTIME()
-!$OMP PARALLEL DO num_threads(16) private(tmp_T) schedule(dynamic)
+!$OMP PARALLEL DO private(tmp_T) schedule(dynamic)
 do i = 1,Nx
    ! Temperature
    tmp_T = Ti(:,i)
@@ -692,7 +695,7 @@ write(*,*) " - - l4 timing: ", finish-start, "(s)"
 
 ! Bring nonlinear terms back to Fourier space
 start = OMP_GET_WTIME()
-!$OMP PARALLEL DO num_threads(16) private(tnlT, tnlphi) schedule(dynamic)
+!$OMP PARALLEL DO private(tnlT, tnlphi) schedule(dynamic)
 do j = 1,Ny
    tnlT   = nlT(j,:)
    tnlphi = nlphi(j,:)
@@ -718,7 +721,7 @@ nlphi = nlphi / real(Nx,kind=dp)
 start = OMP_GET_WTIME()
 select case (stage)
    case (1)
-      !$OMP PARALLEL DO num_threads(16) schedule(dynamic)
+      !$OMP PARALLEL DO schedule(dynamic)
       do i = 1,Nx
          !K1hat_phi(:,i) = K1hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
          K1hat_phi(:,i) = K1hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
@@ -726,7 +729,7 @@ select case (stage)
       !$OMP END PARALLEL DO
       K1hat_T = -nlT
    case (2)
-      !$OMP PARALLEL DO num_threads(16) schedule(dynamic)
+      !$OMP PARALLEL DO schedule(dynamic)
       do i = 1,Nx
          !K2hat_phi(:,i) = K2hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
          K2hat_phi(:,i) = K2hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
@@ -734,7 +737,7 @@ select case (stage)
       !$OMP END PARALLEL DO
       K2hat_T = -nlT
    case (3)
-      !$OMP PARALLEL DO num_threads(16) schedule(dynamic)
+      !$OMP PARALLEL DO schedule(dynamic)
       do i = 1,Nx
          !K3hat_phi(:,i) = K3hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
          K3hat_phi(:,i) = K3hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
@@ -742,7 +745,7 @@ select case (stage)
       !$OMP END PARALLEL DO
       K3hat_T = -nlT
    case (4)
-      !$OMP PARALLEL DO num_threads(16) schedule(dynamic)
+      !$OMP PARALLEL DO schedule(dynamic)
       do i = 1,Nx
          !K4hat_phi(:,i) = K4hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
          K4hat_phi(:,i) = K4hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
