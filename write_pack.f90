@@ -88,7 +88,7 @@ end subroutine write_mat_cmplx
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-subroutine write_vtk_structured_grid(iter)
+subroutine write_vtk_structured_grid(iter, process_id)
 
 use global
 
@@ -99,13 +99,17 @@ character(10) :: citer
 character(9)  :: fiter
 integer :: n
 integer :: ii, jj, kk
+character(3), intent(in), optional  :: process_id
 
 write(citer, "(I10)") 1000000000 + iter
 fiter = citer(2:10)
 
-n = (Nx+1)*Ny*Nz
-
-open(unit=2, file=vtkloc//vtkname//fiter//gtype, action="write", status="replace")
+n = (Nx+1)*Ny*Nx
+if (PRESENT(process_id)) then
+   open(unit=2, file=vtkloc//vtkname//"_P"//process_id//"_"//fiter//gtype, action="write", status="replace")
+else
+   open(unit=2, file=vtkloc//vtkname//fiter//gtype, action="write", status="replace")
+endif
 write(2, "(a)") "# vtk DataFile Version 3.1"
 write(2, "(a)") "Thermal Convection Data"
 write(2, "(a)") "ASCII"
@@ -180,18 +184,22 @@ close(unit=2)
 end subroutine write_vtk_structured_grid
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-subroutine write_to_vtk(step, physical)
+subroutine write_to_vtk(step, physical, process_id)
 
-integer, intent(in) :: step
-logical, intent(in) :: physical
-integer             :: j
+integer, intent(in)            :: step
+logical, intent(in)            :: physical
+character(3), intent(in), optional  :: process_id
+integer                        :: j
+
 
 if (physical) then
-
-   call write_vtk_structured_grid(step)
-
+   if (PRESENT(process_id)) then
+      write(*,*) "writing file with ", process_id
+      call write_vtk_structured_grid(step, process_id)
+   else 
+      call write_vtk_structured_grid(step)
+   endif 
 else
-
    do j = 1,Ny
       ! Bring everything to physical space
       tT  = T(j,:)
@@ -220,7 +228,6 @@ else
    T  = T  / real(Nx, kind=dp)
    ux = ux / real(Nx, kind=dp)
    uy = uy / real(Nx, kind=dp)
-
 end if
 
 end subroutine write_to_vtk
