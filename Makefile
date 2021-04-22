@@ -14,7 +14,7 @@ PROGRAMS = $(MAIN).exe
 all: $(PROGRAMS)
 
 $(PROGRAMS) : $(OBJECTS)
-	$(FC) $(LDFLAGS) -o $(PROGRAMS) $(OBJECTS) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
+	$(FC) -fopenmp $(LDFLAGS) -o $(PROGRAMS) $(OBJECTS) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
 
 fftw.o : fftw.f90
 	$(FC) $(FFLAGS) fftw.f90
@@ -50,7 +50,7 @@ statistics.o : statistics.f90
 	$(FC) $(FFLAGS) statistics.f90
 
 time_integrators.o : time_integrators.f90
-	$(FC) $(FFLAGS) time_integrators.f90
+	$(FC) -fopenmp $(FFLAGS) time_integrators.f90
 
 jacobians.o : jacobians.f90
 	$(FC) $(FFLAGS) jacobians.f90
