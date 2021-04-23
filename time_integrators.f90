@@ -266,8 +266,6 @@ do ! while (time < t_final)
    end if
 
    !call update_dt
-   ! Don't write vtk for now.
-   wvtk = .false.
    if (wvtk) then
       if (mod(nti,vtk_print) == 0) then
          call write_to_vtk(nti, .false.) ! false = Fourier space
