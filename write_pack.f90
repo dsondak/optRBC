@@ -194,7 +194,6 @@ integer                        :: j
 
 if (physical) then
    if (PRESENT(process_id)) then
-      write(*,*) "writing file with ", process_id
       call write_vtk_structured_grid(step, process_id)
    else 
       call write_vtk_structured_grid(step)

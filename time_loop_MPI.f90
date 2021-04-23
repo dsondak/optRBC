@@ -38,6 +38,7 @@ character(80)                                          :: tokens(80)
 integer                                                :: mpierror, num_procs
 integer                                                :: proc_id
 character(4)                                           :: proc_id_str
+real(dp)                                                :: mpi_spacing_y
 integer                                                status(MPI_STATUS_SIZE)
 
 
@@ -123,6 +124,18 @@ end if
 end do
 close(unit=2)
 
+! Print MPI division.
+if (proc_id == 0) then
+    write(*,*) "Ny = ", Ny, " divided among ", num_procs, " processors -> ", &
+               Ny / num_procs, " rows per processor."
+end if
+
+! Initialize MPI variables.
+Ny = Ny / 4
+mpi_spacing_y = (ytop - ybot) / num_procs
+ybot = ybot + proc_id * mpi_spacing_y
+ytop = ybot + mpi_spacing_y
+
 ! Create FFT plans
 planuy = fftw_plan_dft_1d(Nx,tuy,tuy, FFTW_FORWARD,FFTW_ESTIMATE)
 iplanuy = fftw_plan_dft_1d(Nx,tuy,tuy, FFTW_BACKWARD,FFTW_ESTIMATE)
@@ -155,12 +168,6 @@ else
     dx = Lx / (real(Nx,kind=dp))
 end if
 
-if (proc_id == 0) then
-    write(*,*) "Ny = ", Ny, " divided among ", num_procs, " processors -> ", &
-               Ny / num_procs, " rows per processor."
-end if
-
-Ny = Ny / 4
 
 call cosine_mesh(xp,yp,zp, Nx,Ny,Nz) ! get coordinates
 call dxdydz(dynu, xp,yp,zp) ! get mesh spacing for nonuniform grids
@@ -180,7 +187,6 @@ kx = alpha*kx_modes
 ! Write initial field to vtk
 if (wvtk) then
     write(proc_id_str, "(I3.3)") proc_id
-    write(*,*) proc_id_str 
     call write_to_vtk(int(Ra), .true., proc_id_str) ! true = already in physical space
  end if
 
