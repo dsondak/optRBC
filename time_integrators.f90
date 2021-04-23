@@ -100,7 +100,7 @@ do ! while (time < t_final)
    finish = OMP_GET_WTIME()
    write(*,*) " - calc_explicit(1) timing: ", finish-start, "(s)"
    start = OMP_GET_WTIME()
-   !$OMP PARALLEL DO  private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
+   !$OMP PARALLEL DO private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
    do it = 1,Nx ! kx loop
       ! Compute phi1 and T1
       call calc_vari_mod(tmp_phi, tmp_T, acoeffs(1,1), 1,&
@@ -144,7 +144,7 @@ do ! while (time < t_final)
    ! STAGE 2 ::
    !:::::::::::
    start = OMP_GET_WTIME()
-   !$OMP PARALLEL DO  private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
+   !$OMP PARALLEL DO private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
    do it = 1,Nx ! kx loop
       ! Compute phi2 and T2
       call calc_vari_mod(tmp_phi, tmp_T, acoeffs(2,2), 2,&

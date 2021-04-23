@@ -124,12 +124,6 @@ end if
 end do
 close(unit=2)
 
-! Print MPI division.
-if (proc_id == 0) then
-    write(*,*) "Ny = ", Ny, " divided among ", num_procs, " processors -> ", &
-               Ny / num_procs, " rows per processor."
-end if
-
 ! Initialize MPI variables.
 Ny = Ny / 4
 mpi_spacing_y = (ytop - ybot) / num_procs
@@ -168,7 +162,6 @@ else
     dx = Lx / (real(Nx,kind=dp))
 end if
 
-
 call cosine_mesh(xp,yp,zp, Nx,Ny,Nz) ! get coordinates
 call dxdydz(dynu, xp,yp,zp) ! get mesh spacing for nonuniform grids
 call y_mesh_params ! get metric coefficients for nonuniform grids
@@ -188,16 +181,150 @@ kx = alpha*kx_modes
 if (wvtk) then
     write(proc_id_str, "(I3.3)") proc_id
     call write_to_vtk(int(Ra), .true., proc_id_str) ! true = already in physical space
- end if
+end if
+
+! Initialize fields.
+call init_fields(ex_Tptrb, Ra)
+call init_to_fourier(ex_Tptrb)
+
+! Get nu0 and kappa0
+call global_params_Ra(Ra)
+
+if (proc_id == 0) then
+    write(*,'(A70)')                  ' '
+    write(*,'(A70)')                  '*********************************************************************|'
+    write(*,'(A70)')                  '                TWO-DIMENSIONAL THERMAL CONVECTION                   |'
+    write(*,'(A70)')                  '*********************************************************************|'
+    write(*,'(5X,A,47X,A)')           'COMPUTATION SIZE:',                                                 '|'
+    write(*,'(A69,A)')                '                                                                  ','|'
+    write(*,'(20X,A23,I5,21X,A)')     'Nx                       = ', Nx,                                   '|'
+    write(*,'(20X,A23,I5,21X,A)')     'Ny                       = ', Ny,                                   '|'
+    write(*,'(20X,A23,I5,21X,A)')     'Nz                       = ', Nz,                                   '|'
+    write(*,'(20X,A23,I5,21X,A)')     'Number of time steps     = ', nt,                                   '|'
+    write(*,'(20X,A23,I5,21X,A)')     'Number of Fourier modes  = ', Nf,                                   '|'
+    write(*,'(A69,A)')                '                                                                  ','|'
+    write(*,'(A70)')                  '*********************************************************************|'
+    write(*,'(5X,A,45X,A)')           'PROBLEM PARAMETERS:',                                               '|'
+    write(*,'(A69,A)')                '                                                                  ','|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Prandtl number  (Pr)                    = ', Pr,                    '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Initial Rayleigh number (Ra)            = ', Ra,                    '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Initial Reynolds number (Re)            = ', sqrt(Ra/(16.0_dp*Pr)), '|'
+    write(*,'(A69,A)')                '                                                                  ','|'
+    write(*,'(A70)')                  '*********************************************************************|'
+    write(*,'(5X,A,42X,A)')           'PHYSICAL PROBLEM SIZE:',                                            '|'
+    write(*,'(A69,A)')                '                                                                  ','|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'alpha                     = ', alpha,                               '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Left coordinate of box    = ', xL,                                  '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Right coordinate of box   = ', xR,                                  '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Coordinate of bottom wall = ', ybot,                                '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Coordinate of top wall    = ', ytop,                                '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Box width                 = ', Lx,                                  '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Box height                = ', Ly,                                  '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Aspect Ratio              = ', Lx/Ly,                               '|'
+    write(*,'(A69,A)')                '                                                                  ','|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Integration time (T)      = ', t_final,                              '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Time step size (Delta t)  = ', dt,                                   '|'
+    write(*,'(A69,A)')                '                                                                  ','|'
+    write(*,'(A70)')                  '*********************************************************************|'
+    write(*,'(A70)')                  '*********************************************************************|'
+    write(*,'(A70)')                  '                                                                      '
+    
+    flush(6)
+    ! Print MPI division.
+    write(*,*) "Ny = ", Ny*num_procs, " divided among ", num_procs, " processors -> ", &
+               Ny, " rows per processor."
+end if
+
+call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
 
 write(*,*) "processor ", proc_id, "initialized with ", Ny, "rows."
-
-
-
-
 
 call MPI_Finalize(mpierror)
 
 end program time_loop
 
-    
+!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+subroutine init_fields(ex_Tptrb,Ra)
+
+use global
+
+implicit none
+
+logical, intent(out) :: ex_Tptrb
+real(dp), intent(in) :: Ra
+integer              :: ii
+
+! Initialize fields.
+if (Ra < 1710.0_dp) then
+    ex_Tptrb = .true.
+    do ii = 1,Nx
+        Tptrb(:,ii) = 0.5_dp*2.0_dp*cos(alpha*xp(ii))*cos(pi*yp/2.0_dp)
+        T(:,ii) = -yp + Tptrb(:,ii)
+    end do
+else
+    ex_Tptrb = .false.
+    do ii = 1,Nx
+        T(:,ii) = -yp + 0.5_dp*2.0_dp*cos(alpha*xp(ii))*cos(pi*yp/2.0_dp)
+    end do
+end if
+
+end subroutine init_fields
+
+!::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+subroutine init_to_fourier(ex_Tptrb)
+
+use global
+
+implicit none
+
+logical, intent(in) :: ex_Tptrb
+integer             :: ii, jj
+
+! Bring temperature and velocity to Fourier space.
+do jj = 1,Ny
+    tT = T(jj,:)
+    tuy = uy(jj,:)
+    call fftw_execute_dft(planT, tT, tT)
+    call fftw_execute_dft(planuy, tuy, tuy)
+    ! Truncate modes
+    do ii = 1,Nx
+        if (abs(kx(ii))/alpha >= Nf/2) then
+            tT(ii)  = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
+            tuy(ii) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
+        end if
+    end do
+    T(jj,:) = tT
+    uy(jj,:) = tuy
+    ! If temperature perturbation needed.
+    if (ex_Tptrb) then
+        tT = Tptrb(jj,:)
+        call fftw_execute_dft(planT, tT, tT)
+        ! Truncate modes
+        do ii = 1,Nx
+            if (abs(kx(ii))/alpha >= Nf/2) then
+            tT(ii)  = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
+            end if
+        end do
+        Tptrb(jj,:) = tT
+    end if
+end do
+T = T / real(Nx, kind=dp)
+uy = uy / real(Nx, kind=dp)
+
+if (ex_Tptrb) then
+    Tptrb = Tptrb / real(Nx, kind=dp)
+end if
+
+! Calculate phi and ux from uy
+do ii = 1,Nx
+    if (kx(ii) /= 0.0_dp) then
+        tmp_uy = uy(:,ii)
+        !ux(:,ii) = -CI*d1y(tmp_uy)/kx(ii)
+        ux(:,ii) = CI*d1y(tmp_uy)/kx(ii)
+    else if (kx(ii) == 0.0_dp) then
+        ux(:,ii) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
+    end if
+    phi(:,ii) = -kx(ii)**2.0_dp*uy(:,ii) + d2y(uy(:,ii))
+end do
+
+end subroutine init_to_fourier
