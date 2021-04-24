@@ -54,6 +54,239 @@ if (wvtk) then
    call write_to_vtk(0, .false.) ! false = Fourier space
 end if
 
+dt = dt_init
+
+call init_bc(acoeffs(1,1))
+
+time = 0.0_dp
+
+dtmax = 0.5_dp
+dtmin = 1.0e-4_dp
+
+dt_ramp = 1.1_dp
+
+dt_old = dt
+
+nti = 0
+
+! Format for writing out single values.
+1000 format(E25.16E3)
+
+! Time integration
+do ! while (time < t_final)
+   start_overall = OMP_GET_WTIME()
+
+   dt_final = t_final - time
+
+   if (dt_final <= dt) then
+      time = t_final
+   else
+      time = time + dt
+   end if
+
+   write(*,*) "time = ", time, "dt = ", dt
+
+   nti = nti + 1
+
+   !:::::::::::
+   ! STAGE 1 ::
+   !:::::::::::
+   phii = phi
+   Ti   = T
+   uxi  = ux
+   uyi  = uy
+   start = OMP_GET_WTIME()
+   call calc_explicit(1)
+   finish = OMP_GET_WTIME()
+   write(*,*) " - calc_explicit(1) timing: ", finish-start, "(s)"
+   start = OMP_GET_WTIME()
+   !$OMP PARALLEL DO num_threads(16) private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
+   do it = 1,Nx ! kx loop
+      ! Compute phi1 and T1
+      call calc_vari_mod(tmp_phi, tmp_T, acoeffs(1,1), 1,&
+                           kx(it), phi(2:Ny-1,it),&
+                           K1hat_phi(2:Ny-1,it),K2hat_phi(2:Ny-1,it),K3hat_phi(2:Ny-1,it),&
+                           K1hat_T(2:Ny-1,it),K2hat_T(2:Ny-1,it),K3hat_T(2:Ny-1,it),&
+                           K1_phi(2:Ny-1,it), K2_phi(2:Ny-1,it), K1_T(2:Ny-1,it), K2_T(2:Ny-1,it),&
+                           T(:,it))
+      ! Compute v1 from phi1
+      call calc_vi_mod(tmp_uy, tmp_phi, kx(it))
+      ! BOUNDAY CONDITIONS!
+      call update_bcs_mod(tmp_phi1,tmp_uy1, tmp_phi,tmp_uy,dyv1_T(it),dyv2_T(it),&
+                           dyv1_B(it),dyv2_B(it),&
+                           V1(:,it),V2(:,it),phi1(:,it),phi2(:,it))
+      tmp_phi = tmp_phi1
+      tmp_uy  = tmp_uy1
+      call calc_implicit_mod(tmp_K_phi,tmp_K_T, tmp_phi,tmp_T, kx(it))
+      K1_phi(:,it) = tmp_K_phi
+      K1_T(:,it)   = tmp_K_T
+      ! Compute u1 from v1
+      if (kx(it) /= 0.0_dp) then
+         !uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         uxi(:,it) = CI*d1y(tmp_uy)/kx(it)
+      else if (kx(it) == 0.0_dp) then
+         uxi(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
+      end if
+      phii(:,it) = tmp_phi
+      Ti  (:,it) = tmp_T
+      uyi (:,it) = tmp_uy
+   end do
+   !$OMP END PARALLEL DO
+   finish = OMP_GET_WTIME()
+   write(*,*) " - stage 1 mid timing: ", finish-start, "(s)"
+   ! Compute K2hat
+   start = OMP_GET_WTIME()
+   call calc_explicit(2)
+   finish = OMP_GET_WTIME()
+   write(*,*) " - calc_explicit(2) timing: ", finish-start, "(s)"
+
+   !:::::::::::
+   ! STAGE 2 ::
+   !:::::::::::
+   start = OMP_GET_WTIME()
+   !$OMP PARALLEL DO num_threads(16) private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
+   do it = 1,Nx ! kx loop
+      ! Compute phi2 and T2
+      call calc_vari_mod(tmp_phi, tmp_T, acoeffs(2,2), 2,&
+                           kx(it), phi(2:Ny-1,it),&
+                           K1hat_phi(2:Ny-1,it),K2hat_phi(2:Ny-1,it),K3hat_phi(2:Ny-1,it),&
+                           K1hat_T(2:Ny-1,it),K2hat_T(2:Ny-1,it),K3hat_T(2:Ny-1,it),&
+                           K1_phi(2:Ny-1,it), K2_phi(2:Ny-1,it), K1_T(2:Ny-1,it), K2_T(2:Ny-1,it),&
+                           T(:,it))
+      ! Compute v1 from phi1
+      call calc_vi_mod(tmp_uy, tmp_phi, kx(it))
+      ! BOUNDAY CONDITIONS!
+      call update_bcs_mod(tmp_phi1,tmp_uy1, tmp_phi,tmp_uy,dyv1_T(it),dyv2_T(it),&
+                           dyv1_B(it),dyv2_B(it),&
+                           V1(:,it),V2(:,it),phi1(:,it),phi2(:,it))
+      tmp_phi = tmp_phi1
+      tmp_uy  = tmp_uy1
+      ! Compute K2_T and K2_phi
+      call calc_implicit_mod(tmp_K_phi,tmp_K_T, tmp_phi,tmp_T, kx(it))
+      K2_phi(:,it) = tmp_K_phi
+      K2_T(:,it)   = tmp_K_T
+      ! Compute u1 from v1
+      if (kx(it) /= 0.0_dp) then
+         !uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         uxi(:,it) = CI*d1y(tmp_uy)/kx(it)
+      else if (kx(it) == 0.0_dp) then
+         uxi(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
+      end if
+      phii(:,it) = tmp_phi
+      Ti  (:,it) = tmp_T
+      uyi (:,it) = tmp_uy
+   end do
+   finish = OMP_GET_WTIME()
+   write(*,*) " - stage 2 mid timing: ", finish-start, "(s)"
+   ! Compute K3hat
+   start = OMP_GET_WTIME()
+   call calc_explicit(3)
+   finish = OMP_GET_WTIME()
+   write(*,*) " - calc_explicit(3) timing: ", finish-start, "(s)"
+
+   !:::::::::::
+   ! STAGE 3 ::
+   !:::::::::::
+   start = OMP_GET_WTIME()
+   !$OMP PARALLEL DO num_threads(16) private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
+   do it = 1,Nx ! kx loop
+      ! Compute phi3 and T3
+      call calc_vari_mod(tmp_phi, tmp_T, acoeffs(3,3), 3,&
+                           kx(it), phi(2:Ny-1,it),&
+                           K1hat_phi(2:Ny-1,it),K2hat_phi(2:Ny-1,it),K3hat_phi(2:Ny-1,it),&
+                           K1hat_T(2:Ny-1,it),K2hat_T(2:Ny-1,it),K3hat_T(2:Ny-1,it),&
+                           K1_phi(2:Ny-1,it), K2_phi(2:Ny-1,it), K1_T(2:Ny-1,it), K2_T(2:Ny-1,it),&
+                           T(:,it))
+      ! Compute v1 from phi1
+      call calc_vi_mod(tmp_uy, tmp_phi, kx(it))
+      ! BOUNDAY CONDITIONS!
+      call update_bcs_mod(tmp_phi1,tmp_uy1, tmp_phi,tmp_uy,dyv1_T(it),dyv2_T(it),&
+                           dyv1_B(it),dyv2_B(it),&
+                           V1(:,it),V2(:,it),phi1(:,it),phi2(:,it))
+      tmp_phi = tmp_phi1
+      tmp_uy  = tmp_uy1
+      ! Compute K3_T and K3_phi
+      call calc_implicit_mod(tmp_K_phi,tmp_K_T, tmp_phi,tmp_T, kx(it))
+      K3_phi(:,it) = tmp_K_phi
+      K3_T(:,it)   = tmp_K_T
+      ! Compute u1 from v1
+      if (kx(it) /= 0.0_dp) then
+         !uxi(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         uxi(:,it) = CI*d1y(tmp_uy)/kx(it)
+      else if (kx(it) == 0.0_dp) then
+         uxi(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
+      end if
+      phii(:,it) = tmp_phi
+      Ti  (:,it) = tmp_T
+      uyi (:,it) = tmp_uy
+   end do
+   !$OMP END PARALLEL DO
+   finish = OMP_GET_WTIME()
+   write(*,*) " - stage 3 mid timing: ", finish-start, "(s)"
+   ! Compute K4hat
+   start = OMP_GET_WTIME()
+   call calc_explicit(4)
+   finish = OMP_GET_WTIME()
+   write(*,*) " - calc_explicit(4) timing: ", finish-start, "(s)"
+
+   ! UPDATE SOLUTIONS
+
+   start = OMP_GET_WTIME()
+   ! Get phi
+   phi(2:Ny-1,:) = phi(2:Ny-1,:) + dt*(b(1)*(K1_phi(2:Ny-1,:) + K2hat_phi(2:Ny-1,:)) + &
+                  &                    b(2)*(K2_phi(2:Ny-1,:) + K3hat_phi(2:Ny-1,:)) + &
+                  &                    b(3)*(K3_phi(2:Ny-1,:) + K4hat_phi(2:Ny-1,:)))
+
+   ! Get temperature
+   T(2:Ny-1,:)   = T(2:Ny-1,:)  + dt*(b(1)*(K1_T(2:Ny-1,:) + K2hat_T(2:Ny-1,:)) + &
+                  &                   b(2)*(K2_T(2:Ny-1,:) + K3hat_T(2:Ny-1,:)) + &
+                  &                   b(3)*(K3_T(2:Ny-1,:) + K4hat_T(2:Ny-1,:)))
+
+   ! Get ux and uy
+   !$OMP PARALLEL DO num_threads(16) private(tmp_uy, it) schedule(dynamic)
+   do it = 1,Nx
+      ! Solve for v
+      call calc_vi_mod(tmp_uy, phi(:,it), kx(it))
+      uy(:,it) = tmp_uy
+      ! Solve for u
+      if (kx(it) /= 0.0_dp) then
+         !ux(:,it) = -CI*d1y(tmp_uy)/kx(it)
+         ux(:,it) = CI*d1y(tmp_uy)/kx(it)
+      else if (kx(it) == 0.0_dp) then
+         ux(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
+      end if
+   end do
+   !$OMP END PARALLEL DO
+   finish = OMP_GET_WTIME()
+   write(*,*) " - update sols timing: ", finish-start, "(s)"
+
+
+   if (time == t_final) then
+      exit
+   end if
+
+   !call update_dt
+   ! Don't write vtk for now.
+   wvtk = .false.
+   if (wvtk) then
+      if (mod(nti,vtk_print) == 0) then
+         call write_to_vtk(nti, .false.) ! false = Fourier space
+      end if
+   end if
+
+   ! Calculate nusselt number.
+   if (save_nusselt) then
+      call nusselt(nusselt_num, .true.) ! true = Fourier space
+      write(8000, fmt=1000) nusselt_num
+      flush(8000)
+   end if
+
+   finish_overall = OMP_GET_WTIME()
+   write(*,*) "overall timing: ", finish_overall-start_overall, "(s)"
+
+end do ! time loop
+
+
 end subroutine imex_rk
 
 !:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::!
