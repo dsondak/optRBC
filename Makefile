@@ -6,10 +6,10 @@ LDFLAGS   = -I/usr/local/fftw/include
 
 # MAIN = Ra_loop
 # MAIN = Ra_loop_no_opt
-MAIN = time_loop
-#MAIN = time_loop_MPI
+# MAIN = time_loop
+MAIN = time_loop_MPI
 
-OBJECTS = fftw.o global.o allocate_vars.o precmod.o stringmod.o write_pack.o interpolation_pack.o mesh_pack.o imod.o bc_setup.o statistics.o time_integrators.o jacobians.o gmres_pack.o nonlinear_solvers.o $(MAIN).o
+OBJECTS = fftw.o global.o allocate_vars.o precmod.o stringmod.o write_pack.o interpolation_pack.o mesh_pack.o imod.o bc_setup.o statistics.o time_integrators.o time_integrators_MPI.o jacobians.o gmres_pack.o nonlinear_solvers.o $(MAIN).o
 PROGRAMS = $(MAIN).exe
 
 all: $(PROGRAMS)
@@ -52,6 +52,9 @@ statistics.o : statistics.f90
 
 time_integrators.o : time_integrators.f90
 	$(FC) -fopenmp $(FFLAGS) time_integrators.f90
+
+time_integrators_MPI.o : time_integrators_MPI.f90
+	$(FC) -fopenmp $(FFLAGS) time_integrators_MPI.f90
 
 jacobians.o : jacobians.f90
 	$(FC) $(FFLAGS) jacobians.f90

@@ -104,7 +104,7 @@ character(3), intent(in), optional  :: process_id
 write(citer, "(I10)") 1000000000 + iter
 fiter = citer(2:10)
 
-n = (Nx+1)*Ny*Nx
+n = (Nx+1)*Ny*Nz
 if (PRESENT(process_id)) then
    open(unit=2, file=vtkloc//vtkname//"_P"//process_id//"_"//fiter//gtype, action="write", status="replace")
 else
@@ -211,7 +211,11 @@ else
       ux(j,:)  = tux
       uy(j,:)  = tuy
    end do
-   call write_vtk_structured_grid(step)
+   if (PRESENT(process_id)) then
+      call write_vtk_structured_grid(step, process_id)
+   else 
+      call write_vtk_structured_grid(step)
+   endif 
    do j = 1,Ny
       ! Bring everything to Fourier space
       tT  = T(j,:)

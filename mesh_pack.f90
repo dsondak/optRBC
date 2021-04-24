@@ -42,6 +42,51 @@ end do
 
 end subroutine cosine_mesh
 ! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+subroutine cosine_mesh_MPI(xcoor,ycoor,zcoor, numx,numy,numz, proc_id,num_procs,dxin)
+
+implicit none
+
+integer,                             intent(in)  :: numx, numy, numz
+integer,                             intent(in)  :: proc_id, num_procs
+integer                                                :: mpierror
+integer                                          :: ii, jj, kk
+real(dp)                                         :: c
+real(dp), optional,                  intent(in)  :: dxin
+real(dp)                                         :: dxj
+real(dp), allocatable, dimension(:), intent(out) :: xcoor, ycoor, zcoor
+integer                                          :: total_ny, start_ny
+
+if (present(dxin)) then
+   dxj = dxin
+else
+   dxj = dx
+end if
+
+allocate(xcoor(numx), stat=alloc_err)
+allocate(ycoor(numy), stat=alloc_err)
+allocate(zcoor(numz), stat=alloc_err)
+call check_alloc_err(alloc_err)
+
+! Create the grid.
+xcoor(1) = xL
+zcoor(1) = 0.0_dp
+total_ny = numy * num_procs
+start_ny = proc_id * numy
+do jj = 1,numy
+      c = (real(jj+start_ny,kind=dp) - 1.0_dp) / (real(total_ny,kind=dp) - 1.0_dp)
+      ycoor(jj) = -cos(c*pi)
+end do
+do ii = 2,numx
+   xcoor(ii) = xcoor(ii-1) + dxj
+end do
+do kk = 2,numz
+   zcoor(kk) = 0.0_dp
+end do
+
+end subroutine cosine_mesh_MPI
+! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 subroutine dxdydz(dyj, xcoor,ycoor,zcoor)
 
 implicit none

@@ -10,7 +10,7 @@ use interpolation_pack
 use allocate_vars
 use statistics
 use mesh_pack
-use time_integrators
+use time_integrators_MPI
 
 implicit none
 include 'mpif.h'
@@ -38,7 +38,7 @@ character(80)                                          :: tokens(80)
 integer                                                :: mpierror, num_procs
 integer                                                :: proc_id
 character(4)                                           :: proc_id_str
-real(dp)                                                :: mpi_spacing_y
+real(dp)                                               :: mpi_spacing_y
 integer                                                status(MPI_STATUS_SIZE)
 
 
@@ -162,7 +162,7 @@ else
     dx = Lx / (real(Nx,kind=dp))
 end if
 
-call cosine_mesh(xp,yp,zp, Nx,Ny,Nz) ! get coordinates
+call cosine_mesh_MPI(xp,yp,zp, Nx,Ny,Nz, proc_id, num_procs) ! get coordinates
 call dxdydz(dynu, xp,yp,zp) ! get mesh spacing for nonuniform grids
 call y_mesh_params ! get metric coefficients for nonuniform grids
 dymin = minval(dynu)
@@ -238,6 +238,9 @@ end if
 call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
 
 write(*,*) "processor ", proc_id, "initialized with ", Ny, "rows."
+
+! Get solution with time integration
+call imex_rk_MPI(proc_id_str, 1, .true.) ! true causes writing of nusselt number.
 
 call MPI_Finalize(mpierror)
 
