@@ -26,9 +26,9 @@ type(C_PTR) :: test_plan
 iret = fftw_init_threads()
 ! Uncomment below to check if init_threads working (should be nonzero)
 ! PRINT *, "iret: ", iret 
-do N_exp = 7,25
+do N_exp = 20,25
     N_test = 2**N_exp
-    print '("Points: ",i12)', N_test
+    print '("N_exp: ",i12)', N_exp
     curr_threads = 1
     do N_threads = 0,15
         call fftw_plan_with_nthreads(curr_threads)
