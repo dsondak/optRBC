@@ -49,7 +49,7 @@ implicit none
 
 integer,                             intent(in)  :: numx, numy, numz
 integer,                             intent(in)  :: proc_id, num_procs
-integer                                                :: mpierror
+integer                                          :: mpierror
 integer                                          :: ii, jj, kk
 real(dp)                                         :: c
 real(dp), optional,                  intent(in)  :: dxin
