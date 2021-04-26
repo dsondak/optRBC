@@ -13,9 +13,8 @@ use mesh_pack
 use time_integrators_MPI
 
 implicit none
-include 'mpif.h'
 
-integer                                                :: ntokens, ios
+integer                                                :: ntokens, ios, i
 integer                                                :: Nxc, Nyc, Nzc
 integer                                                :: nRa, ii, jj
 integer                                                :: refine_flag_x, refine_flag_y, refine_flag_z
@@ -129,6 +128,7 @@ Ny = Ny / 4
 mpi_spacing_y = (ytop - ybot) / num_procs
 ybot = ybot + proc_id * mpi_spacing_y
 ytop = ybot + mpi_spacing_y
+write(proc_id_str, "(I3.3)") proc_id
 
 ! Create FFT plans
 planuy = fftw_plan_dft_1d(Nx,tuy,tuy, FFTW_FORWARD,FFTW_ESTIMATE)
@@ -163,7 +163,7 @@ else
 end if
 
 call cosine_mesh_MPI(xp,yp,zp, Nx,Ny,Nz, proc_id, num_procs) ! get coordinates
-call dxdydz(dynu, xp,yp,zp) ! get mesh spacing for nonuniform grids
+call dxdydz_MPI(dynu, xp,yp,zp, proc_id, num_procs) ! get mesh spacing for nonuniform grids
 call y_mesh_params ! get metric coefficients for nonuniform grids
 dymin = minval(dynu)
 dxmin = sqrt(dx**2.0_dp + dymin**2.0_dp)
@@ -179,7 +179,6 @@ kx = alpha*kx_modes
 
 ! Write initial field to vtk
 if (wvtk) then
-    write(proc_id_str, "(I3.3)") proc_id
     call write_to_vtk(int(Ra), .true., proc_id_str) ! true = already in physical space
 end if
 

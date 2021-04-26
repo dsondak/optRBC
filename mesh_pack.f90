@@ -1,6 +1,7 @@
 module mesh_pack
 
 use global
+include 'mpif.h'
 
 contains
 
@@ -107,6 +108,57 @@ do jj = 2,numy
 end do
 
 end subroutine dxdydz
+
+! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+subroutine dxdydz_MPI(dyj, xcoor,ycoor,zcoor, proc_id, num_procs)
+
+implicit none
+
+real(dp),              dimension(:), intent(in)  :: xcoor, ycoor, zcoor
+integer,                             intent(in)  :: proc_id, num_procs
+real(dp), allocatable, dimension(:), intent(out) :: dyj
+integer                                          :: alloc_err, mpierror
+integer                                          :: numy, jj
+real(dp)                                         :: prev_element
+
+numy = size(ycoor)
+
+if (proc_id == 0) then
+   allocate(dyj(numy-1), stat=alloc_err)
+   call check_alloc_err(alloc_err)
+   ! Calculate grid spacing
+   do jj = 2,numy
+      dyj(jj-1) = ycoor(jj) - ycoor(jj-1)
+   end do
+   ! Send last element to next process to the right.
+   call MPI_SEND(ycoor(numy), 1, MPI_DOUBLE, proc_id+1, 42, MPI_COMM_WORLD, mpierror)
+else if (proc_id == num_procs - 1) then
+   ! Recieve first element from next process to the left.
+   call MPI_RECV(prev_element, 1, MPI_DOUBLE, proc_id-1, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+   allocate(dyj(numy), stat=alloc_err)
+   call check_alloc_err(alloc_err)
+   ! Calculate grid spacing
+   dyj(1) = ycoor(1) - prev_element
+   do jj = 2,numy
+      dyj(jj) = ycoor(jj) - ycoor(jj-1)
+   end do
+else
+   ! Recieve first element from next process to the left.
+   call MPI_RECV(prev_element, 1, MPI_DOUBLE, proc_id-1, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+   ! Send last element to next process to the right.
+   call MPI_SEND(ycoor(numy), 1, MPI_DOUBLE, proc_id+1, 42, MPI_COMM_WORLD, mpierror)
+   allocate(dyj(numy), stat=alloc_err)
+   call check_alloc_err(alloc_err)
+   ! Calculate grid spacing
+   dyj(1) = ycoor(1) - prev_element
+   do jj = 2,numy
+      dyj(jj) = ycoor(jj) - ycoor(jj-1)
+   end do
+end if
+
+
+end subroutine dxdydz_MPI
 ! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 subroutine y_mesh_params
 
