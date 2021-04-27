@@ -62,13 +62,13 @@ dt = dt_init
 
 call init_bc_MPI(acoeffs(1,1), proc_id, num_procs, proc_id_str)
 
-open(unit=9000, file="P"//proc_id_str//"phi1.txt", action="write", status="unknown")
-open(unit=9001, file="P"//proc_id_str//"phi2.txt", action="write", status="unknown")
+open(unit=9000, file="P"//proc_id_str//"V1.txt", action="write", status="unknown")
+open(unit=9001, file="P"//proc_id_str//"V2.txt", action="write", status="unknown")
 
 do i=1,Ny
    do j=1,Nx
-       write (9000,*) phi1(i,j)
-       write (9001,*) phi2(i,j)
+       write (9000,*) V1(i,j)
+       write (9001,*) V2(i,j)
    end do
 end do
 

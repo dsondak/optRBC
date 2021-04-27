@@ -263,10 +263,39 @@ if(proc_id == 0) then
       ! Send phi1 and phi2 columns to each node.
       do otherproc = 1,num_procs-1
          start = otherproc * Ny
-         ! write(*,*) start, Fphi12
          call MPI_SEND(Fphi12(start,1), Ny, MPI_DOUBLE, otherproc, 45, MPI_COMM_WORLD, mpierror)
          call MPI_SEND(Fphi12(start,2), Ny, MPI_DOUBLE, otherproc, 46, MPI_COMM_WORLD, mpierror)
       end do
+
+      ! Getting V1 and V2 initialized.
+      FV12(:,1) = Fphi12(:,1)
+      FV12(:,2) = Fphi12(:,2)
+
+      do jj = 2,total_ny-1
+         d(jj-1) = -wavex**2.0_dp + g2_total(jj)
+      end do
+
+      do jj = 2,total_ny-2
+         du(jj-1) = g3_total(jj)
+      end do
+
+      do jj = 3,total_ny-1
+         dl(jj-2) = g1_total(jj)
+      end do
+
+      call dgtsv(total_ny-2, 2, dl, d, du, FV12, total_ny-2, info)
+
+      ! Place V1, V2 in main node memory.
+      V1(2:Ny,ii) = FV12(1:Ny-1,1)
+      V2(2:Ny,ii) = FV12(1:Ny-1,2)
+
+      ! Send V1 and V1 columns to each node.
+      do otherproc = 1,num_procs-1
+         start = otherproc * Ny
+         call MPI_SEND(FV12(start,1), Ny, MPI_DOUBLE, otherproc, 48, MPI_COMM_WORLD, mpierror)
+         call MPI_SEND(FV12(start,2), Ny, MPI_DOUBLE, otherproc, 49, MPI_COMM_WORLD, mpierror)
+      end do
+
    end do
 
    ! Send last row to final proc.
@@ -283,12 +312,20 @@ else
    allocate(recv_col2(Ny), stat=alloc_err)
    call check_alloc_err(alloc_err)
 
-   ! Receive rows of phi1 and phi2.
+   ! Receive cols of phi1 and phi2.
    do ii = 1,Nx
       call MPI_RECV(recv_col, Ny, MPI_DOUBLE, 0, 45, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
       call MPI_RECV(recv_col2, Ny, MPI_DOUBLE, 0, 46, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
       phi1(1:Ny, ii) = recv_col
       phi2(1:Ny, ii) = recv_col2
+   end do
+
+   ! Receive cols of V1 and V2.
+   do ii = 1,Nx
+      call MPI_RECV(recv_col, Ny, MPI_DOUBLE, 0, 48, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+      call MPI_RECV(recv_col2, Ny, MPI_DOUBLE, 0, 49, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+      V1(1:Ny, ii) = recv_col
+      V2(1:Ny, ii) = recv_col2
    end do
 
    ! Handle boundary of last processor.
@@ -298,6 +335,8 @@ else
       call MPI_RECV(last_row_recv, Nx, MPI_DOUBLE, 0, 47, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
       phi1(Ny,1:Nx)     = 0.0_dp
       phi2(Ny,1:Nx)     = last_row_recv
+      V1(Ny, 1:Nx)      = 0.0_dp
+      V2(Ny, 1:Nx)      = 0.0_dp
    end if 
 end if 
 
