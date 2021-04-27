@@ -62,18 +62,33 @@ dt = dt_init
 
 call init_bc_MPI(acoeffs(1,1), proc_id, num_procs, proc_id_str)
 
-open(unit=9000, file="P"//proc_id_str//"V1.txt", action="write", status="unknown")
-open(unit=9001, file="P"//proc_id_str//"V2.txt", action="write", status="unknown")
+if (proc_id == 0) then
+    open(unit=9000, file="P000dyv1_b.txt", action="write", status="unknown")
+    open(unit=9001, file="P000dyv2_b.txt", action="write", status="unknown")
+    
+    do i=1,Nx
+        write (9000,*) dyv1_B(i)
+        write (9001,*) dyv2_B(i)
+    end do
+    
+    close(unit=9000)
+    close(unit=9001)
+end if
 
-do i=1,Ny
-   do j=1,Nx
-       write (9000,*) V1(i,j)
-       write (9001,*) V2(i,j)
-   end do
-end do
+if (proc_id == num_procs-1) then
+    open(unit=9000, file="P003dyv1_t.txt", action="write", status="unknown")
+    open(unit=9001, file="P003dyv2_t.txt", action="write", status="unknown")
+    
+    do i=1,Nx
+        write (9000,*) dyv1_T(i)
+        write (9001,*) dyv2_T(i)
+    end do
+    
+    close(unit=9000)
+    close(unit=9001)
+end if
 
-close(unit=9000)
-close(unit=9001)
+
 
 end subroutine imex_rk_MPI
 

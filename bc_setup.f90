@@ -340,6 +340,19 @@ else
    end if 
 end if 
 
+! Calculate wall derivative on first and last processor.
+if (proc_id == 0) then
+   do ii = 1,Nx
+      dyv1_B(ii) = h1(1)*V1(1,ii) + h2(1)*V1(2,ii) + h3(1)*V1(3,ii)
+      dyv2_B(ii) = h1(1)*V2(1,ii) + h2(1)*V2(2,ii) + h3(1)*V2(3,ii)
+   end do
+else if (proc_id == num_procs - 1) then
+   do ii = 1,Nx
+      dyv1_T(ii) = h1(Ny)*V1(Ny-2,ii) + h2(Ny)*V1(Ny-1,ii) + h3(Ny)*V1(Ny,ii)
+      dyv2_T(ii) = h1(Ny)*V2(Ny-2,ii) + h2(Ny)*V2(Ny-1,ii) + h3(Ny)*V2(Ny,ii)
+   end do
+end if
+
 end subroutine init_bc_MPI
 
 end module bc_setup
