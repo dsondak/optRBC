@@ -192,6 +192,95 @@ g3(Ny) =  2.0_dp / (dynu(Ny-1)*(dynu(Ny-1) + dynu(Ny-2)))
 
 end subroutine y_mesh_params
 ! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+subroutine y_mesh_params_MPI (proc_id, num_procs)
+
+implicit none
+
+integer, intent(in)  :: proc_id, num_procs
+real(dp)             :: recv_val
+integer              :: mpierror, jj
+
+! Calculate metric coefficients
+! g is for second derivatives
+! h is for first derivatives
+
+! First element
+if (proc_id == 0) then
+   call MPI_RECV(recv_val, 1, MPI_DOUBLE, proc_id+1, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+
+   ! First elems
+   g1(1) =  2.0_dp / (dynu(1)*(dynu(1)+dynu(2)))
+   g2(1) = -2.0_dp / (dynu(1)*dynu(2))
+   g3(1) =  2.0_dp / (dynu(2)*(dynu(1)+dynu(2)))
+
+   h1(1) = -(2.0_dp*dynu(1)+dynu(2)) / (dynu(1)*(dynu(1)+dynu(2)))
+   h2(1) = (dynu(1) + dynu(2)) / (dynu(1)*dynu(2))
+   h3(1) = -dynu(1) / (dynu(2)*(dynu(1)+dynu(2)))
+
+   ! Middle Ny-2 elements.
+   do jj = 2,Ny-1
+      g1(jj) =  2.0_dp / (dynu(jj-1)*(dynu(jj)+dynu(jj-1)))
+      g2(jj) = -2.0_dp / (dynu(jj-1)*dynu(jj))
+      g3(jj) =  2.0_dp / (dynu( jj )*(dynu(jj)+dynu(jj-1)))
+
+      h1(jj) = -dynu(jj) / (dynu(jj-1)*(dynu(jj-1) + dynu(jj)))
+      h2(jj) = (dynu(jj) - dynu(jj-1)) / (dynu(jj-1)*dynu(jj))
+      h3(jj) = dynu(jj-1) / (dynu(jj)*(dynu(jj-1) + dynu(jj)))
+   end do
+
+   ! Last elems
+   g1(Ny) =  2.0_dp / (dynu(Ny-1)*(recv_val+dynu(Ny-1)))
+   g2(Ny) = -2.0_dp / (dynu(Ny-1)*recv_val)
+   g3(Ny) =  2.0_dp / (recv_val*(recv_val+dynu(Ny-1)))
+
+   h1(Ny) = -recv_val / (dynu(Ny-1)*(dynu(Ny-1) + recv_val))
+   h2(Ny) = (recv_val - dynu(Ny-1)) / (dynu(Ny-1)*recv_val)
+   h3(Ny) = dynu(Ny-1) / (recv_val*(dynu(Ny-1) + recv_val))
+else if (proc_id == num_procs - 1) then
+   call MPI_SEND(dynu(1), 1, MPI_DOUBLE, proc_id-1, 42, MPI_COMM_WORLD, mpierror)
+   do jj = 1,Ny-1
+      g1(jj) =  2.0_dp / (dynu(jj)*(dynu(jj+1)+dynu(jj)))
+      g2(jj) = -2.0_dp / (dynu(jj)*dynu(jj+1))
+      g3(jj) =  2.0_dp / (dynu(jj+1)*(dynu(jj+1)+dynu(jj)))
+
+      h1(jj) = -dynu(jj+1) / (dynu(jj)*(dynu(jj) + dynu(jj+1)))
+      h2(jj) = (dynu(jj+1) - dynu(jj)) / (dynu(jj)*dynu(jj+1))
+      h3(jj) = dynu(jj) / (dynu(jj+1)*(dynu(jj) + dynu(jj+1)))
+   end do
+   h1(Ny) = dynu(Ny) / (dynu(Ny-1)*(dynu(Ny-1)+dynu(Ny)))
+   h2(Ny) = -(dynu(Ny-1) + dynu(Ny)) / (dynu(Ny-1)*dynu(Ny))
+   h3(Ny) = (2.0_dp*dynu(Ny) + dynu(Ny-1)) / (dynu(Ny)*(dynu(Ny-1) + dynu(Ny)))
+
+   g1(Ny) =  2.0_dp / (dynu(Ny-1)*(dynu(Ny-1) + dynu(Ny)))
+   g2(Ny) = -2.0_dp / (dynu(Ny)*dynu(Ny-1))
+   g3(Ny) =  2.0_dp / (dynu(Ny)*(dynu(Ny) + dynu(Ny-1)))
+
+else
+   call MPI_SEND(dynu(1), 1, MPI_DOUBLE, proc_id-1, 42, MPI_COMM_WORLD, mpierror)
+   call MPI_RECV(recv_val, 1, MPI_DOUBLE, proc_id+1, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+   ! All but last elems.
+   do jj = 1,Ny-1
+      g1(jj) =  2.0_dp / (dynu(jj)*(dynu(jj+1)+dynu(jj)))
+      g2(jj) = -2.0_dp / (dynu(jj)*dynu(jj+1))
+      g3(jj) =  2.0_dp / (dynu(jj+1)*(dynu(jj+1)+dynu(jj)))
+
+      h1(jj) = -dynu(jj+1) / (dynu(jj)*(dynu(jj) + dynu(jj+1)))
+      h2(jj) = (dynu(jj+1) - dynu(jj)) / (dynu(jj)*dynu(jj+1))
+      h3(jj) = dynu(jj) / (dynu(jj+1)*(dynu(jj) + dynu(jj+1)))
+   end do
+   ! Last elems
+   g1(Ny) =  2.0_dp / (dynu(Ny)*(recv_val+dynu(Ny)))
+   g2(Ny) = -2.0_dp / (dynu(Ny)*recv_val)
+   g3(Ny) =  2.0_dp / (recv_val*(recv_val+dynu(Ny)))
+
+   h1(Ny) = -recv_val / (dynu(Ny)*(dynu(Ny) + recv_val))
+   h2(Ny) = (recv_val - dynu(Ny)) / (dynu(Ny)*recv_val)
+   h3(Ny) = dynu(Ny) / (recv_val*(dynu(Ny) + recv_val))
+end if 
+
+end subroutine y_mesh_params_MPI
+! :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 subroutine uniform_mesh(xcoor,ycoor,zcoor, numx,numy,numz)
 
 implicit none
