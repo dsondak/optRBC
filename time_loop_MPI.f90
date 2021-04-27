@@ -166,106 +166,81 @@ call cosine_mesh_MPI(xp,yp,zp, Nx,Ny,Nz, proc_id, num_procs) ! get coordinates
 call dxdydz_MPI(dynu, xp,yp,zp, proc_id, num_procs) ! get mesh spacing for nonuniform grids
 call y_mesh_params_MPI(proc_id, num_procs) ! get metric coefficients for nonuniform grids
 
-open(unit=9000, file=proc_id_str//"g1.txt", action="write", status="unknown")
-open(unit=9001, file=proc_id_str//"g2.txt", action="write", status="unknown")
-open(unit=9002, file=proc_id_str//"g3.txt", action="write", status="unknown")
-open(unit=9003, file=proc_id_str//"h1.txt", action="write", status="unknown")
-open(unit=9004, file=proc_id_str//"h2.txt", action="write", status="unknown")
-open(unit=9005, file=proc_id_str//"h3.txt", action="write", status="unknown")
+dymin = minval(dynu)
+dxmin = sqrt(dx**2.0_dp + dymin**2.0_dp)
+
+! Fourier modes
+do ii = 1,Nx/2
+    kx_modes(ii) = real(ii,kind=dp) - 1.0_dp
+end do
+do ii = Nx/2+1, Nx
+    kx_modes(ii) = real(ii-Nx,kind=dp) - 1.0_dp
+end do
+kx = alpha*kx_modes
+
+! Write initial field to vtk
+if (wvtk) then
+    call write_to_vtk(int(Ra), .true., proc_id_str) ! true = already in physical space
+end if
+
+! Initialize fields.
+call init_fields(ex_Tptrb, Ra)
+call init_to_fourier(ex_Tptrb)
+
+! Get nu0 and kappa0
+call global_params_Ra(Ra)
+
+if (proc_id == 0) then
+    write(*,'(A70)')                  ' '
+    write(*,'(A70)')                  '*********************************************************************|'
+    write(*,'(A70)')                  '                TWO-DIMENSIONAL THERMAL CONVECTION                   |'
+    write(*,'(A70)')                  '*********************************************************************|'
+    write(*,'(5X,A,47X,A)')           'COMPUTATION SIZE:',                                                 '|'
+    write(*,'(A69,A)')                '                                                                  ','|'
+    write(*,'(20X,A23,I5,21X,A)')     'Nx                       = ', Nx,                                   '|'
+    write(*,'(20X,A23,I5,21X,A)')     'Ny                       = ', Ny,                                   '|'
+    write(*,'(20X,A23,I5,21X,A)')     'Nz                       = ', Nz,                                   '|'
+    write(*,'(20X,A23,I5,21X,A)')     'Number of time steps     = ', nt,                                   '|'
+    write(*,'(20X,A23,I5,21X,A)')     'Number of Fourier modes  = ', Nf,                                   '|'
+    write(*,'(A69,A)')                '                                                                  ','|'
+    write(*,'(A70)')                  '*********************************************************************|'
+    write(*,'(5X,A,45X,A)')           'PROBLEM PARAMETERS:',                                               '|'
+    write(*,'(A69,A)')                '                                                                  ','|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Prandtl number  (Pr)                    = ', Pr,                    '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Initial Rayleigh number (Ra)            = ', Ra,                    '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Initial Reynolds number (Re)            = ', sqrt(Ra/(16.0_dp*Pr)), '|'
+    write(*,'(A69,A)')                '                                                                  ','|'
+    write(*,'(A70)')                  '*********************************************************************|'
+    write(*,'(5X,A,42X,A)')           'PHYSICAL PROBLEM SIZE:',                                            '|'
+    write(*,'(A69,A)')                '                                                                  ','|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'alpha                     = ', alpha,                               '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Left coordinate of box    = ', xL,                                  '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Right coordinate of box   = ', xR,                                  '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Coordinate of bottom wall = ', ybot,                                '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Coordinate of top wall    = ', ytop,                                '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Box width                 = ', Lx,                                  '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Box height                = ', Ly,                                  '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Aspect Ratio              = ', Lx/Ly,                               '|'
+    write(*,'(A69,A)')                '                                                                  ','|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Integration time (T)      = ', t_final,                              '|'
+    write(*,'(10X,A32,ES16.8,11X,A)') 'Time step size (Delta t)  = ', dt,                                   '|'
+    write(*,'(A69,A)')                '                                                                  ','|'
+    write(*,'(A70)')                  '*********************************************************************|'
+    write(*,'(A70)')                  '*********************************************************************|'
+    write(*,'(A70)')                  '                                                                      '
+    
+    flush(6)
+    ! Print MPI division.
+    write(*,*) "Ny = ", Ny*num_procs, " divided among ", num_procs, " processors -> ", &
+               Ny, " rows per processor."
+end if
 
 call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
 
-do i=1,Ny
-   write (9000,*) g1(i)
-   write (9001,*) g2(i)
-   write (9002,*) g3(i)
-   write (9003,*) h1(i)
-   write (9004,*) h2(i)
-   write (9005,*) h3(i)
-end do
+write(*,*) "processor ", proc_id, "initialized with ", Ny, "rows."
 
-close(unit=9000)
-close(unit=9001)
-close(unit=9002)
-close(unit=9003)
-close(unit=9004)
-close(unit=9005)
-
-! dymin = minval(dynu)
-! dxmin = sqrt(dx**2.0_dp + dymin**2.0_dp)
-
-! ! Fourier modes
-! do ii = 1,Nx/2
-!     kx_modes(ii) = real(ii,kind=dp) - 1.0_dp
-! end do
-! do ii = Nx/2+1, Nx
-!     kx_modes(ii) = real(ii-Nx,kind=dp) - 1.0_dp
-! end do
-! kx = alpha*kx_modes
-
-! ! Write initial field to vtk
-! if (wvtk) then
-!     call write_to_vtk(int(Ra), .true., proc_id_str) ! true = already in physical space
-! end if
-
-! ! Initialize fields.
-! call init_fields(ex_Tptrb, Ra)
-! call init_to_fourier(ex_Tptrb)
-
-! ! Get nu0 and kappa0
-! call global_params_Ra(Ra)
-
-! if (proc_id == 0) then
-!     write(*,'(A70)')                  ' '
-!     write(*,'(A70)')                  '*********************************************************************|'
-!     write(*,'(A70)')                  '                TWO-DIMENSIONAL THERMAL CONVECTION                   |'
-!     write(*,'(A70)')                  '*********************************************************************|'
-!     write(*,'(5X,A,47X,A)')           'COMPUTATION SIZE:',                                                 '|'
-!     write(*,'(A69,A)')                '                                                                  ','|'
-!     write(*,'(20X,A23,I5,21X,A)')     'Nx                       = ', Nx,                                   '|'
-!     write(*,'(20X,A23,I5,21X,A)')     'Ny                       = ', Ny,                                   '|'
-!     write(*,'(20X,A23,I5,21X,A)')     'Nz                       = ', Nz,                                   '|'
-!     write(*,'(20X,A23,I5,21X,A)')     'Number of time steps     = ', nt,                                   '|'
-!     write(*,'(20X,A23,I5,21X,A)')     'Number of Fourier modes  = ', Nf,                                   '|'
-!     write(*,'(A69,A)')                '                                                                  ','|'
-!     write(*,'(A70)')                  '*********************************************************************|'
-!     write(*,'(5X,A,45X,A)')           'PROBLEM PARAMETERS:',                                               '|'
-!     write(*,'(A69,A)')                '                                                                  ','|'
-!     write(*,'(10X,A32,ES16.8,11X,A)') 'Prandtl number  (Pr)                    = ', Pr,                    '|'
-!     write(*,'(10X,A32,ES16.8,11X,A)') 'Initial Rayleigh number (Ra)            = ', Ra,                    '|'
-!     write(*,'(10X,A32,ES16.8,11X,A)') 'Initial Reynolds number (Re)            = ', sqrt(Ra/(16.0_dp*Pr)), '|'
-!     write(*,'(A69,A)')                '                                                                  ','|'
-!     write(*,'(A70)')                  '*********************************************************************|'
-!     write(*,'(5X,A,42X,A)')           'PHYSICAL PROBLEM SIZE:',                                            '|'
-!     write(*,'(A69,A)')                '                                                                  ','|'
-!     write(*,'(10X,A32,ES16.8,11X,A)') 'alpha                     = ', alpha,                               '|'
-!     write(*,'(10X,A32,ES16.8,11X,A)') 'Left coordinate of box    = ', xL,                                  '|'
-!     write(*,'(10X,A32,ES16.8,11X,A)') 'Right coordinate of box   = ', xR,                                  '|'
-!     write(*,'(10X,A32,ES16.8,11X,A)') 'Coordinate of bottom wall = ', ybot,                                '|'
-!     write(*,'(10X,A32,ES16.8,11X,A)') 'Coordinate of top wall    = ', ytop,                                '|'
-!     write(*,'(10X,A32,ES16.8,11X,A)') 'Box width                 = ', Lx,                                  '|'
-!     write(*,'(10X,A32,ES16.8,11X,A)') 'Box height                = ', Ly,                                  '|'
-!     write(*,'(10X,A32,ES16.8,11X,A)') 'Aspect Ratio              = ', Lx/Ly,                               '|'
-!     write(*,'(A69,A)')                '                                                                  ','|'
-!     write(*,'(10X,A32,ES16.8,11X,A)') 'Integration time (T)      = ', t_final,                              '|'
-!     write(*,'(10X,A32,ES16.8,11X,A)') 'Time step size (Delta t)  = ', dt,                                   '|'
-!     write(*,'(A69,A)')                '                                                                  ','|'
-!     write(*,'(A70)')                  '*********************************************************************|'
-!     write(*,'(A70)')                  '*********************************************************************|'
-!     write(*,'(A70)')                  '                                                                      '
-    
-!     flush(6)
-!     ! Print MPI division.
-!     write(*,*) "Ny = ", Ny*num_procs, " divided among ", num_procs, " processors -> ", &
-!                Ny, " rows per processor."
-! end if
-
-! call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
-
-! write(*,*) "processor ", proc_id, "initialized with ", Ny, "rows."
-
-! ! Get solution with time integration
-! call imex_rk_MPI(proc_id_str, 1, .true.) ! true causes writing of nusselt number.
+! Get solution with time integration
+call imex_rk_MPI(proc_id_str, 1, .true., proc_id, num_procs) ! true causes writing of nusselt number.
 
 call MPI_Finalize(mpierror)
 
