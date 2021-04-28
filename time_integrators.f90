@@ -33,7 +33,7 @@ logical                        :: wvtk
 real(dp)                       :: nusselt_num
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
+!write(*,*) "error is in time_integrators.f90"
 if (present(vtk_print)) then
    wvtk = .true.
    nprint = vtk_print
@@ -63,7 +63,7 @@ nti = 0
 
 ! Format for writing out single values.
 1000 format(E25.16E3)
-
+!write(*,*) "good till here 1"
 ! Time integration
 do ! while (time < t_final)
 
@@ -86,6 +86,7 @@ do ! while (time < t_final)
    Ti   = T
    uxi  = ux
    uyi  = uy
+   !write(*,*) "good till here 2"
    call calc_explicit(1)
    do it = 1,Nx ! kx loop
       ! Compute phi1 and T1
@@ -113,7 +114,7 @@ do ! while (time < t_final)
    end do
    ! Compute K2hat
    call calc_explicit(2)
-
+   !write(*,*) "stage 1 works"
    !:::::::::::
    ! STAGE 2 ::
    !:::::::::::
@@ -143,7 +144,7 @@ do ! while (time < t_final)
    end do
    ! Compute K3hat
    call calc_explicit(3)
-
+   !write(*,*) "stage 2 works"
    !:::::::::::
    ! STAGE 3 ::
    !:::::::::::
@@ -173,19 +174,19 @@ do ! while (time < t_final)
    end do
    ! Compute K4hat
    call calc_explicit(4)
-
+   !write(*,*) "stage 3 works"
    ! UPDATE SOLUTIONS
 
    ! Get phi
    phi(2:Ny-1,:) = phi(2:Ny-1,:) + dt*(b(1)*(K1_phi(2:Ny-1,:) + K2hat_phi(2:Ny-1,:)) + &
                   &                    b(2)*(K2_phi(2:Ny-1,:) + K3hat_phi(2:Ny-1,:)) + &
                   &                    b(3)*(K3_phi(2:Ny-1,:) + K4hat_phi(2:Ny-1,:)))
-
+   !write(*,*) "good till here 3"
    ! Get temperature
    T(2:Ny-1,:)   = T(2:Ny-1,:)  + dt*(b(1)*(K1_T(2:Ny-1,:) + K2hat_T(2:Ny-1,:)) + &
                   &                   b(2)*(K2_T(2:Ny-1,:) + K3hat_T(2:Ny-1,:)) + &
                   &                   b(3)*(K3_T(2:Ny-1,:) + K4hat_T(2:Ny-1,:)))
-
+   !write(*,*) "good till here 4"
    ! Get ux and uy
    do it = 1,Nx
       ! Solve for v
@@ -199,28 +200,34 @@ do ! while (time < t_final)
          ux(:,it) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
    end do
-
+   !write(*,*) "good till here 5"
    if (time == t_final) then
       exit
    end if
 
    !call update_dt
-
+   !write(*,*) "good till here 6"
    if (wvtk) then
       if (mod(nti,vtk_print) == 0) then
          call write_to_vtk(nti, .false.) ! false = Fourier space
       end if
    end if
-
+   !write(*,*) "good till here 7"
+   write(*,*) save_nusselt
    ! Calculate nusselt number.
    if (save_nusselt) then
+      write(*,*) "entered if statement"
       call nusselt(nusselt_num, .true.) ! true = Fourier space
+      write(*,*) "called nusselt"
+      write(*,*) nusselt_num
       write(8000, fmt=1000) nusselt_num
+      write(*,*) "wrote to file"
       flush(8000)
+      write(*,*) "flushed"
    end if
-
+   write(*,*) "good till here 8"
 end do ! time loop
-
+!write(*,*) "time loop over!"
 end subroutine imex_rk
 
 !:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::!
@@ -627,5 +634,16 @@ call init_bc(acoeffs(1,1))
 !write(*,*) "cfl, tmpmax, dt", cfl, tmpmax, dt
 
 end subroutine update_dt
+
+!!!!!!!!!!!!!!!!!!!
+
+!subroutine calc_kappa()
+
+!real(dp) :: kappa_top
+
+!kappa_top = 1.0
+!Tkappa = kappa_top*(1+49*T+450*T**6)
+        
+!end subroutine calc_kappa
 
 end module time_integrators

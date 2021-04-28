@@ -415,10 +415,9 @@ Raloop: do ii = 1, nRa
                   write(*,*) " "
                end if
             end if
-
+          
             ! Get nu0 and kappa0
             call global_params_Ra(Ra)
-
             do alphai = 1,alphai_max
 
                select case (alphai)
@@ -444,7 +443,7 @@ Raloop: do ii = 1, nRa
                      end if
 
                      kx = alpha * kx_modes
-
+                     !write(*,*) "good till here 1"
                      call cosine_mesh(xp,yp,zp, Nx,Ny,Nz) ! get coordinates
                      dxmin = sqrt(dx**2.0_dp + dymin**2.0_dp)
 
@@ -460,14 +459,14 @@ Raloop: do ii = 1, nRa
                      end do
 
                end select
-
+               !write(*,*) "good till here 2"
                ! Populate x0
                call packx(x0)
-
+               !write(*,*) "good till here 3"
                ! Get solution with flow map
-               call flow_map(Nui(alphai), nl_iter_data, temp)
+               call flow_map(Nui(alphai), nl_iter_data, temp) 
+               !write(*,*) "good till here 4"
                Li(alphai) = Lx
-
                if (alphai == alphai_max) then
                   if (Nui(alphai) < Nui(alphai-1)) then
                      ext = 0
