@@ -30,6 +30,7 @@ logical, optional, intent(in)  :: save_nusselt
 integer                        :: nti
 integer                        :: nprint
 logical                        :: wvtk
+logical                        :: wnusselt
 real(dp)                       :: nusselt_num
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -44,6 +45,12 @@ end if
 
 if (wvtk) then
    call write_to_vtk(0, .false.) ! false = Fourier space
+end if
+
+if (present(save_nusselt)) then
+   wnusselt = .true.
+else
+   wnusselt = .false.
 end if
 
 dt = dt_init
@@ -213,7 +220,7 @@ do ! while (time < t_final)
    end if
 
    ! Calculate nusselt number.
-   if (save_nusselt) then
+   if (wnusselt) then
       call nusselt(nusselt_num, .true.) ! true = Fourier space
       write(8000, fmt=1000) nusselt_num
       flush(8000)
