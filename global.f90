@@ -314,7 +314,7 @@ implicit none
 
 complex(C_DOUBLE_COMPLEX), dimension(:), intent(in)  :: vec
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:) :: d1yvec
-integer               :: alloc_err, jj, n
+integer               :: alloc_err, jj, n, i
 
 n = size(vec)
 
@@ -333,6 +333,35 @@ end do
 d1yvec(n) = h1(n)*vec(n-2) + h2(n)*vec(n-1) + h3(n)*vec(n)
 
 end function d1y
+
+!:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+function d1y_MPI(vec, h1_total, h2_total, h3_total) result(d1yvec)
+
+implicit none
+
+complex(C_DOUBLE_COMPLEX), dimension(:), intent(in)  :: vec
+complex(C_DOUBLE_COMPLEX), allocatable, dimension(:) :: d1yvec
+real(dp),   dimension(:),  intent(in)  :: h1_total, h2_total, h3_total                
+integer               :: alloc_err, jj, n, i
+
+n = size(vec)
+
+allocate(d1yvec(n), stat=alloc_err)
+if (alloc_err /= 0) then
+   write(*,*) "ERROR:  Allocation problem in d1y."
+   stop
+end if
+
+d1yvec = 0.0_dp
+
+d1yvec(1) = h1_total(1)*vec(1) + h2_total(1)*vec(2) + h3_total(1)*vec(3)
+do jj = 2,n-1
+   d1yvec(jj) = h1_total(jj)*vec(jj-1) + h2_total(jj)*vec(jj) + h3_total(jj)*vec(jj+1)
+end do
+d1yvec(n) = h1_total(n)*vec(n-2) + h2_total(n)*vec(n-1) + h3_total(n)*vec(n)
+
+end function d1y_MPI
 
 !:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
@@ -388,6 +417,65 @@ d2yvec(n) = ellNm3*vec(n-3) + ellNm2*vec(n-2) + &
            &ellNm1*vec(n-1) + ellN*vec(n)
 
 end function d2y
+
+!:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+function d2y_MPI(vec, dynu_in, g1_total, g2_total, g3_total, total_ny) result(d2yvec)
+
+implicit none
+
+complex(C_DOUBLE_COMPLEX), intent(in)  :: vec(:)
+complex(C_DOUBLE_COMPLEX), allocatable :: d2yvec(:)
+real(dp),   dimension(:),  intent(in)  :: dynu_in, g1_total, g2_total, g3_total                
+integer,                   intent(in)  :: total_ny
+real(dp)                               :: d1, d2, d3, d4
+real(dp)                               :: ell1, ell2, ell3, ell4
+real(dp)                               :: dNm3, dNm2, dNm1, dN
+real(dp)                               :: ellNm3, ellNm2, ellNm1, ellN
+integer                                :: jj, n
+
+n = size(vec)
+
+allocate(d2yvec(n), stat=alloc_err)
+if (alloc_err /= 0) then
+   write(*,*) "ERROR:  Allocation problem in d2y."
+   stop
+end if
+
+d2yvec = 0.0_dp
+
+d1 = -dynu_in(1)*(dynu_in(1)+dynu_in(2))*(dynu_in(1)+dynu_in(2)+dynu_in(3))
+d2 =  dynu_in(1)*dynu_in(2)*(dynu_in(2) + dynu_in(3))
+d3 = -dynu_in(2)*dynu_in(3)*(dynu_in(1) + dynu_in(2))
+d4 =  dynu_in(3)*(dynu_in(2)+dynu_in(3))*(dynu_in(1)+dynu_in(2)+dynu_in(3))
+
+ell1 = -2.0_dp*(3.0_dp*dynu_in(1) + 2.0_dp*dynu_in(2) + dynu_in(3)) / d1
+ell2 = -2.0_dp*(2.0_dp*(dynu_in(1) + dynu_in(2)) + dynu_in(3)) / d2
+ell3 = -2.0_dp*(2.0_dp*dynu_in(1) + dynu_in(2) + dynu_in(3)) / d3
+ell4 = -2.0_dp*(2.0_dp*dynu_in(1) + dynu_in(2)) / d4
+
+dN   =  dynu_in(total_ny-1)*(dynu_in(total_ny-1)+dynu_in(total_ny-2))*(dynu_in(total_ny-1)+dynu_in(total_ny-2)+dynu_in(total_ny-3))
+dNm1 = -dynu_in(total_ny-1)*dynu_in(total_ny-2)*(dynu_in(total_ny-2)+dynu_in(total_ny-3))
+dNm2 =  dynu_in(total_ny-2)*dynu_in(total_ny-3)*(dynu_in(total_ny-1)+dynu_in(total_ny-2))
+dNm3 = -dynu_in(total_ny-3)*(dynu_in(total_ny-2)+dynu_in(total_ny-3))*(dynu_in(total_ny-1)+dynu_in(total_ny-2)+dynu_in(total_ny-3))
+
+ellN   = 2.0_dp*(3.0_dp*dynu_in(total_ny-1) + 2.0_dp*dynu_in(total_ny-2) + dynu_in(total_ny-3)) / dN
+ellNm1 = 2.0_dp*(2.0_dp*(dynu_in(total_ny-1)+dynu_in(total_ny-2)) + dynu_in(total_ny-3)) / dNm1
+ellNm2 = 2.0_dp*(2.0_dp*dynu_in(total_ny-1) + dynu_in(total_ny-2) + dynu_in(total_ny-3)) / dNm2
+ellNm3 = 2.0_dp*(2.0_dp*dynu_in(total_ny-1) + dynu_in(total_ny-2)) / dNm3
+
+!d2yvec(1) = g1(1)*vec(1) + g2(1)*vec(2) + g3(1)*vec(3)
+d2yvec(1) = ell1*vec(1) + ell2*vec(2) + ell3*vec(3) + ell4*vec(4)
+do jj = 2,n-1
+   d2yvec(jj) = g1_total(jj)*vec(jj-1) + g2_total(jj)*vec(jj) + g3_total(jj)*vec(jj+1)
+end do
+!d2yvec(n) = g1(n)*vec(n-2) + g2(n)*vec(n-1) + g3(n)*vec(n)
+d2yvec(n) = ellNm3*vec(n-3) + ellNm2*vec(n-2) + &
+            &ellNm1*vec(n-1) + ellN*vec(n)
+
+end function d2y_MPI
+
+!:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 subroutine check_alloc_err(err_mess)
 
