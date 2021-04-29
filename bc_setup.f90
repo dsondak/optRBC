@@ -2,9 +2,10 @@ module bc_setup
 
 use global
 use write_pack
+use mesh_pack
 
 implicit none
-include 'mpif.h'
+! include 'mpif.h'
 
 contains
 
@@ -303,9 +304,9 @@ if(proc_id == 0) then
 
 else
    ! Send g1, g2, g3 to first node.
-   call MPI_SEND(g1(1), 12, MPI_DOUBLE, 0, 42, MPI_COMM_WORLD, mpierror)
-   call MPI_SEND(g2(1), 12, MPI_DOUBLE, 0, 43, MPI_COMM_WORLD, mpierror)
-   call MPI_SEND(g3(1), 12, MPI_DOUBLE, 0, 44, MPI_COMM_WORLD, mpierror)
+   call MPI_SEND(g1(1), Ny, MPI_DOUBLE, 0, 42, MPI_COMM_WORLD, mpierror)
+   call MPI_SEND(g2(1), Ny, MPI_DOUBLE, 0, 43, MPI_COMM_WORLD, mpierror)
+   call MPI_SEND(g3(1), Ny, MPI_DOUBLE, 0, 44, MPI_COMM_WORLD, mpierror)
 
    allocate(recv_col(Ny), stat=alloc_err)
    call check_alloc_err(alloc_err)

@@ -12,6 +12,7 @@ use statistics
 use mesh_pack
 use time_integrators_MPI
 
+! include 'mpif.h'
 implicit none
 
 integer                                                :: ntokens, ios, i
