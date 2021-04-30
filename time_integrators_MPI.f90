@@ -38,7 +38,7 @@ real(dp)                       :: nusselt_num
 real(dp)                       :: start, finish
 real(dp)                       :: start_overall, finish_overall
 integer                        :: nthreads, myid, stind
-complex(C_DOUBLE_COMPLEX), allocatable, dimension(:) :: tmp_phi_MPI, tmp_T_MPI, phi_MPI
+complex(C_DOUBLE_COMPLEX), allocatable, dimension(:) :: tmp_phi_MPI, tmp_T_MPI, phi_MPI, phi_update_MPI
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:) :: K1hat_phi_MPI, K2hat_phi_MPI, K3hat_phi_MPI
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:) :: K1hat_T_MPI, K2hat_T_MPI, K3hat_T_MPI
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:) :: K1_phi_MPI, K2_phi_MPI, K1_T_MPI, K2_T_MPI
@@ -90,7 +90,7 @@ nti = 0
 
 if (proc_id == 0) then 
    total_ny = Ny * num_procs
-   allocate(tmp_phi_MPI(total_ny), tmp_T_MPI(total_ny), phi_MPI(total_ny-2), stat=alloc_err)
+   allocate(tmp_phi_MPI(total_ny), tmp_T_MPI(total_ny), phi_MPI(total_ny-2), phi_update_MPI(total_ny), stat=alloc_err)
    call check_alloc_err(alloc_err)
    allocate(K1hat_phi_MPI(total_ny-2), K2hat_phi_MPI(total_ny-2), K3hat_phi_MPI(total_ny-2), stat=alloc_err)
    call check_alloc_err(alloc_err)
@@ -1043,6 +1043,7 @@ do ! while (time < t_final)
     write(*,*) " - calc_explicit(4) timing: ", finish-start, "(s)"
     call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
 
+    start = OMP_GET_WTIME()
     ! UPDATE SOLUTIONS
     if (proc_id == 0) then
         ! Get phi
@@ -1075,18 +1076,100 @@ do ! while (time < t_final)
         &                   b(2)*(K2_T(1:Ny,:) + K3hat_T(1:Ny,:)) + &
         &                   b(3)*(K3_T(1:Ny,:) + K4hat_T(1:Ny,:)))
     end if
+
+    ! Get ux and uy
+    if (proc_id == 0) then
+        ! Receive g1,g2,g3 from all other nodes.
+        do otherproc = 1,num_procs-1
+            stind = otherproc * Ny + 1
+            call MPI_RECV(g1_total(stind), Ny, MPI_DOUBLE, otherproc, 80, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(g2_total(stind), Ny, MPI_DOUBLE, otherproc, 81, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(g3_total(stind), Ny, MPI_DOUBLE, otherproc, 82, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+        end do
+        g1_total(1:Ny) = g1
+        g2_total(1:Ny) = g2
+        g3_total(1:Ny) = g3
+
+        ! Receive h1,h2,h3 from all other nodes.
+        do otherproc = 1,num_procs-1
+            stind = otherproc * Ny + 1
+            call MPI_RECV(h1_total(stind), Ny, MPI_DOUBLE, otherproc, 83, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(h2_total(stind), Ny, MPI_DOUBLE, otherproc, 84, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(h3_total(stind), Ny, MPI_DOUBLE, otherproc, 85, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+        end do
+        h1_total(1:Ny) = h1
+        h2_total(1:Ny) = h2
+        h3_total(1:Ny) = h3
+    else 
+        ! Send g1, g2, g3 to first node.
+        call MPI_SEND(g1(1), Ny, MPI_DOUBLE, 0, 80, MPI_COMM_WORLD, mpierror)
+        call MPI_SEND(g2(1), Ny, MPI_DOUBLE, 0, 81, MPI_COMM_WORLD, mpierror)
+        call MPI_SEND(g3(1), Ny, MPI_DOUBLE, 0, 82, MPI_COMM_WORLD, mpierror)
+
+        ! Send h1, h2, h3 to first node.
+        call MPI_SEND(h1(1), Ny, MPI_DOUBLE, 0, 83, MPI_COMM_WORLD, mpierror)
+        call MPI_SEND(h2(1), Ny, MPI_DOUBLE, 0, 84, MPI_COMM_WORLD, mpierror)
+        call MPI_SEND(h3(1), Ny, MPI_DOUBLE, 0, 85, MPI_COMM_WORLD, mpierror)
+    end if
+    !$OMP PARALLEL DO private(tmp_uy, it) schedule(dynamic)
+    do it = 1,Nx
+        ! Only call from single node.
+        if (proc_id == 0) then 
+
+            do otherproc= 1, num_procs-1
+                stind = otherproc * Ny + 1
+                ! Receive phi
+                call MPI_RECV(phi_update_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, &
+                              otherproc, 86, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            end do
+            ! Set local phi
+            phi_update_MPI(1:Ny) = phi(1:Ny,it)
+
+            ! Solve for v
+            call calc_vi_mod_MPI(tmp_uy_MPI, phi_update_MPI, kx(it), total_ny, g1_total, g2_total, g3_total)
+            ! Solve for u
+            if (kx(it) /= 0.0_dp) then
+                uxi_MPI = CI*d1y_MPI(tmp_uy_MPI, h1_total, h2_total, h3_total)/kx(it)
+            else if (kx(it) == 0.0_dp) then
+                uxi_MPI = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
+            end if
+
+            ! Send uy, ux back to each node.
+            do otherproc = 1,num_procs-1
+                stind = otherproc * Ny + 1
+                call MPI_SEND(tmp_uy_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, otherproc, 87, MPI_COMM_WORLD, mpierror)
+                call MPI_SEND(uxi_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, otherproc, 88, MPI_COMM_WORLD, mpierror)
+            end do
+            ! Set local versions.
+            uy(1:Ny,it) = tmp_uy_MPI(1:Ny)
+            ux(1:Ny,it) = uxi_MPI(1:Ny)
+
+        else 
+            ! Send phi
+            call MPI_SEND(phi(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 86, MPI_COMM_WORLD, mpierror)
+
+            ! Receive uy, ux from main node.
+            call MPI_RECV(uy(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 87,&
+                          MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(ux(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 88,&
+                          MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+        end if 
+    end do
+    !$OMP END PARALLEL DO
+    finish = OMP_GET_WTIME()
+    write(*,*) " - update sols timing: ", finish-start, "(s)"
     
-    open(unit=9010, file="P"//proc_id_str//"phi_real_update.txt", action="write", status="unknown")
-    open(unit=9011, file="P"//proc_id_str//"phi_im_update.txt", action="write", status="unknown")
+    open(unit=9010, file="P"//proc_id_str//"uy_real_update.txt", action="write", status="unknown")
+    open(unit=9011, file="P"//proc_id_str//"uy_im_update.txt", action="write", status="unknown")
     do i=1,Ny
         do j=1,Nx
-            write (9010,*) REAL(phi(i,j))
-            write (9011,*) AIMAG(phi(i,j))
+            write (9010,*) REAL(uy(i,j))
+            write (9011,*) AIMAG(uy(i,j))
         end do
     end do
     close(unit=9010)
     close(unit=9011)
-    write(*,*) "done writing phi!"
+    write(*,*) "done writing uy!"
    
     if (time == t_final) then
         exit
