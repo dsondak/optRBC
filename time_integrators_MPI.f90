@@ -1043,17 +1043,50 @@ do ! while (time < t_final)
     write(*,*) " - calc_explicit(4) timing: ", finish-start, "(s)"
     call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
 
-    open(unit=9010, file="P"//proc_id_str//"uyi_real_stage3.txt", action="write", status="unknown")
-    open(unit=9011, file="P"//proc_id_str//"uyi_im_stage3.txt", action="write", status="unknown")
+    ! UPDATE SOLUTIONS
+    if (proc_id == 0) then
+        ! Get phi
+        phi(2:Ny,:) = phi(2:Ny,:) + dt*(b(1)*(K1_phi(2:Ny,:) + K2hat_phi(2:Ny,:)) + &
+        &                    b(2)*(K2_phi(2:Ny,:) + K3hat_phi(2:Ny,:)) + &
+        &                    b(3)*(K3_phi(2:Ny,:) + K4hat_phi(2:Ny,:)))
+
+        ! Get temperature
+        T(2:Ny,:)   = T(2:Ny,:)  + dt*(b(1)*(K1_T(2:Ny,:) + K2hat_T(2:Ny,:)) + &
+        &                   b(2)*(K2_T(2:Ny,:) + K3hat_T(2:Ny,:)) + &
+        &                   b(3)*(K3_T(2:Ny,:) + K4hat_T(2:Ny,:)))
+    else if (proc_id == num_procs - 1) then
+        ! Get phi
+        phi(1:Ny-1,:) = phi(1:Ny-1,:) + dt*(b(1)*(K1_phi(1:Ny-1,:) + K2hat_phi(1:Ny-1,:)) + &
+        &                    b(2)*(K2_phi(1:Ny-1,:) + K3hat_phi(1:Ny-1,:)) + &
+        &                    b(3)*(K3_phi(1:Ny-1,:) + K4hat_phi(1:Ny-1,:)))
+
+        ! Get temperature
+        T(1:Ny-1,:)   = T(1:Ny-1,:)  + dt*(b(1)*(K1_T(1:Ny-1,:) + K2hat_T(1:Ny-1,:)) + &
+        &                   b(2)*(K2_T(1:Ny-1,:) + K3hat_T(1:Ny-1,:)) + &
+        &                   b(3)*(K3_T(1:Ny-1,:) + K4hat_T(1:Ny-1,:)))    
+    else 
+        ! Get phi
+        phi(1:Ny,:) = phi(1:Ny,:) + dt*(b(1)*(K1_phi(1:Ny,:) + K2hat_phi(1:Ny,:)) + &
+        &                    b(2)*(K2_phi(1:Ny,:) + K3hat_phi(1:Ny,:)) + &
+        &                    b(3)*(K3_phi(1:Ny,:) + K4hat_phi(1:Ny,:)))
+    
+        ! Get temperature
+        T(1:Ny,:)   = T(1:Ny,:)  + dt*(b(1)*(K1_T(1:Ny,:) + K2hat_T(1:Ny,:)) + &
+        &                   b(2)*(K2_T(1:Ny,:) + K3hat_T(1:Ny,:)) + &
+        &                   b(3)*(K3_T(1:Ny,:) + K4hat_T(1:Ny,:)))
+    end if
+    
+    open(unit=9010, file="P"//proc_id_str//"phi_real_update.txt", action="write", status="unknown")
+    open(unit=9011, file="P"//proc_id_str//"phi_im_update.txt", action="write", status="unknown")
     do i=1,Ny
         do j=1,Nx
-            write (9010,*) REAL(uyi(i,j))
-            write (9011,*) AIMAG(uyi(i,j))
+            write (9010,*) REAL(phi(i,j))
+            write (9011,*) AIMAG(phi(i,j))
         end do
     end do
     close(unit=9010)
     close(unit=9011)
-    write(*,*) "done writing uyi!"
+    write(*,*) "done writing phi!"
    
     if (time == t_final) then
         exit
