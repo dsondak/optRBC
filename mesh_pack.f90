@@ -1,7 +1,7 @@
 module mesh_pack
 
 use global
-include 'mpif.h'
+! include 'mpif.h'
 
 contains
 
@@ -106,6 +106,10 @@ call check_alloc_err(alloc_err)
 do jj = 2,numy
    dyj(jj-1) = ycoor(jj) - ycoor(jj-1)
 end do
+
+! do jj=1,numy-1
+!    write(*,*) jj,  dyj(jj)
+! end do
 
 end subroutine dxdydz
 

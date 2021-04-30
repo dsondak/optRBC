@@ -3,6 +3,7 @@ module global
 use fftw
 
 implicit none
+include 'mpif.h'
 save
 
 ! Get double-precision type
@@ -103,9 +104,8 @@ real(dp)                 :: gmma
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:) :: tmp_phi, tmp_phi1, tmp_T, tmp_uy, tmp_uy1
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:) :: tmp_K_phi, tmp_K_T
 
-
-
 contains
+
 
 subroutine global_params
 
@@ -365,6 +365,73 @@ end function d1y_MPI
 
 !:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
+function d1y_MPI2(vec, proc_id, num_procs) result(d1yvec)
+
+implicit none
+
+complex(C_DOUBLE_COMPLEX), dimension(:), intent(in)  :: vec
+complex(C_DOUBLE_COMPLEX), allocatable, dimension(:) :: d1yvec
+integer,                                 intent(in)  :: proc_id, num_procs
+integer               :: alloc_err, jj, n, i, mpierror
+complex(C_DOUBLE_COMPLEX)              :: prev_MPI, post_MPI
+
+n = size(vec)
+
+allocate(d1yvec(n), stat=alloc_err)
+if (alloc_err /= 0) then
+   write(*,*) "ERROR:  Allocation problem in d1y."
+   stop
+end if
+
+d1yvec = 0.0_dp
+
+if (proc_id == 0) then 
+   ! Send nth element of vector
+   call MPI_SEND(vec(n), 1, MPI_C_DOUBLE_COMPLEX, proc_id+1, 78, MPI_COMM_WORLD, mpierror)
+   ! Receive post element of vector
+   call MPI_RECV(post_MPI, 1, MPI_C_DOUBLE_COMPLEX, proc_id+1, 79, &
+                 MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+   
+   d1yvec(1) = h1(1)*vec(1) + h2(1)*vec(2) + h3(1)*vec(3)
+   do jj = 2,n-1
+      d1yvec(jj) = h1(jj)*vec(jj-1) + h2(jj)*vec(jj) + h3(jj)*vec(jj+1)
+   end do
+   d1yvec(n) = h1(n)*vec(n-1) + h2(n)*vec(n) + h3(n)*post_MPI
+else if (proc_id == num_procs - 1) then
+   ! Receive previous element of vector
+   call MPI_RECV(prev_MPI, 1, MPI_C_DOUBLE_COMPLEX, proc_id-1, 78, &
+                 MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+   ! Send first element of vector.
+   call MPI_SEND(vec(1), 1, MPI_C_DOUBLE_COMPLEX, proc_id-1, 79, MPI_COMM_WORLD, mpierror)       
+   d1yvec(1) = h1(1)*prev_MPI + h2(1)*vec(1) + h3(1)*vec(2)
+   do jj = 2,n-1
+      d1yvec(jj) = h1(jj)*vec(jj-1) + h2(jj)*vec(jj) + h3(jj)*vec(jj+1)
+   end do
+   d1yvec(n) = h1(n)*vec(n-2) + h2(n)*vec(n-1) + h3(n)*vec(n)
+else 
+   ! Send nth element of vector
+   call MPI_SEND(vec(n), 1, MPI_C_DOUBLE_COMPLEX, proc_id+1, 78, MPI_COMM_WORLD, mpierror)
+   ! Receive previous element of vector
+   call MPI_RECV(prev_MPI, 1, MPI_C_DOUBLE_COMPLEX, proc_id-1, 78, &
+                 MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+   ! Send first element of vector.
+   call MPI_SEND(vec(1), 1, MPI_C_DOUBLE_COMPLEX, proc_id-1, 79, MPI_COMM_WORLD, mpierror)
+   ! Receive post element of vector
+   call MPI_RECV(post_MPI, 1, MPI_C_DOUBLE_COMPLEX, proc_id+1, 79, &
+                 MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+   d1yvec(1) = h1(1)*prev_MPI + h2(1)*vec(1) + h3(1)*vec(2)
+   do jj = 2,n-1
+      d1yvec(jj) = h1(jj)*vec(jj-1) + h2(jj)*vec(jj) + h3(jj)*vec(jj+1)
+   end do
+   d1yvec(n) = h1(n)*vec(n-1) + h2(n)*vec(n) + h3(n)*post_MPI
+end if
+
+
+
+end function d1y_MPI2
+
+!:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 function d2y(vec) result(d2yvec)
 
 implicit none
@@ -474,6 +541,94 @@ d2yvec(n) = ellNm3*vec(n-3) + ellNm2*vec(n-2) + &
             &ellNm1*vec(n-1) + ellN*vec(n)
 
 end function d2y_MPI
+
+!:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+function d2y_MPI2(vec, proc_id, num_procs) result(d2yvec)
+
+implicit none
+
+complex(C_DOUBLE_COMPLEX), intent(in)  :: vec(:)
+integer                  , intent(in)  :: proc_id, num_procs
+complex(C_DOUBLE_COMPLEX), allocatable :: d2yvec(:)
+real(dp)                               :: d1, d2, d3, d4
+real(dp)                               :: ell1, ell2, ell3, ell4
+real(dp)                               :: dNm3, dNm2, dNm1, dN
+real(dp)                               :: ellNm3, ellNm2, ellNm1, ellN
+integer                                :: jj, n, mpierror
+complex(C_DOUBLE_COMPLEX)              :: prev_MPI, post_MPI
+
+n = size(vec)
+
+allocate(d2yvec(n), stat=alloc_err)
+if (alloc_err /= 0) then
+   write(*,*) "ERROR:  Allocation problem in d2y."
+   stop
+end if
+
+d2yvec = 0.0_dp
+
+d1 = -dynu(1)*(dynu(1)+dynu(2))*(dynu(1)+dynu(2)+dynu(3))
+d2 =  dynu(1)*dynu(2)*(dynu(2) + dynu(3))
+d3 = -dynu(2)*dynu(3)*(dynu(1) + dynu(2))
+d4 =  dynu(3)*(dynu(2)+dynu(3))*(dynu(1)+dynu(2)+dynu(3))
+
+ell1 = -2.0_dp*(3.0_dp*dynu(1) + 2.0_dp*dynu(2) + dynu(3)) / d1
+ell2 = -2.0_dp*(2.0_dp*(dynu(1) + dynu(2)) + dynu(3)) / d2
+ell3 = -2.0_dp*(2.0_dp*dynu(1) + dynu(2) + dynu(3)) / d3
+ell4 = -2.0_dp*(2.0_dp*dynu(1) + dynu(2)) / d4
+
+dN   =  dynu(Ny)*(dynu(Ny)+dynu(Ny-1))*(dynu(Ny)+dynu(Ny-1)+dynu(Ny-2))
+dNm1 = -dynu(Ny)*dynu(Ny-1)*(dynu(Ny-1)+dynu(Ny-2))
+dNm2 =  dynu(Ny-1)*dynu(Ny-2)*(dynu(Ny)+dynu(Ny-1))
+dNm3 = -dynu(Ny-2)*(dynu(Ny-1)+dynu(Ny-2))*(dynu(Ny)+dynu(Ny-1)+dynu(Ny-2))
+
+ellN   = 2.0_dp*(3.0_dp*dynu(Ny) + 2.0_dp*dynu(Ny-1) + dynu(Ny-2)) / dN
+ellNm1 = 2.0_dp*(2.0_dp*(dynu(Ny)+dynu(Ny-1)) + dynu(Ny-2)) / dNm1
+ellNm2 = 2.0_dp*(2.0_dp*dynu(Ny) + dynu(Ny-1) + dynu(Ny-2)) / dNm2
+ellNm3 = 2.0_dp*(2.0_dp*dynu(Ny) + dynu(Ny-1)) / dNm3
+
+if (proc_id == 0) then
+   d2yvec(1) = ell1*vec(1) + ell2*vec(2) + ell3*vec(3) + ell4*vec(4)
+   ! Send nth element of vector
+   call MPI_SEND(vec(n), 1, MPI_C_DOUBLE_COMPLEX, proc_id+1, 76, MPI_COMM_WORLD, mpierror)
+   ! Receive post element of vector
+   call MPI_RECV(post_MPI, 1, MPI_C_DOUBLE_COMPLEX, proc_id+1, 77, &
+                 MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+   do jj = 2,n-1
+      d2yvec(jj) = g1(jj)*vec(jj-1) + g2(jj)*vec(jj) + g3(jj)*vec(jj+1)
+   end do
+   d2yvec(n) = g1(n)*vec(n-1) + g2(n)*vec(n) + g3(n)*post_MPI
+else if (proc_id == num_procs-1) then
+   ! Receive previous element of vector
+   call MPI_RECV(prev_MPI, 1, MPI_C_DOUBLE_COMPLEX, proc_id-1, 76, &
+                 MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+   ! Send first element of vector.
+   call MPI_SEND(vec(1), 1, MPI_C_DOUBLE_COMPLEX, proc_id-1, 77, MPI_COMM_WORLD, mpierror)       
+   d2yvec(1) = g1(1)*prev_MPI + g2(1)*vec(1) + g3(1)*vec(2)
+   do jj = 2,n-1
+      d2yvec(jj) = g1(jj)*vec(jj-1) + g2(jj)*vec(jj) + g3(jj)*vec(jj+1)
+   end do 
+   d2yvec(n) = ellNm3*vec(n-3) + ellNm2*vec(n-2) + ellNm1*vec(n-1) + ellN*vec(n)
+else
+   ! Send nth element of vector
+   call MPI_SEND(vec(n), 1, MPI_C_DOUBLE_COMPLEX, proc_id+1, 76, MPI_COMM_WORLD, mpierror)
+   ! Receive previous element of vector
+   call MPI_RECV(prev_MPI, 1, MPI_C_DOUBLE_COMPLEX, proc_id-1, 76, &
+                 MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+   ! Send first element of vector.
+   call MPI_SEND(vec(1), 1, MPI_C_DOUBLE_COMPLEX, proc_id-1, 77, MPI_COMM_WORLD, mpierror)
+   ! Receive post element of vector
+   call MPI_RECV(post_MPI, 1, MPI_C_DOUBLE_COMPLEX, proc_id+1, 77, &
+                 MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+   d2yvec(1) = g1(1)*prev_MPI + g2(1)*vec(1) + g3(1)*vec(2)
+   do jj = 2,n-1
+      d2yvec(jj) = g1(jj)*vec(jj-1) + g2(jj)*vec(jj) + g3(jj)*vec(jj+1)
+   end do 
+   d2yvec(n) = g1(n)*vec(n-1) + g2(n)*vec(n) + g3(n)*post_MPI
+endif 
+
+end function d2y_MPI2
 
 !:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 

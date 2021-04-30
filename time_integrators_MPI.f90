@@ -8,6 +8,7 @@ use bc_setup
 use statistics
 use omp_lib
 
+
 integer  :: it, jt, kkt
 integer  :: info
 real(dp) :: time, dtmax, dtmin, dt_old, dt_ramp, dt_final
@@ -433,26 +434,324 @@ do ! while (time < t_final)
     finish = OMP_GET_WTIME()
     write(*,*) " - stage 1 mid timing: ", finish-start, "(s)"
 
-   
-
-    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
     ! Compute K2hat
     start = OMP_GET_WTIME()
     call calc_explicit_MPI(2, proc_id, num_procs, proc_id_str)
     finish = OMP_GET_WTIME()
     write(*,*) " - calc_explicit(2) timing: ", finish-start, "(s)"
+    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
 
-    open(unit=9010, file="P"//proc_id_str//"uxi_real_stage1.txt", action="write", status="unknown")
-    open(unit=9011, file="P"//proc_id_str//"uxi_im_stage1.txt", action="write", status="unknown")
+    !:::::::::::
+    ! STAGE 2 ::
+    !:::::::::::
+    start = OMP_GET_WTIME()
+    !$OMP PARALLEL DO private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
+    do it = 1,Nx ! kx loop
+        ! Compute phi1 and T1
+        if (proc_id == 0) then
+            ! Need to pull all of the variables into local main memory.
+            phi_MPI(1:Ny-1) = phi(2:Ny,it)
+            K1hat_phi_MPI(1:Ny-1) = K1hat_phi(2:Ny,it)
+            K2hat_phi_MPI(1:Ny-1) = K2hat_phi(2:Ny,it)
+            K3hat_phi_MPI(1:Ny-1) = K3hat_phi(2:Ny,it)
+            K1hat_T_MPI(1:Ny-1) = K1hat_T(2:Ny,it)
+            K2hat_T_MPI(1:Ny-1) = K2hat_T(2:Ny,it)
+            K3hat_t_MPI(1:Ny-1) = K3hat_T(2:Ny,it)
+            K1_phi_MPI(1:Ny-1) = K1_phi(2:Ny,it)
+            K2_phi_MPI(1:Ny-1) = K2_phi(2:Ny,it)
+            K1_T_MPI(1:Ny-1) = K1_T(2:Ny,it)
+            K2_T_MPI(1:Ny-1) = K2_T(2:Ny,it)
+            T_MPI(1:Ny) = T(1:Ny,it)
+
+            ! Receive pieces from other nodes.
+            do otherproc = 1,num_procs-2
+                stind = otherproc * Ny
+                call MPI_RECV(phi_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, &
+                              otherproc, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(K1hat_phi_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, &
+                              otherproc, 43, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(K2hat_phi_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, &
+                              otherproc, 44, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(K3hat_phi_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, & 
+                              otherproc, 45, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(K1hat_T_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, & 
+                              otherproc, 46, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(K2hat_T_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, & 
+                              otherproc, 47, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(K3hat_T_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, & 
+                              otherproc, 48, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(K1_phi_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, & 
+                              otherproc, 49, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(K2_phi_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, & 
+                              otherproc, 50, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(K1_T_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, & 
+                              otherproc, 51, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(K2_T_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, & 
+                              otherproc, 52, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(T_MPI(stind+1), Ny, MPI_C_DOUBLE_COMPLEX, & 
+                              otherproc, 53, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            end do
+            
+            ! Receive from last node.
+            stind = (num_procs-1) * Ny
+            call MPI_RECV(phi_MPI(stind), Ny-1, MPI_C_DOUBLE_COMPLEX, & 
+                          num_procs-1, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(K1hat_phi_MPI(stind), Ny-1, MPI_C_DOUBLE_COMPLEX, & 
+                          num_procs-1, 43, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(K2hat_phi_MPI(stind), Ny-1, MPI_C_DOUBLE_COMPLEX, & 
+                          num_procs-1, 44, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(K3hat_phi_MPI(stind), Ny-1, MPI_C_DOUBLE_COMPLEX, & 
+                          num_procs-1, 45, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(K1hat_T_MPI(stind), Ny-1, MPI_C_DOUBLE_COMPLEX, & 
+                          num_procs-1, 46, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(K2hat_T_MPI(stind), Ny-1, MPI_C_DOUBLE_COMPLEX, & 
+                          num_procs-1, 47, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(K3hat_T_MPI(stind), Ny-1, MPI_C_DOUBLE_COMPLEX, & 
+                          num_procs-1, 48, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(K1_phi_MPI(stind), Ny-1, MPI_C_DOUBLE_COMPLEX, & 
+                          num_procs-1, 49, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(K2_phi_MPI(stind), Ny-1, MPI_C_DOUBLE_COMPLEX, & 
+                          num_procs-1, 50, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(K1_T_MPI(stind), Ny-1, MPI_C_DOUBLE_COMPLEX, & 
+                          num_procs-1, 51, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(K2_T_MPI(stind), Ny-1, MPI_C_DOUBLE_COMPLEX, & 
+                          num_procs-1, 52, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(T_MPI(stind+1), Ny, MPI_C_DOUBLE_COMPLEX, & 
+                          num_procs-1, 53, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+
+        
+            ! Receive g1,g2,g3 from all other nodes.
+            do otherproc = 1,num_procs-1
+                stind = otherproc * Ny + 1
+                call MPI_RECV(g1_total(stind), Ny, MPI_DOUBLE, otherproc, 54, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(g2_total(stind), Ny, MPI_DOUBLE, otherproc, 55, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(g3_total(stind), Ny, MPI_DOUBLE, otherproc, 56, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            end do
+            g1_total(1:Ny) = g1
+            g2_total(1:Ny) = g2
+            g3_total(1:Ny) = g3
+
+            ! Call vari mod
+            call calc_vari_mod_MPI(tmp_phi_MPI, tmp_T_MPI, acoeffs(2,2), 2, total_ny,&
+                                kx(it), phi_MPI,&
+                                K1hat_phi_MPI,K2hat_phi_MPI,K3hat_phi_MPI,&
+                                K1hat_T_MPI,K2hat_T_MPI,K3hat_T_MPI,&
+                                K1_phi_MPI, K2_phi_MPI, K1_T_MPI, K2_T_MPI,&
+                                g1_total, g2_total, g3_total,&
+                                T_MPI)
+            
+            ! Compute v1 from phi1
+            call calc_vi_mod_MPI(tmp_uy_MPI, tmp_phi_MPI, kx(it), total_ny, g1_total, g2_total, g3_total)
+            
+            ! Receive dyv1 and dyv2
+            call MPI_RECV(dyv1_T_it_MPI, 1, MPI_DOUBLE, num_procs-1, 57, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(dyv2_T_it_MPI, 1, MPI_DOUBLE, num_procs-1, 58, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+
+            ! Receive V1, V2, phi1, phi2
+            do otherproc = 1,num_procs-1
+                stind = otherproc * Ny + 1
+                call MPI_RECV(V1_MPI(stind), Ny, MPI_DOUBLE, otherproc, 59, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(V2_MPI(stind), Ny, MPI_DOUBLE, otherproc, 60, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(phi1_MPI(stind), Ny, MPI_DOUBLE, otherproc, 61, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(phi2_MPI(stind), Ny, MPI_DOUBLE, otherproc, 62, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            end do
+            ! Set local variables to MPI.
+            V1_MPI(1:Ny) = V1(1:Ny, it)
+            V2_MPI(1:Ny) = V2(1:Ny, it)
+            phi1_MPI(1:Ny) = phi1(1:Ny, it)
+            phi2_MPI(1:Ny) = phi2(1:Ny, it)
+
+            ! Receive end of h1, h2, h3 for last processor.
+            call MPI_RECV(h1_end_MPI, 1, MPI_DOUBLE, num_procs-1, 63, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(h2_end_MPI, 1, MPI_DOUBLE, num_procs-1, 64, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(h3_end_MPI, 1, MPI_DOUBLE, num_procs-1, 65, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            
+            ! BOUNDAY CONDITIONS!
+            call update_bcs_mod_MPI(tmp_phi1_MPI,tmp_uy1_MPI, tmp_phi_MPI,tmp_uy_MPI,&
+                                dyv1_T_it_MPI,dyv2_T_it_MPI,&
+                                dyv1_B(it),dyv2_B(it),&
+                                V1_MPI,V2_MPI,phi1_MPI,phi2_MPI,&
+                                total_ny, h1_end_MPI, h2_end_MPI, h3_end_MPI)
+            
+            tmp_phi_MPI = tmp_phi1_MPI
+            tmp_uy_MPI  = tmp_uy1_MPI
+
+            ! Receive dynu from all other nodes.
+            do otherproc = 1,num_procs-1
+                stind = otherproc * Ny
+                call MPI_RECV(dynu_MPI(stind), Ny, MPI_DOUBLE, otherproc, 66, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            end do
+            dynu_MPI(1:Ny-1) = dynu(1:Ny-1)
+            
+            ! Implicit.
+            call calc_implicit_mod_MPI(tmp_K_phi_MPI,tmp_K_T_MPI, tmp_phi_MPI,tmp_T_MPI,&
+                                       kx(it), total_ny, dynu_MPI, g1_total, g2_total, g3_total)
+
+            ! Receive h1,h2,h3 from all other nodes.
+            do otherproc = 1,num_procs-1
+                stind = otherproc * Ny + 1
+                call MPI_RECV(h1_total(stind), Ny, MPI_DOUBLE, otherproc, 67, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(h2_total(stind), Ny, MPI_DOUBLE, otherproc, 68, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+                call MPI_RECV(h3_total(stind), Ny, MPI_DOUBLE, otherproc, 69, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            end do
+            h1_total(1:Ny) = h1
+            h2_total(1:Ny) = h2
+            h3_total(1:Ny) = h3
+            
+            ! Compute u1 from v1
+            if (kx(it) /= 0.0_dp) then
+                uxi_MPI = CI*d1y_MPI(tmp_uy_MPI, h1_total, h2_total, h3_total)/kx(it)
+            else if (kx(it) == 0.0_dp) then
+                uxi_MPI = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
+            end if
+
+            ! Send K2_phi, K2_T, phii, Ti, uyi, uxi back to each node.
+            do otherproc = 1,num_procs-1
+                stind = otherproc * Ny + 1
+                call MPI_SEND(tmp_K_phi_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, otherproc, 70, MPI_COMM_WORLD, mpierror)
+                call MPI_SEND(tmp_K_T_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, otherproc, 71, MPI_COMM_WORLD, mpierror)
+                call MPI_SEND(tmp_phi_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, otherproc, 72, MPI_COMM_WORLD, mpierror)
+                call MPI_SEND(tmp_T_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, otherproc, 73, MPI_COMM_WORLD, mpierror)
+                call MPI_SEND(tmp_uy_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, otherproc, 74, MPI_COMM_WORLD, mpierror)
+                call MPI_SEND(uxi_MPI(stind), Ny, MPI_C_DOUBLE_COMPLEX, otherproc, 75, MPI_COMM_WORLD, mpierror)
+            end do
+
+            ! Set local to main node variables.
+            K2_phi(1:Ny,it) = tmp_K_phi_MPI(1:Ny)
+            K2_T(1:Ny,it) = tmp_K_T_MPI(1:Ny)
+            phii(1:Ny,it) = tmp_phi_MPI(1:Ny)
+            Ti(1:Ny,it) = tmp_T_MPI(1:Ny)
+            uyi(1:Ny,it) = tmp_uy_MPI(1:Ny)
+            uxi(1:Ny,it) = uxi_MPI(1:Ny)
+
+            
+        else if (proc_id == num_procs - 1) then
+            ! Send data to main node
+            call MPI_SEND(phi(1:Ny-1,it), Ny-1, MPI_C_DOUBLE_COMPLEX, 0, 42, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K1hat_phi(1:Ny-1,it), Ny-1, MPI_C_DOUBLE_COMPLEX, 0, 43, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K2hat_phi(1:Ny-1,it), Ny-1, MPI_C_DOUBLE_COMPLEX, 0, 44, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K3hat_phi(1:Ny-1,it), Ny-1, MPI_C_DOUBLE_COMPLEX, 0, 45, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K1hat_T(1:Ny-1,it), Ny-1, MPI_C_DOUBLE_COMPLEX, 0, 46, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K2hat_T(1:Ny-1,it), Ny-1, MPI_C_DOUBLE_COMPLEX, 0, 47, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K3hat_T(1:Ny-1,it), Ny-1, MPI_C_DOUBLE_COMPLEX, 0, 48, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K1_phi(1:Ny-1,it), Ny-1, MPI_C_DOUBLE_COMPLEX, 0, 49, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K2_phi(1:Ny-1,it), Ny-1, MPI_C_DOUBLE_COMPLEX, 0, 50, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K1_T(1:Ny-1,it), Ny-1, MPI_C_DOUBLE_COMPLEX, 0, 51, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K2_T(1:Ny-1,it), Ny-1, MPI_C_DOUBLE_COMPLEX, 0, 52, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(T(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 53, MPI_COMM_WORLD, mpierror)
+
+            ! Send g1, g2, g3 to first node.
+            call MPI_SEND(g1(1), Ny, MPI_DOUBLE, 0, 54, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(g2(1), Ny, MPI_DOUBLE, 0, 55, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(g3(1), Ny, MPI_DOUBLE, 0, 56, MPI_COMM_WORLD, mpierror)
+
+            ! Send dyv1 and dyv2.
+            call MPI_SEND(dyv1_T(it), 1, MPI_DOUBLE, 0, 57, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(dyv2_T(it), 1, MPI_DOUBLE, 0, 58, MPI_COMM_WORLD, mpierror)
+
+            ! Send V1, V2, phi1, phi2
+            call MPI_SEND(V1(1:Ny,it), Ny, MPI_DOUBLE, 0, 59, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(V2(1:Ny,it), Ny, MPI_DOUBLE, 0, 60, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(phi1(1:Ny,it), Ny, MPI_DOUBLE, 0, 61, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(phi2(1:Ny,it), Ny, MPI_DOUBLE, 0, 62, MPI_COMM_WORLD, mpierror)
+            
+            ! Send h1,h2,h3 last elements.
+            call MPI_SEND(h1(Ny), 1, MPI_DOUBLE, 0, 63, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(h2(Ny), 1, MPI_DOUBLE, 0, 64, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(h3(Ny), 1, MPI_DOUBLE, 0, 65, MPI_COMM_WORLD, mpierror)
+
+            ! Send dynu to main.
+            call MPI_SEND(dynu(1), Ny, MPI_DOUBLE, 0, 66, MPI_COMM_WORLD, mpierror)
+
+            ! Send h1, h2, h3 to first node.
+            call MPI_SEND(h1(1), Ny, MPI_DOUBLE, 0, 67, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(h2(1), Ny, MPI_DOUBLE, 0, 68, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(h3(1), Ny, MPI_DOUBLE, 0, 69, MPI_COMM_WORLD, mpierror)
+
+            ! Receive K2_phi, K2_T, phii, Ti, uyi, uxi from main node.
+            call MPI_RECV(K2_phi(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 70,&
+                          MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(K2_T(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 71,&
+                          MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(phii(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 72,&
+                          MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(Ti(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 73,&
+                          MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(uyi(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 74,&
+                          MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(uxi(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 75,&
+                          MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            
+        else 
+            ! Send data to main node
+            call MPI_SEND(phi(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 42, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K1hat_phi(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 43, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K2hat_phi(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 44, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K3hat_phi(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 45, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K1hat_T(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 46, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K2hat_T(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 47, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K3hat_T(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 48, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K1_phi(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 49, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K2_phi(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 50, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K1_T(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 51, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(K2_T(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 52, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(T(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 53, MPI_COMM_WORLD, mpierror)
+
+            ! Send g1, g2, g3 to first node.
+            call MPI_SEND(g1(1), Ny, MPI_DOUBLE, 0, 54, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(g2(1), Ny, MPI_DOUBLE, 0, 55, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(g3(1), Ny, MPI_DOUBLE, 0, 56, MPI_COMM_WORLD, mpierror)
+
+            ! Send V1, V2, phi1, phi2
+            call MPI_SEND(V1(1:Ny,it), Ny, MPI_DOUBLE, 0, 59, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(V2(1:Ny,it), Ny, MPI_DOUBLE, 0, 60, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(phi1(1:Ny,it), Ny, MPI_DOUBLE, 0, 61, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(phi2(1:Ny,it), Ny, MPI_DOUBLE, 0, 62, MPI_COMM_WORLD, mpierror)
+        
+            ! Send dynu to main.
+            call MPI_SEND(dynu(1), Ny, MPI_DOUBLE, 0, 66, MPI_COMM_WORLD, mpierror)
+
+            ! Send h1, h2, h3 to first node.
+            call MPI_SEND(h1(1), Ny, MPI_DOUBLE, 0, 67, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(h2(1), Ny, MPI_DOUBLE, 0, 68, MPI_COMM_WORLD, mpierror)
+            call MPI_SEND(h3(1), Ny, MPI_DOUBLE, 0, 69, MPI_COMM_WORLD, mpierror)
+
+            ! Receive K2_phi, K2_T, phii, Ti, uyi, uxi from main node.
+            call MPI_RECV(K2_phi(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 70,&
+                          MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(K2_T(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 71,&
+                          MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(phii(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 72,&
+                          MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(Ti(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 73,&
+                          MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(uyi(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 74,&
+                          MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+            call MPI_RECV(uxi(1:Ny,it), Ny, MPI_C_DOUBLE_COMPLEX, 0, 75,&
+                          MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+        end if
+    end do
+    !$OMP END PARALLEL DO
+    finish = OMP_GET_WTIME()
+    write(*,*) " - stage 2 mid timing: ", finish-start, "(s)"
+    ! Compute K3hat
+    start = OMP_GET_WTIME()
+    call calc_explicit_MPI(3, proc_id, num_procs, proc_id_str)
+    finish = OMP_GET_WTIME()
+    write(*,*) " - calc_explicit(3) timing: ", finish-start, "(s)"
+
+
+    open(unit=9010, file="P"//proc_id_str//"uyi_real_stage2.txt", action="write", status="unknown")
+    open(unit=9011, file="P"//proc_id_str//"uyi_im_stage2.txt", action="write", status="unknown")
     do i=1,Ny
         do j=1,Nx
-            write (9010,*) REAL(uxi(i,j))
-            write (9011,*) AIMAG(uxi(i,j))
+            write (9010,*) REAL(uyi(i,j))
+            write (9011,*) AIMAG(uyi(i,j))
         end do
     end do
     close(unit=9010)
     close(unit=9011)
-    write(*,*) "done writing uxi!"
+    write(*,*) "done writing uyi!"
    
     if (time == t_final) then
         exit
@@ -508,7 +807,7 @@ do i=1,Nx
    ! Compute dx(T) in Fourier space
    nlT  (:,i) =  kx(i)*Ti(:,i)
    ! Compute D2(ux)
-   nlphi(:,i) = -kx(i)**2.0_dp*uxi(:,i) + d2y(uxi(:,i))
+   nlphi(:,i) = -kx(i)**2.0_dp*uxi(:,i) + d2y_MPI2(uxi(:,i), proc_id, num_procs)
 end do
 !$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
@@ -551,7 +850,7 @@ start = OMP_GET_WTIME()
 do i = 1,Nx
    ! Temperature
    tmp_T = Ti(:,i)
-   nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T)
+   nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y_MPI2(tmp_T, proc_id, num_procs)
    ! phi
    nlphi(:,i) = uxi(:,i)*phii(:,i) - uyi(:,i)*nlphi(:,i)
 end do
@@ -685,13 +984,6 @@ do jt = 2,total_ny-1
     dphi(jt-1) = 1.0_dp - nu0   *dt*aii*(-kx_it**2.0_dp + g2_total(jt))
 end do
 
-! do i = 2,total_ny-1
-!     write(*,*) i, ddT (i-1)
-! end do 
-
-! write(*,*) kappa0 ,dt , aii
-
-
 do jt = 2,total_ny-2
     duT  (jt-1) = -kappa0*dt*g3_total(jt)*aii
     duphi(jt-1) = -nu0   *dt*g3_total(jt)*aii
@@ -733,6 +1025,10 @@ select case (stage)
         &                     ahatcoeffs(3,2)*k2hat_T_in)
         FT(1)    = FT(1) + kappa0*dt*aii*g1_total(2)*T_in(1) ! b/c Ti(y_1) = T(y_1)
         FT(total_ny-2) = FT(total_ny-2) + kappa0*dt*aii*g3_total(total_ny-1)*T_in(total_ny) ! b/c Ti(total_ny) = T(total_ny)
+
+        ! do i = 1,total_ny-2
+        !     write(*,*) i, k2hat_phi_in(i)
+        ! end do 
 
         phi_rhs(:,1) = real(Fphi)
         phi_rhs(:,2) = aimag(Fphi)
@@ -828,8 +1124,6 @@ vi(2:total_ny-1) = cmplx(vi_rhs(:,1), vi_rhs(:,2), kind=C_DOUBLE_COMPLEX)
 vi(total_ny)  = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
 
 end subroutine calc_vi_mod_MPI
-
-!:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::!
 
 !:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 subroutine update_bcs_mod_MPI(phiout,vout, phiin,vin,dyv1_T_it,dyv2_T_it,dyv1_B_it,&
