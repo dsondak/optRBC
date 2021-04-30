@@ -15,7 +15,7 @@ PROGRAMS = $(MAIN).exe
 all: $(PROGRAMS)
 
 $(PROGRAMS) : $(OBJECTS)
-	$(FC) -fopenmp $(LDFLAGS) -o $(PROGRAMS) $(OBJECTS) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
+	$(FC) -fopenmp -fallow-argument-mismatch $(LDFLAGS) -o $(PROGRAMS) $(OBJECTS) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
 
 fftw.o : fftw.f90
 	$(FC) $(FFLAGS) fftw.f90
@@ -54,7 +54,7 @@ time_integrators.o : time_integrators.f90
 	$(FC) -fopenmp $(FFLAGS) time_integrators.f90
 
 time_integrators_MPI.o : time_integrators_MPI.f90
-	$(FC) -fopenmp $(FFLAGS) time_integrators_MPI.f90
+	$(FC) -fopenmp -fallow-argument-mismatch  $(FFLAGS) time_integrators_MPI.f90
 
 jacobians.o : jacobians.f90
 	$(FC) $(FFLAGS) jacobians.f90
