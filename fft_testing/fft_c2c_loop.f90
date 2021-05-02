@@ -57,14 +57,17 @@ do n=3,20
    !go into Fourier space
    call fftw_execute_dft(tempPlan,tempT,tempT)
    tempT = tempT / real(Nx, kind=dp)
-   tempT = CI * kx * tempT
+   !tempT = CI * kx * tempT
+   tempT = kx * kx * tempT
 
    call fftw_execute_dft(itempPlan,tempT,tempT)
 
    Tx = tempT
 
    open(unit=8000, file="errs_c2c.txt", action="write", status="unknown", position="append")
-   write(8000, fmt=2000) Nx, maxval(abs(real(Tx - cos(xVals))))
+   !write(8000, fmt=2000) Nx, maxval(abs(real(Tx - cos(xVals))))
+   !write(8000, fmt=2000) Nx, maxval(abs(real(Tx - sin(xVals))))
+   write(8000, fmt=2000) Nx, maxval(abs(real(Tx + sin(xVals))))
    close(8000)
 
    call fftw_destroy_plan(tempPlan)

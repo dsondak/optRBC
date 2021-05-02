@@ -4,7 +4,7 @@ FFLAGS= -c -O3
 LIBFLAGS2 = -L/usr/local/fftw/lib
 LDFLAGS   = -I/usr/local/fftw/include
 
-MAIN = fft_r2c
+MAIN = fft_c2c_loop
   
 OBJECTS = fftw.o $(MAIN).o
 PROGRAMS = $(MAIN).exe
