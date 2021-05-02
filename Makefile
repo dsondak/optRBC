@@ -6,8 +6,8 @@ LDFLAGS   = -I/usr/local/Cellar/fftw/3.3.9/include
 
 # MAIN = Ra_loop
 #MAIN = Ra_loop_no_opt
-#MAIN = time_loop
-MAIN = real_to_comp_set
+MAIN = time_loop
+# MAIN = real_to_comp_set
 
 OBJECTS = fftw.o global.o allocate_vars.o precmod.o stringmod.o write_pack.o interpolation_pack.o mesh_pack.o imod.o bc_setup.o statistics.o time_integrators.o jacobians.o gmres_pack.o nonlinear_solvers.o $(MAIN).o
 PROGRAMS = $(MAIN).exe

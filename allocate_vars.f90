@@ -27,12 +27,19 @@ subroutine global_allocations
     allocate(dyv1_B(Nx), dyv1_T(Nx), stat=alloc_err)
     allocate(dyv2_B(Nx), dyv2_T(Nx), stat=alloc_err)
 
-    allocate(tT (Nx), stat=alloc_err)
-    allocate(tux(Nx), stat=alloc_err)
-    allocate(tuy(Nx), stat=alloc_err)
-    allocate(tnlT(Nx), stat=alloc_err)
-    allocate(tnlphi(Nx), stat=alloc_err)
-    allocate(tphi(Nx), stat=alloc_err)
+    allocate(tT_real (Nx), stat=alloc_err)
+    allocate(tux_real(Nx), stat=alloc_err)
+    allocate(tuy_real(Nx), stat=alloc_err)
+    allocate(tnlT_real(Nx), stat=alloc_err)
+    allocate(tnlphi_real(Nx), stat=alloc_err)
+    allocate(tphi_real(Nx), stat=alloc_err)
+
+    allocate(tT_comp(Nx/2+1), stat=alloc_err)
+    allocate(tux_comp(Nx/2+1), stat=alloc_err)
+    allocate(tuy_comp(Nx/2+1), stat=alloc_err)
+    allocate(tnlT_comp(Nx/2+1), stat=alloc_err)
+    allocate(tnlphi_comp(Nx/2+1), stat=alloc_err)
+    allocate(tphi_comp(Nx/2+1), stat=alloc_err)
 
     allocate(xp(Nx), stat=alloc_err)
     allocate(yp(Ny), stat=alloc_err)
@@ -72,12 +79,19 @@ subroutine global_allocations
     nlT      = (0.0_dp, 0.0_dp)
     nlphi    = (0.0_dp, 0.0_dp)
 
-    tT     = (0.0_dp, 0.0_dp)
-    tux    = (0.0_dp, 0.0_dp)
-    tuy    = (0.0_dp, 0.0_dp)
-    tnlT   = (0.0_dp, 0.0_dp)
-    tnlphi = (0.0_dp, 0.0_dp)
-    tphi   = (0.0_dp, 0.0_dp)
+    tT_real     = 0.0_dp
+    tux_real    = 0.0_dp
+    tuy_real    = 0.0_dp
+    tnlT_real   = 0.0_dp
+    tnlphi_real = 0.0_dp
+    tphi_real   = 0.0_dp
+
+    tT_comp     = (0.0_dp, 0.0_dp)
+    tux_comp    = (0.0_dp, 0.0_dp)
+    tuy_comp    = (0.0_dp, 0.0_dp)
+    tnlT_comp   = (0.0_dp, 0.0_dp)
+    tnlphi_comp = (0.0_dp, 0.0_dp)
+    tphi_comp   = (0.0_dp, 0.0_dp)
 
     phi1 = 0.0_dp
     phi2 = 0.0_dp

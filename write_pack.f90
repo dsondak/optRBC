@@ -194,28 +194,28 @@ else
 
    do j = 1,Ny
       ! Bring everything to physical space
-      tT  = T(j,:)
-      tuy = uy(j,:)
-      tux = ux(j,:)
-      call fftw_execute_dft(iplanux, tux, tux)
-      call fftw_execute_dft(iplanuy, tuy, tuy)
-      call fftw_execute_dft(iplanT, tT, tT)
-      T(j,:)   = tT
-      ux(j,:)  = tux
-      uy(j,:)  = tuy
+      tT_comp  = T(j,:)
+      tuy_comp = uy(j,:)
+      tux_comp = ux(j,:)
+      call fftw_execute_dft_c2r(iplanux, tux_comp, tux_real)
+      call fftw_execute_dft_c2r(iplanuy, tuy_comp, tuy_real)
+      call fftw_execute_dft_c2r(iplanT, tT_comp, tT_real)
+      T(j,:)   = tT_real
+      ux(j,:)  = tux_real
+      uy(j,:)  = tuy_real
    end do
    call write_vtk_structured_grid(step)
    do j = 1,Ny
       ! Bring everything to Fourier space
-      tT  = T(j,:)
-      tuy = uy(j,:)
-      tux = ux(j,:)
-      call fftw_execute_dft(planux, tux, tux)
-      call fftw_execute_dft(planuy, tuy, tuy)
-      call fftw_execute_dft(planT, tT, tT)
-      T(j,:)   = tT
-      ux(j,:)  = tux
-      uy(j,:)  = tuy
+      tT_real  = real(T(j,:))
+      tuy_real = real(uy(j,:))
+      tux_real = real(ux(j,:))
+      call fftw_execute_dft_r2c(planux, tux_real, tux_comp)
+      call fftw_execute_dft_r2c(planuy, tuy_real, tuy_comp)
+      call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
+      T(j,:)   = tT_comp
+      ux(j,:)  = tux_comp
+      uy(j,:)  = tuy_comp
    end do
    T  = T  / real(Nx, kind=dp)
    ux = ux / real(Nx, kind=dp)
@@ -253,12 +253,12 @@ else
 
    do j = 1,Ny
       ! Bring everything to physical space
-      tT  = T(j,:)
-      tuy = uy(j,:)
-      call fftw_execute_dft(iplanuy, tuy, tuy)
-      call fftw_execute_dft(iplanT, tT, tT)
-      T(j,:)   = tT
-      uy(j,:)  = tuy
+      tT_comp  = T(j,:)
+      tuy_comp = uy(j,:)
+      call fftw_execute_dft_c2r(iplanuy, tuy_comp, tuy_real)
+      call fftw_execute_dft_c2r(iplanT, tT_comp, tT_real)
+      T(j,:)   = tT_real
+      uy(j,:)  = tuy_real
    end do
 
    ! Write restart
@@ -280,12 +280,12 @@ else
 
    do j = 1,Ny
       ! Bring everything to Fourier space
-      tT  = T(j,:)
-      tuy = uy(j,:)
-      call fftw_execute_dft(planuy, tuy, tuy)
-      call fftw_execute_dft(planT, tT, tT)
-      T(j,:)   = tT
-      uy(j,:)  = tuy
+      tT_real  = real(T(j,:))
+      tuy_real = real(uy(j,:))
+      call fftw_execute_dft_r2c(planuy, tuy_real, tuy_comp)
+      call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
+      T(j,:)   = tT_comp
+      uy(j,:)  = tuy_comp
    end do
    T  = T  / real(Nx, kind=dp)
    uy = uy / real(Nx, kind=dp)
@@ -332,15 +332,15 @@ else
 
    do j = 1,Ny
       ! Bring everything to physical space
-      tT  = T(j,:)
-      tuy = uy(j,:)
-      tux = ux(j,:)
-      call fftw_execute_dft(iplanux, tux, tux)
-      call fftw_execute_dft(iplanuy, tuy, tuy)
-      call fftw_execute_dft(iplanT, tT, tT)
-      T(j,:)   = tT
-      ux(j,:)  = tux
-      uy(j,:)  = tuy
+      tT_comp  = T(j,:)
+      tuy_comp = uy(j,:)
+      tux_comp = ux(j,:)
+      call fftw_execute_dft_c2r(iplanux, tux_comp, tux_real)
+      call fftw_execute_dft_c2r(iplanuy, tuy_comp, tuy_real)
+      call fftw_execute_dft_c2r(iplanT, tT_comp, tT_real)
+      T(j,:)   = tT_real
+      ux(j,:)  = tux_real
+      uy(j,:)  = tuy_real
    end do
 
    ! Write to VTK
@@ -365,15 +365,15 @@ else
 
    do j = 1,Ny
       ! Bring everything to Fourier space
-      tT  = T(j,:)
-      tuy = uy(j,:)
-      tux = ux(j,:)
-      call fftw_execute_dft(planux, tux, tux)
-      call fftw_execute_dft(planuy, tuy, tuy)
-      call fftw_execute_dft(planT, tT, tT)
-      T(j,:)   = tT
-      ux(j,:)  = tux
-      uy(j,:)  = tuy
+      tT_real  = real(T(j,:))
+      tuy_real = real(uy(j,:))
+      tux_real = real(ux(j,:))
+      call fftw_execute_dft_r2c(planux, tux_real, tux_comp)
+      call fftw_execute_dft_r2c(planuy, tuy_real, tuy_comp)
+      call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
+      T(j,:)   = tT_comp
+      ux(j,:)  = tux_comp
+      uy(j,:)  = tuy_comp
    end do
    T  = T  / real(Nx, kind=dp)
    ux = ux / real(Nx, kind=dp)
