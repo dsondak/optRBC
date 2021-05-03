@@ -106,7 +106,6 @@ complex(C_DOUBLE_COMPLEX), allocatable, dimension(:) :: tmp_phi, tmp_phi1, tmp_T
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:) :: tmp_K_phi, tmp_K_T
 
 
-
 contains
 
 subroutine global_params

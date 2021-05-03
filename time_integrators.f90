@@ -422,6 +422,16 @@ do j = 1,Ny
    phii(j,:) = tphi
 end do
 
+write(*,*) "Initial T"
+write(*,*) T(10,:)
+write(*,*) "-------------"
+write(*,*) "Tkappa"
+call calc_kappa
+write(*,*) Tkappa(10,:)
+write(*,*) "----------"
+stop
+
+
 ! Calculate nonlinear term
 do i = 1,Nx
    ! Temperature
@@ -626,13 +636,14 @@ end subroutine update_dt
 
 !!!!!!!!!!!!!!!!!!!
 
-!subroutine calc_kappa()
+subroutine calc_kappa()
 
-!real(dp) :: kappa_top
+real(dp) :: kappa_top
 
-!kappa_top = 1.0
-!Tkappa = kappa_top*(1+49*T+450*T**6)
-        
-!end subroutine calc_kappa
+kappa_top = 1.0
+Tkappa = kappa_top*(1+49*T+450*T**6)
+!Tkappa = kappa_top*T**2
+
+end subroutine calc_kappa
 
 end module time_integrators
