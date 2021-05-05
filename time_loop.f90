@@ -352,7 +352,7 @@ write(*,'(A70)')                  '*********************************************
 write(*,'(A70)')                  '                                                                      '
 
 flush(6)
-
+open(unit=7000, file="Debug_data.txt", action="write", status="unknown", position="append")
 open(unit=8000, file="Nu_data.txt", action="write", status="unknown", position="append")
 
 ! Get nu0 and kappa0

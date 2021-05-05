@@ -428,6 +428,12 @@ do j = 1,Ny
    phii(j,:) = tphi_real
 end do
 
+write(7000, *) '("After first do=1,Ny loop in calc_explicit")'
+write(7000, *) '("nlT")'
+do i=1,Nx
+  write(7000, *) nlT(Ny-1, i)
+  flush(7000)
+end do
 ! Calculate nonlinear term
 do i = 1,Nx
    ! Temperature
@@ -436,7 +442,6 @@ do i = 1,Nx
    ! phi
    nlphi(:,i) = uxi(:,i)*phii(:,i) - uyi(:,i)*nlphi(:,i) 
 end do
-
 ! Bring nonlinear terms back to Fourier space
 do j = 1,Ny
    tnlT_real   = real(nlT(j,:))
@@ -456,6 +461,13 @@ do j = 1,Ny
 end do
 nlT   = nlT   / real(Nx,kind=dp)
 nlphi = nlphi / real(Nx,kind=dp)
+
+write(7000, *) '("After second do=1,Ny loop in calc_explicit")'
+write(7000, *) '("nlT")'
+do i=1,Nx
+  write(7000, *) nlT(Ny-1, i)
+  flush(7000)
+end do
 
 select case (stage)
    case (1)
