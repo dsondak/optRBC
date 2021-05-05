@@ -310,6 +310,8 @@ if (wvtk) then
 end if
 
 ! Initialize fields.
+open(unit=7000, file="Debug_data.txt", action="write", status="unknown", position="append")
+
 call init_fields(ex_Tptrb, fTexist, Ra)
 call init_to_fourier(ex_Tptrb)
 
@@ -352,7 +354,6 @@ write(*,'(A70)')                  '*********************************************
 write(*,'(A70)')                  '                                                                      '
 
 flush(6)
-open(unit=7000, file="Debug_data.txt", action="write", status="unknown", position="append")
 open(unit=8000, file="Nu_data.txt", action="write", status="unknown", position="append")
 
 ! Get nu0 and kappa0
@@ -422,6 +423,13 @@ implicit none
 
 logical, intent(in) :: ex_Tptrb
 integer             :: ii, jj
+
+write(7000, *) '("T at beginning of init_to_fourier (prior to any fft execution)")'
+flush(7000)
+do ii=Nx-100,Nx
+ write(7000, *) T(Ny-1,ii)
+ flush(7000)
+end do
 
 ! Bring temperature and velocity to Fourier space.
 do jj = 1,Ny
