@@ -87,6 +87,13 @@ do ! while (time < t_final)
    uxi  = ux
    uyi  = uy
    call calc_explicit(1)
+   write(7000, *) '("Output after calc_explicit(1)")'
+   flush(7000)
+   do it=Nx-100,Nx
+    write(7000, *) nlT(Ny-1,it)
+    flush(7000)
+   end do
+
    do it = 1,Nx ! kx loop
       ! Compute phi1 and T1
       call calc_vari(tmp_phi, tmp_T, acoeffs(1,1), 1)
@@ -113,7 +120,12 @@ do ! while (time < t_final)
    end do
    ! Compute K2hat
    call calc_explicit(2)
-
+   write(7000, *) '("Output after calc_explicit(2) (End of stage 1)")'
+   flush(7000)
+   do it=Nx-100,Nx
+    write(7000, *) nlT(Ny-1,it)
+    flush(7000)
+   end do
    !:::::::::::
    ! STAGE 2 ::
    !:::::::::::
@@ -143,7 +155,12 @@ do ! while (time < t_final)
    end do
    ! Compute K3hat
    call calc_explicit(3)
-
+   write(7000, *) '("Output after calc_explicit(3) (End of stage 2)")'
+   flush(7000)
+   do it=Nx-100,Nx
+    write(7000, *) nlT(Ny-1,it)
+    flush(7000)
+   end do
    !:::::::::::
    ! STAGE 3 ::
    !:::::::::::
@@ -173,6 +190,13 @@ do ! while (time < t_final)
    end do
    ! Compute K4hat
    call calc_explicit(4)
+
+   write(7000, *) '("Output after calc_explicit(4) (End of stage 3)")'
+   flush(7000)
+   do it=Nx-100,Nx
+    write(7000, *) nlT(Ny-1,it)
+    flush(7000)
+   end do
 
    ! UPDATE SOLUTIONS
 
@@ -428,12 +452,14 @@ do j = 1,Ny
    phii(j,:) = tphi_real
 end do
 
-write(7000, *) '("After first do=1,Ny loop in calc_explicit")'
-write(7000, *) '("nlT")'
-do i=1,Nx
-  write(7000, *) nlT(Ny-1, i)
-  flush(7000)
-end do
+! write(7000, *) '("After first do=1,Ny loop in calc_explicit")'
+! flush(7000)
+! write(7000, *) '("nlT")'
+! flush(7000)
+! do i=Nx-100,Nx
+!   write(7000, *) nlT(Ny-1, i)
+!   flush(7000)
+! end do
 ! Calculate nonlinear term
 do i = 1,Nx
    ! Temperature
@@ -462,12 +488,14 @@ end do
 nlT   = nlT   / real(Nx,kind=dp)
 nlphi = nlphi / real(Nx,kind=dp)
 
-write(7000, *) '("After second do=1,Ny loop in calc_explicit")'
-write(7000, *) '("nlT")'
-do i=1,Nx
-  write(7000, *) nlT(Ny-1, i)
-  flush(7000)
-end do
+! write(7000, *) '("After second do=1,Ny loop in calc_explicit")'
+! flush(7000)
+! write(7000, *) '("nlT")'
+! flush(7000)
+! do i=Nx-100,Nx
+!   write(7000, *) nlT(Ny-1, i)
+!   flush(7000)
+! end do
 
 select case (stage)
    case (1)
