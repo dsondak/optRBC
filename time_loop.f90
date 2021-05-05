@@ -110,23 +110,23 @@ end do
 close(unit=2)
 
 ! Create FFT plans
-planuy = fftw_plan_dft_1d(Nx,tuy,tuy, FFTW_FORWARD,FFTW_ESTIMATE)
-iplanuy = fftw_plan_dft_1d(Nx,tuy,tuy, FFTW_BACKWARD,FFTW_ESTIMATE)
+planuy = fftw_plan_dft_r2c_1d(Nx,tuy_real,tuy_comp,FFTW_ESTIMATE)
+iplanuy = fftw_plan_dft_c2r_1d(Nx,tuy_comp,tuy_real,FFTW_ESTIMATE)
 
-planux = fftw_plan_dft_1d(Nx,tux,tux, FFTW_FORWARD,FFTW_ESTIMATE)
-iplanux = fftw_plan_dft_1d(Nx,tux,tux, FFTW_BACKWARD,FFTW_ESTIMATE)
+planux = fftw_plan_dft_r2c_1d(Nx,tux_real,tux_comp,FFTW_ESTIMATE)
+iplanux = fftw_plan_dft_c2r_1d(Nx,tux_comp,tux_real,FFTW_ESTIMATE)
 
-planphi = fftw_plan_dft_1d(Nx,tphi,tphi, FFTW_FORWARD,FFTW_ESTIMATE)
-iplanphi = fftw_plan_dft_1d(Nx,tphi,tphi, FFTW_BACKWARD,FFTW_ESTIMATE)
+planphi = fftw_plan_dft_r2c_1d(Nx,tphi_real,tphi_comp,FFTW_ESTIMATE)
+iplanphi = fftw_plan_dft_c2r_1d(Nx,tphi_comp,tphi_real,FFTW_ESTIMATE)
 
-planT = fftw_plan_dft_1d(Nx,tT,tT, FFTW_FORWARD,FFTW_ESTIMATE)
-iplanT = fftw_plan_dft_1d(Nx,tT,tT, FFTW_BACKWARD,FFTW_ESTIMATE)
+planT = fftw_plan_dft_r2c_1d(Nx,tT_real,tT_comp,FFTW_ESTIMATE)
+iplanT = fftw_plan_dft_c2r_1d(Nx,tT_comp,tT_real,FFTW_ESTIMATE)
 
-plannlT = fftw_plan_dft_1d(Nx,tnlT,tnlT, FFTW_FORWARD,FFTW_ESTIMATE)
-iplannlT = fftw_plan_dft_1d(Nx,tnlT,tnlT, FFTW_BACKWARD,FFTW_ESTIMATE)
+plannlT = fftw_plan_dft_r2c_1d(Nx,tnlT_real,tnlT_comp,FFTW_ESTIMATE)
+iplannlT = fftw_plan_dft_c2r_1d(Nx,tnlT_comp,tnlT_real,FFTW_ESTIMATE)
 
-plannlphi = fftw_plan_dft_1d(Nx,tnlphi,tnlphi, FFTW_FORWARD,FFTW_ESTIMATE)
-iplannlphi = fftw_plan_dft_1d(Nx,tnlphi,tnlphi, FFTW_BACKWARD,FFTW_ESTIMATE)
+plannlphi = fftw_plan_dft_r2c_1d(Nx,tnlphi_real,tnlphi_comp,FFTW_ESTIMATE)
+iplannlphi = fftw_plan_dft_c2r_1d(Nx,tnlphi_comp,tnlphi_real,FFTW_ESTIMATE)
 
 call global_params
 call global_allocations
@@ -425,30 +425,30 @@ integer             :: ii, jj
 
 ! Bring temperature and velocity to Fourier space.
 do jj = 1,Ny
-   tT = T(jj,:)
-   tuy = uy(jj,:)
-   call fftw_execute_dft(planT, tT, tT)
-   call fftw_execute_dft(planuy, tuy, tuy)
+   tT_real = real(T(jj,:))
+   tuy_real = real(uy(jj,:))
+   call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
+   call fftw_execute_dft_r2c(planuy, tuy_real, tuy_comp)
    ! Truncate modes
    do ii = 1,Nx
       if (abs(kx(ii))/alpha >= Nf/2) then
-         tT(ii)  = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
-         tuy(ii) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
+         tT_comp(ii)  = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
+         tuy_comp(ii) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
       end if
    end do
-   T(jj,:) = tT
-   uy(jj,:) = tuy
+   T(jj,:) = tT_comp
+   uy(jj,:) = tuy_comp
    ! If temperature perturbation needed.
    if (ex_Tptrb) then
-      tT = Tptrb(jj,:)
-      call fftw_execute_dft(planT, tT, tT)
+      tT_real = real(Tptrb(jj,:))
+      call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
       ! Truncate modes
       do ii = 1,Nx
          if (abs(kx(ii))/alpha >= Nf/2) then
-            tT(ii)  = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
+            tT_comp(ii)  = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
          end if
       end do
-      Tptrb(jj,:) = tT
+      Tptrb(jj,:) = tT_comp
    end if
 end do
 T = T / real(Nx, kind=dp)

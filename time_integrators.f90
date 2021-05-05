@@ -413,24 +413,26 @@ nlT = CI*nlT
 
 do j = 1,Ny
    ! Bring everything to physical space
-   tnlT   = nlT(j,:)
-   tnlphi = nlphi(j,:)
-   tT     = Ti(j,:)
-   tux    = uxi(j,:)
-   tuy    = uyi(j,:)
-   tphi   = phii(j,:)
-   call fftw_execute_dft(iplannlT, tnlT, tnlT)
-   call fftw_execute_dft(iplannlphi, tnlphi, tnlphi)
-   call fftw_execute_dft(iplanT, tT, tT)
-   call fftw_execute_dft(iplanux, tux, tux)
-   call fftw_execute_dft(iplanuy, tuy, tuy)
-   call fftw_execute_dft(iplanphi, tphi, tphi)
-   nlT(j,:)   = tnlT
-   nlphi(j,:) = tnlphi
-   Ti(j,:)   = tT
-   uxi(j,:)  = tux
-   uyi(j,:)  = tuy
-   phii(j,:) = tphi
+   tnlT_comp   = nlT(j,:)
+   tnlphi_comp = nlphi(j,:)
+   tT_comp     = Ti(j,:)
+   tux_comp    = uxi(j,:)
+   tuy_comp    = uyi(j,:)
+   tphi_comp   = phii(j,:)
+   ! Previous code: FFTW_BACKWARD, use c2r
+   call fftw_execute_dft_c2r(iplannlT, tnlT_comp, tnlT_real)
+   call fftw_execute_dft_c2r(iplannlphi, tnlphi_comp, tnlphi_real)
+   call fftw_execute_dft_c2r(iplanT, tT_comp, tT_real)
+   call fftw_execute_dft_c2r(iplanux, tux_comp, tux_real)
+   call fftw_execute_dft_c2r(iplanuy, tuy_comp, tuy_real)
+   call fftw_execute_dft_c2r(iplanphi, tphi_comp, tphi_real)
+
+   nlT(j,:)   = tnlT_real
+   nlphi(j,:) = tnlphi_real
+   Ti(j,:)   = tT_real
+   uxi(j,:)  = tux_real
+   uyi(j,:)  = tuy_real
+   phii(j,:) = tphi_real
 end do
 
 ! Calculate nonlinear term
@@ -444,19 +446,20 @@ end do
 
 ! Bring nonlinear terms back to Fourier space
 do j = 1,Ny
-   tnlT   = nlT(j,:)
-   tnlphi = nlphi(j,:)
-   call fftw_execute_dft(plannlT, tnlT, tnlT)
-   call fftw_execute_dft(plannlphi, tnlphi, tnlphi)
+   tnlT_real   = real(nlT(j,:))
+   tnlphi_real = real(nlphi(j,:))
+   ! Previous code: FFTW_FORWARD, use r2c
+   call fftw_execute_dft_r2c(plannlT, tnlT_real, tnlT_comp)
+   call fftw_execute_dft_r2c(plannlphi, tnlphi_real, tnlphi_comp)
    ! Dealias
    do i = 1,Nx
       if (abs(kx(i))/alpha >= Nf/2) then
-         tnlT(i)   = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
-         tnlphi(i) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
+         tnlT_comp(i)   = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
+         tnlphi_comp(i) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
       end if
    end do
-   nlT(j,:)   = tnlT
-   nlphi(j,:) = tnlphi
+   nlT(j,:)   = tnlT_comp
+   nlphi(j,:) = tnlphi_comp
 end do
 nlT   = nlT   / real(Nx,kind=dp)
 nlphi = nlphi / real(Nx,kind=dp)
@@ -594,12 +597,12 @@ uyi = uy
 
 do jj = 1,Ny
    ! Bring everything to physical space
-   tux    = uxi(jj,:)
-   tuy    = uyi(jj,:)
-   call fftw_execute_dft(iplanux, tux, tux)
-   call fftw_execute_dft(iplanuy, tuy, tuy)
-   uxi(jj,:)  = tux
-   uyi(jj,:)  = tuy
+   tux_comp    = uxi(jj,:)
+   tuy_comp    = uyi(jj,:)
+   call fftw_execute_dft_c2r(iplanux, tux_comp, tux_real)
+   call fftw_execute_dft_c2r(iplanuy, tuy_comp, tuy_real)
+   uxi(jj,:)  = tux_real
+   uyi(jj,:)  = tuy_real
 end do
 
 dt_old = dt

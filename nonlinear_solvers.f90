@@ -121,8 +121,8 @@ do nli = 1,nl_max
    ! Calculate phi and ux from uy
    do jj = 1,Nx
       if (kx(jj) /= 0.0_dp) then
-         tuy = uy(:,jj)
-         ux(:,jj) = -CI*d1y(tuy)/kx(jj)
+         tuy_comp = uy(:,jj)
+         ux(:,jj) = -CI*d1y(tuy_comp)/kx(jj)
       else if (kx(jj) == 0.0_dp) then
          ux(:,jj) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX) ! Zero mean flow!
       end if
