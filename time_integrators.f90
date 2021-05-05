@@ -86,6 +86,14 @@ do ! while (time < t_final)
    Ti   = T
    uxi  = ux
    uyi  = uy
+   
+   write(7000, *) '("T before calc_explicit(1)")'
+   flush(7000)
+   do it=Nx-100,Nx
+    write(7000, *) T(Ny-1,it)
+    flush(7000)
+   end do
+
    call calc_explicit(1)
    write(7000, *) '("Output after calc_explicit(1)")'
    flush(7000)
@@ -428,6 +436,13 @@ end do
 !nlT = -CI*nlT
 nlT = CI*nlT
 
+write(7000, *) '("nlT in calc explicit BEFORE FFTW execute")'
+flush(7000)
+do it=Nx-100,Nx
+ write(7000, *) nlT(Ny-1,it)
+ flush(7000)
+end do
+
 do j = 1,Ny
    ! Bring everything to physical space
    tnlT_comp   = nlT(j,:)
@@ -452,6 +467,12 @@ do j = 1,Ny
    phii(j,:) = tphi_real
 end do
 
+write(7000, *) '("nlT in calc explicit AFTER FFTW execute")'
+flush(7000)
+do it=Nx-100,Nx
+ write(7000, *) nlT(Ny-1,it)
+ flush(7000)
+end do
 ! write(7000, *) '("After first do=1,Ny loop in calc_explicit")'
 ! flush(7000)
 ! write(7000, *) '("nlT")'
