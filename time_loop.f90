@@ -304,11 +304,6 @@ do ii = Nx/2+1, Nx
 end do
 kx = alpha*kx_modes
 
-! Write initial field to vtk
-if (wvtk) then
-   call write_to_vtk(int(Ra), .true.) ! true = already in physical space
-end if
-
 ! Initialize fields.
 call init_fields(ex_Tptrb, fTexist, Ra)
 call init_to_fourier(ex_Tptrb)
@@ -359,7 +354,7 @@ open(unit=8000, file="Nu_data.txt", action="write", status="unknown")
 call global_params_Ra(Ra)
 
 ! Get solution with time integration
-call imex_rk(1, .true.) ! true causes writing of nusselt number.
+call imex_rk(.true.) ! true causes writing of nusselt number.
 
 write(*,*) " "
 flush(6)
