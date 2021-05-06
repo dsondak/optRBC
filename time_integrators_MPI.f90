@@ -1170,6 +1170,7 @@ do ! while (time < t_final)
         end do
         close(unit=9010)
         close(unit=9011)
+        write(*,*) Ny
         write(*,*) "done writing T!"
         exit
     end if
@@ -1178,8 +1179,8 @@ do ! while (time < t_final)
         call write_to_vtk(nti, .false., proc_id_str) ! false = Fourier space
     end if
 
-    ! call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
-    ! write(*,*) "proc ", proc_id_str, " write vtk complete for t", time 
+    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
+    write(*,*) "proc ", proc_id_str, " write vtk complete for t", time 
  
  end do
 

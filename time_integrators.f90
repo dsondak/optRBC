@@ -257,13 +257,6 @@ do ! while (time < t_final)
    finish = OMP_GET_WTIME()
    write(*,*) " - update sols timing: ", finish-start, "(s)"
 
-   ! Calculate nusselt number.
-   if (save_nusselt) then
-      call nusselt(nusselt_num, .true.) ! true = Fourier space
-      write(8000, fmt=1000) nusselt_num
-      flush(8000)
-   end if
-
    if (time == t_final) then
       open(unit=9010, file="T_real_update.txt", action="write", status="unknown")
       open(unit=9011, file="T_im_update.txt", action="write", status="unknown")
@@ -284,10 +277,16 @@ do ! while (time < t_final)
       call write_to_vtk(nti, .false.) ! false = Fourier space
    end if
 
-   
+   ! Calculate nusselt number.
+   if (save_nusselt) then
+      call nusselt(nusselt_num, .true.) ! true = Fourier space
+      write(8000, fmt=1000) nusselt_num
+      flush(8000)
+   end if
 
-   ! finish_overall = OMP_GET_WTIME()
-   ! write(*,*) "overall timing: ", finish_overall-start_overall, "(s)"
+   
+   finish_overall = OMP_GET_WTIME()
+   write(*,*) "overall timing: ", finish_overall-start_overall, "(s)"
 
 end do ! time loop
 

@@ -125,7 +125,7 @@ end do
 close(unit=2)
 
 ! Initialize MPI variables.
-Ny = Ny / 4
+Ny = Ny / num_procs
 mpi_spacing_y = (ytop - ybot) / num_procs
 ybot = ybot + proc_id * mpi_spacing_y
 ytop = ybot + mpi_spacing_y
