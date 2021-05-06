@@ -40,8 +40,6 @@ real(dp), EXTERNAL             :: OMP_GET_WTIME
 EXTERNAL                       :: OMP_SET_NUM_THREADS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-call OMP_SET_NUM_THREADS(1)
-
 if (present(vtk_print)) then
    wvtk = .true.
    nprint = vtk_print
