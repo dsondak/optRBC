@@ -69,18 +69,6 @@ nti = 0
 ! Format for writing out single values.
 1000 format(E25.16E3)
 
-open(unit=9010, file="T_real_update.txt", action="write", status="unknown")
-open(unit=9011, file="T_im_update.txt", action="write", status="unknown")
-do i=1,Ny
-    do j=1,Nx
-        write (9010,*) REAL(T(i,j))
-        write (9011,*) AIMAG(T(i,j))
-    end do
-end do
-close(unit=9010)
-close(unit=9011)
-write(*,*) "done writing T!"
-
 ! Time integration
 do ! while (time < t_final)
    start_overall = OMP_GET_WTIME()
@@ -269,14 +257,20 @@ do ! while (time < t_final)
    finish = OMP_GET_WTIME()
    write(*,*) " - update sols timing: ", finish-start, "(s)"
 
+   ! Calculate nusselt number.
+   if (save_nusselt) then
+      call nusselt(nusselt_num, .true.) ! true = Fourier space
+      write(8000, fmt=1000) nusselt_num
+      flush(8000)
+   end if
 
    if (time == t_final) then
       open(unit=9010, file="T_real_update.txt", action="write", status="unknown")
       open(unit=9011, file="T_im_update.txt", action="write", status="unknown")
       do i=1,Ny
          do j=1,Nx
-               write (9010,*) REAL(T(i,j))
-               write (9011,*) AIMAG(T(i,j))
+            write (9010,*) REAL(T(i,j))
+            write (9011,*) AIMAG(T(i,j))
          end do
       end do
       close(unit=9010)
@@ -290,15 +284,10 @@ do ! while (time < t_final)
       call write_to_vtk(nti, .false.) ! false = Fourier space
    end if
 
-   ! Calculate nusselt number.
-   if (save_nusselt) then
-      call nusselt(nusselt_num, .true.) ! true = Fourier space
-      write(8000, fmt=1000) nusselt_num
-      flush(8000)
-   end if
+   
 
-   finish_overall = OMP_GET_WTIME()
-   write(*,*) "overall timing: ", finish_overall-start_overall, "(s)"
+   ! finish_overall = OMP_GET_WTIME()
+   ! write(*,*) "overall timing: ", finish_overall-start_overall, "(s)"
 
 end do ! time loop
 
