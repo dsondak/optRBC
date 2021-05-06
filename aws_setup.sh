@@ -10,4 +10,5 @@ sudo apt install python3-pip
 pip3 install matplotlib
 mkdir vtkdata
 
-export OMP_NUM_THREADS=8
+export OMP_NUM_THREADS=1
+export OMPI_MCA_btl=^openib

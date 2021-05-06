@@ -73,8 +73,6 @@ dt = dt_init
 
 call init_bc_MPI(acoeffs(1,1), proc_id, num_procs, proc_id_str)
 
-write(*,*) "init_bc_MPI from proc ", proc_id_str
-
 time = 0.0_dp
 
 dtmax = 0.5_dp

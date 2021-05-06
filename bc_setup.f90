@@ -192,6 +192,7 @@ if(proc_id == 0) then
       call MPI_RECV(g2_total(start), Ny, MPI_DOUBLE, otherproc, 43, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
       call MPI_RECV(g3_total(start), Ny, MPI_DOUBLE, otherproc, 44, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
    end do
+   
    g1_total(1:Ny) = g1
    g2_total(1:Ny) = g2
    g3_total(1:Ny) = g3
@@ -252,8 +253,10 @@ if(proc_id == 0) then
       Fphi12(1,1)    = pnu*g1_total(2)*phi1_b(ii)
       Fphi12(total_ny-2,2) = pnu*g3_total(total_ny-1)*phi2_t(ii)
 
+
       !  Solve the system Aphi phi = Fphi
       call dgtsv(total_ny-2, 2, dl, d, du, Fphi12, total_ny-2, info)
+
 
       !  Put phi1 and phi2 together in main node.
       phi1(1,ii)      = phi1_b(ii)
@@ -261,12 +264,14 @@ if(proc_id == 0) then
       phi2(1,ii)      = 0.0_dp
       phi2(2:Ny,ii) = Fphi12(1:Ny-1,2)
       
+      
       ! Send phi1 and phi2 columns to each node.
       do otherproc = 1,num_procs-1
          start = otherproc * Ny
          call MPI_SEND(Fphi12(start,1), Ny, MPI_DOUBLE, otherproc, 45, MPI_COMM_WORLD, mpierror)
          call MPI_SEND(Fphi12(start,2), Ny, MPI_DOUBLE, otherproc, 46, MPI_COMM_WORLD, mpierror)
       end do
+
 
       ! Getting V1 and V2 initialized.
       FV12(:,1) = Fphi12(:,1)
@@ -291,13 +296,15 @@ if(proc_id == 0) then
       V2(2:Ny,ii) = FV12(1:Ny-1,2)
 
       ! Send V1 and V1 columns to each node.
-      do otherproc = 1,num_procs-1
+      do otherproc = 1,num_procs-1 
          start = otherproc * Ny
+         ! write(*,*) "about to send FV12 ", SHAPE(FV12), Ny
          call MPI_SEND(FV12(start,1), Ny, MPI_DOUBLE, otherproc, 48, MPI_COMM_WORLD, mpierror)
          call MPI_SEND(FV12(start,2), Ny, MPI_DOUBLE, otherproc, 49, MPI_COMM_WORLD, mpierror)
+         ! write(*,*) " - -  FV12 sent"
       end do
-
    end do
+
 
    ! Send last row to final proc.
    call MPI_SEND(phi2_t(1), Nx, MPI_DOUBLE, num_procs-1, 47, MPI_COMM_WORLD, mpierror)
@@ -323,8 +330,8 @@ else
 
    ! Receive cols of V1 and V2.
    do ii = 1,Nx
-      call MPI_RECV(recv_col, Ny, MPI_DOUBLE, 0, 48, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
-      call MPI_RECV(recv_col2, Ny, MPI_DOUBLE, 0, 49, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+      call MPI_RECV(recv_col-1, Ny, MPI_DOUBLE, 0, 48, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+      call MPI_RECV(recv_col2-1, Ny, MPI_DOUBLE, 0, 49, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
       V1(1:Ny, ii) = recv_col
       V2(1:Ny, ii) = recv_col2
    end do
@@ -339,7 +346,9 @@ else
       V1(Ny, 1:Nx)      = 0.0_dp
       V2(Ny, 1:Nx)      = 0.0_dp
    end if 
+
 end if 
+
 
 ! Calculate wall derivative on first and last processor.
 if (proc_id == 0) then
@@ -357,3 +366,4 @@ end if
 end subroutine init_bc_MPI
 
 end module bc_setup
+
