@@ -179,11 +179,6 @@ do ii = Nx/2+1, Nx
 end do
 kx = alpha*kx_modes
 
-! Write initial field to vtk
-if (wvtk) then
-    call write_to_vtk(int(Ra), .true., proc_id_str) ! true = already in physical space
-end if
-
 ! Initialize fields.
 call init_fields(ex_Tptrb, Ra)
 call init_to_fourier(ex_Tptrb)
@@ -241,7 +236,7 @@ call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
 write(*,*) "processor ", proc_id, "initialized with ", Ny, "rows."
 
 ! Get solution with time integration
-call imex_rk_MPI(proc_id_str, 1, .true., proc_id, num_procs) ! true causes writing of nusselt number.
+call imex_rk_MPI(proc_id_str, wvtk, .true., proc_id, num_procs) ! true causes writing of nusselt number.
 
 call MPI_Finalize(mpierror)
 

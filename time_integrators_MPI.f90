@@ -27,8 +27,8 @@ subroutine imex_rk_MPI(proc_id_str, vtk_print, save_nusselt, proc_id, num_procs)
 implicit none
 
 character(3), intent(in)       :: proc_id_str
-integer, optional, intent(in)  :: vtk_print
-logical, optional, intent(in)  :: save_nusselt
+logical,           intent(in)  :: vtk_print
+logical,           intent(in)  :: save_nusselt
 integer,           intent(in)  :: proc_id, num_procs
 
 integer                        :: nti, i, j, mpierror, total_ny
@@ -56,9 +56,8 @@ EXTERNAL                       :: OMP_SET_NUM_THREADS
 
 call OMP_SET_NUM_THREADS(1)
 
-if (present(vtk_print)) then
+if (vtk_print) then
     wvtk = .true.
-    nprint = vtk_print
 else
     wvtk = .false.
     nprint = 100
@@ -1160,17 +1159,17 @@ do ! while (time < t_final)
     write(*,*) " - update sols timing: ", finish-start, "(s)"
     call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
     
-    ! open(unit=9010, file="P"//proc_id_str//"uy_real_update.txt", action="write", status="unknown")
-    ! open(unit=9011, file="P"//proc_id_str//"uy_im_update.txt", action="write", status="unknown")
-    ! do i=1,Ny
-    !     do j=1,Nx
-    !         write (9010,*) REAL(uy(i,j))
-    !         write (9011,*) AIMAG(uy(i,j))
-    !     end do
-    ! end do
-    ! close(unit=9010)
-    ! close(unit=9011)
-    ! write(*,*) "done writing uy!"
+    open(unit=9010, file="P"//proc_id_str//"uy_real_update.txt", action="write", status="unknown")
+    open(unit=9011, file="P"//proc_id_str//"uy_im_update.txt", action="write", status="unknown")
+    do i=1,Ny
+        do j=1,Nx
+            write (9010,*) REAL(uy(i,j))
+            write (9011,*) AIMAG(uy(i,j))
+        end do
+    end do
+    close(unit=9010)
+    close(unit=9011)
+    write(*,*) "done writing uy!"
    
     
 

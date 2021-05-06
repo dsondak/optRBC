@@ -25,10 +25,10 @@ subroutine imex_rk(save_nusselt, vtk_print)
 
 implicit none
 
-integer, optional, intent(in)  :: vtk_print
+logical,           intent(in)  :: vtk_print
 logical,           intent(in)  :: save_nusselt
 
-integer                        :: nti
+integer                        :: nti, i, j
 integer                        :: nprint
 logical                        :: wvtk
 real(dp)                       :: nusselt_num
@@ -40,9 +40,9 @@ real(dp), EXTERNAL             :: OMP_GET_WTIME
 EXTERNAL                       :: OMP_SET_NUM_THREADS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-if (present(vtk_print)) then
+if (vtk_print) then
    wvtk = .true.
-   nprint = vtk_print
+   nprint = 1
 else
    wvtk = .false.
 end if
@@ -259,14 +259,23 @@ do ! while (time < t_final)
 
 
    if (time == t_final) then
+      open(unit=9010, file="T_real_update.txt", action="write", status="unknown")
+      open(unit=9011, file="T_im_update.txt", action="write", status="unknown")
+      do i=1,Ny
+         do j=1,Nx
+               write (9010,*) REAL(T(i,j))
+               write (9011,*) AIMAG(T(i,j))
+         end do
+      end do
+      close(unit=9010)
+      close(unit=9011)
+      write(*,*) "done writing T!"
       exit
    end if
 
    !call update_dt
    if (wvtk) then
-      if (mod(nti,vtk_print) == 0) then
-         call write_to_vtk(nti, .false.) ! false = Fourier space
-      end if
+      call write_to_vtk(nti, .false.) ! false = Fourier space
    end if
 
    ! Calculate nusselt number.
