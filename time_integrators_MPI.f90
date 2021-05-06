@@ -354,6 +354,7 @@ do ! while (time < t_final)
     end do
     !$OMP END PARALLEL DO
     finish = OMP_GET_WTIME()
+    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
     ! write(*,*) " - stage 1 mid timing: ", finish-start, "(s)"
 
     ! Compute K2hat
