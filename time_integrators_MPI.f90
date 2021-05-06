@@ -54,16 +54,12 @@ real(dp), EXTERNAL             :: OMP_GET_WTIME
 EXTERNAL                       :: OMP_SET_NUM_THREADS
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-call OMP_SET_NUM_THREADS(1)
-
 if (vtk_print) then
     wvtk = .true.
 else
     wvtk = .false.
     nprint = 100
 end if
-
-write(*,*) "imex_rk_MPI from proc ", proc_id_str
 
 if (wvtk) then
     call write_to_vtk(0, .false., proc_id_str) ! false = Fourier space
