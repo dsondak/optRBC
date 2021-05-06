@@ -169,8 +169,10 @@ do ! while (time < t_final)
     else
        time = time + dt
     end if
- 
-    write(*,*) "time = ", time, "dt = ", dt
+
+    if (proc_id == 0) then 
+        write(*,*) "time = ", time, "dt = ", dt
+    end if 
  
     nti = nti + 1
  
@@ -186,7 +188,6 @@ do ! while (time < t_final)
     finish = OMP_GET_WTIME()
     ! write(*,*) " - calc_explicit(1) timing: ", finish-start, "(s)"
     start = OMP_GET_WTIME()
-    !$OMP PARALLEL DO private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
     do it = 1,Nx ! kx loop
         ! Compute phi1 and T1
         if (proc_id == 0) then
@@ -352,7 +353,6 @@ do ! while (time < t_final)
                           MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
         end if
     end do
-    !$OMP END PARALLEL DO
     finish = OMP_GET_WTIME()
     call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
     ! write(*,*) " - stage 1 mid timing: ", finish-start, "(s)"
@@ -368,7 +368,6 @@ do ! while (time < t_final)
     ! STAGE 2 ::
     !:::::::::::
     start = OMP_GET_WTIME()
-    !$OMP PARALLEL DO private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
     do it = 1,Nx ! kx loop
         ! Compute phi1 and T1
         if (proc_id == 0) then
@@ -568,7 +567,6 @@ do ! while (time < t_final)
                           MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
         end if
     end do
-    !$OMP END PARALLEL DO
     finish = OMP_GET_WTIME()
     ! write(*,*) " - stage 2 mid timing: ", finish-start, "(s)"
     call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
@@ -583,7 +581,6 @@ do ! while (time < t_final)
     ! STAGE 3 ::
     !:::::::::::
     start = OMP_GET_WTIME()
-    !$OMP PARALLEL DO private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
     do it = 1,Nx ! kx loop
         ! Compute phi1 and T1
         if (proc_id == 0) then
@@ -806,7 +803,6 @@ do ! while (time < t_final)
                           MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
         end if
     end do
-    !$OMP END PARALLEL DO
     finish = OMP_GET_WTIME()
     ! write(*,*) " - stage 3 mid timing: ", finish-start, "(s)"
     call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
@@ -851,7 +847,6 @@ do ! while (time < t_final)
         &                   b(3)*(K3_T(1:Ny,:) + K4hat_T(1:Ny,:)))
     end if
 
-    !$OMP PARALLEL DO private(tmp_uy, it) schedule(dynamic)
     do it = 1,Nx
         ! Only call from single node.
         if (proc_id == 0) then 
@@ -895,7 +890,6 @@ do ! while (time < t_final)
                           MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
         end if 
     end do
-    !$OMP END PARALLEL DO
     finish = OMP_GET_WTIME()
     ! write(*,*) " - update sols timing: ", finish-start, "(s)"
     ! call MPI_BARRIER(MPI_COMM_WORLD, mpierror)    
@@ -967,16 +961,13 @@ finish = OMP_GET_WTIME()
 ! write(*,*) " - - l1 timing: ", finish-start, "(s)"
 
 start = OMP_GET_WTIME()
-!$OMP PARALLEL DO schedule(dynamic)
 do i=1,Nx
    ! Compute dx(T) in Fourier space
    nlT  (:,i) =  kx(i)*Ti(:,i)
    ! Compute D2(ux)
    nlphi(:,i) = -kx(i)**2.0_dp*uxi(:,i) + d2y_MPI2(uxi(:,i), proc_id, num_procs)
 end do
-!$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
-
 ! write(*,*) " - - l2 timing: ", finish-start, "(s)"
 
 !nlT = -CI*nlT
@@ -1011,7 +1002,6 @@ finish = OMP_GET_WTIME()
 
 ! Calculate nonlinear term
 start = OMP_GET_WTIME()
-!$OMP PARALLEL DO private(tmp_T) schedule(dynamic)
 do i = 1,Nx
    ! Temperature
    tmp_T = Ti(:,i)
@@ -1019,7 +1009,6 @@ do i = 1,Nx
    ! phi
    nlphi(:,i) = uxi(:,i)*phii(:,i) - uyi(:,i)*nlphi(:,i)
 end do
-!$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
 ! write(*,*) " - - l4 timing: ", finish-start, "(s)"
 
