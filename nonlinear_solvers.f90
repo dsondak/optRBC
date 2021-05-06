@@ -119,7 +119,7 @@ do nli = 1,nl_max
    call unpackx(x0)
 
    ! Calculate phi and ux from uy
-   do jj = 1,Nx
+   do jj = 1,Nx/2+1
       if (kx(jj) /= 0.0_dp) then
          tuy_comp = uy(:,jj)
          ux(:,jj) = -CI*d1y(tuy_comp)/kx(jj)

@@ -418,6 +418,7 @@ end subroutine init_fields
 subroutine init_to_fourier(ex_Tptrb)
 
 use global
+use statistics
 
 implicit none
 
