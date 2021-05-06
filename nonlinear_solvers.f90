@@ -65,7 +65,7 @@ norm_x0 = dnrm2(n,x0,incx)
 do nli = 1,nl_max
    nli_global = nli
    ! Get solution at time T
-   call imex_rk(.true.)
+   call imex_rk(.false., .false.)
    !  Form xT
    call packx(xT)
    ! Get flow map
