@@ -213,11 +213,6 @@ else
       call fftw_execute_dft_r2c(planux, tux_real, tux_comp)
       call fftw_execute_dft_r2c(planuy, tuy_real, tuy_comp)
       call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
-      do ii=1,Nx/2
-         tux_comp(Nx - ii + 1) = conjg(tux_comp(ii))
-         tuy_comp(Nx - ii + 1) = conjg(tuy_comp(ii))
-         tT_comp(Nx - ii + 1) = conjg(tT_comp(ii))
-      end do
       T(j,:)   = tT_comp
       ux(j,:)  = tux_comp
       uy(j,:)  = tuy_comp
@@ -289,10 +284,6 @@ else
       tuy_real = real(uy(j,:))
       call fftw_execute_dft_r2c(planuy, tuy_real, tuy_comp)
       call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
-      do ii=1,Nx/2
-         tuy_comp(Nx - ii + 1) = conjg(tuy_comp(ii))
-         tT_comp(Nx - ii + 1) = conjg(tT_comp(ii))
-      end do
       T(j,:)   = tT_comp
       uy(j,:)  = tuy_comp
    end do
@@ -380,11 +371,6 @@ else
       call fftw_execute_dft_r2c(planux, tux_real, tux_comp)
       call fftw_execute_dft_r2c(planuy, tuy_real, tuy_comp)
       call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
-      do ii=1,Nx/2
-         tux_comp(Nx - ii + 1) = conjg(tux_comp(ii))
-         tuy_comp(Nx - ii + 1) = conjg(tuy_comp(ii))
-         tT_comp(Nx - ii + 1) = conjg(tT_comp(ii))
-      end do
       T(j,:)   = tT_comp
       ux(j,:)  = tux_comp
       uy(j,:)  = tuy_comp

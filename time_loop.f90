@@ -111,22 +111,22 @@ close(unit=2)
 
 ! Create FFT plans
 planuy = fftw_plan_dft_r2c_1d(Nx,tuy_real,tuy_comp,FFTW_ESTIMATE)
-iplanuy = fftw_plan_dft_c2r_1d(Nx,tuy_comp,tuy_real,FFTW_ESTIMATE)
+iplanuy = fftw_plan_dft_c2r_1d(Nx,tuy_comp,tuy_real,IOR(FFTW_ESTIMATE,FFTW_PRESERVE_INPUT))
 
 planux = fftw_plan_dft_r2c_1d(Nx,tux_real,tux_comp,FFTW_ESTIMATE)
-iplanux = fftw_plan_dft_c2r_1d(Nx,tux_comp,tux_real,FFTW_ESTIMATE)
+iplanux = fftw_plan_dft_c2r_1d(Nx,tux_comp,tux_real,IOR(FFTW_ESTIMATE,FFTW_PRESERVE_INPUT))
 
 planphi = fftw_plan_dft_r2c_1d(Nx,tphi_real,tphi_comp,FFTW_ESTIMATE)
-iplanphi = fftw_plan_dft_c2r_1d(Nx,tphi_comp,tphi_real,FFTW_ESTIMATE)
+iplanphi = fftw_plan_dft_c2r_1d(Nx,tphi_comp,tphi_real,IOR(FFTW_ESTIMATE,FFTW_PRESERVE_INPUT))
 
 planT = fftw_plan_dft_r2c_1d(Nx,tT_real,tT_comp,FFTW_ESTIMATE)
-iplanT = fftw_plan_dft_c2r_1d(Nx,tT_comp,tT_real,FFTW_ESTIMATE)
+iplanT = fftw_plan_dft_c2r_1d(Nx,tT_comp,tT_real,IOR(FFTW_ESTIMATE,FFTW_PRESERVE_INPUT))
 
 plannlT = fftw_plan_dft_r2c_1d(Nx,tnlT_real,tnlT_comp,FFTW_ESTIMATE)
-iplannlT = fftw_plan_dft_c2r_1d(Nx,tnlT_comp,tnlT_real,FFTW_ESTIMATE)
+iplannlT = fftw_plan_dft_c2r_1d(Nx,tnlT_comp,tnlT_real,IOR(FFTW_ESTIMATE,FFTW_PRESERVE_INPUT))
 
 plannlphi = fftw_plan_dft_r2c_1d(Nx,tnlphi_real,tnlphi_comp,FFTW_ESTIMATE)
-iplannlphi = fftw_plan_dft_c2r_1d(Nx,tnlphi_comp,tnlphi_real,FFTW_ESTIMATE)
+iplannlphi = fftw_plan_dft_c2r_1d(Nx,tnlphi_comp,tnlphi_real,IOR(FFTW_ESTIMATE,FFTW_PRESERVE_INPUT))
 
 call global_params
 call global_allocations
@@ -310,7 +310,7 @@ if (wvtk) then
 end if
 
 ! Initialize fields.
-open(unit=7000, file="Debug_data.txt", action="write", status="unknown", position="append")
+! open(unit=7000, file="Debug_data.txt", action="write", status="unknown", position="append")
 
 call init_fields(ex_Tptrb, fTexist, Ra)
 call init_to_fourier(ex_Tptrb)
@@ -423,6 +423,7 @@ implicit none
 
 logical, intent(in) :: ex_Tptrb
 integer             :: ii, jj
+real(dp)            :: nusselt_num
 
 write(7000, *) '("T at beginning of init_to_fourier (prior to any fft execution)")'
 flush(7000)
@@ -437,18 +438,8 @@ do jj = 1,Ny
    tuy_real = real(uy(jj,:))
    call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
    call fftw_execute_dft_r2c(planuy, tuy_real, tuy_comp)
-   do ii=1,Nx/2
-      tT_comp(Nx - ii + 1) = conjg(tT_comp(ii))
-      tuy_comp(Nx - ii + 1) = conjg(tuy_comp(ii))
-      ! if (ii == 1) then
-      !    print *, "tT_comp(1)"
-      !    print *, tT_comp(ii)
-      !    print *, "tT_comp(Nx)"
-      !    print *, tT_comp(Nx - ii + 1)
-      ! end if 
-   end do
    ! Truncate modes
-   do ii = 1,Nx
+   do ii = 1,Nx/2+1
       if (abs(kx(ii))/alpha >= Nf/2) then
          tT_comp(ii)  = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
          tuy_comp(ii) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
@@ -460,11 +451,8 @@ do jj = 1,Ny
    if (ex_Tptrb) then
       tT_real = real(Tptrb(jj,:))
       call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
-      do ii=1,Nx/2
-         tT_comp(Nx - ii + 1) = conjg(tT_comp(ii))
-      end do
       ! Truncate modes
-      do ii = 1,Nx
+      do ii = 1,Nx/2+1
          if (abs(kx(ii))/alpha >= Nf/2) then
             tT_comp(ii)  = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
          end if
@@ -479,8 +467,11 @@ if (ex_Tptrb) then
    Tptrb = Tptrb / real(Nx, kind=dp)
 end if
 
+call nusselt(nusselt_num, .true.)
+print *, '("In init_to_fourier after execute fftw")'
+print *, nusselt_num
 ! Calculate phi and ux from uy
-do ii = 1,Nx
+do ii = 1,Nx/2+1
    if (kx(ii) /= 0.0_dp) then
       tmp_uy = uy(:,ii)
       !ux(:,ii) = -CI*d1y(tmp_uy)/kx(ii)

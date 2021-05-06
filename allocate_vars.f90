@@ -34,12 +34,12 @@ subroutine global_allocations
     allocate(tnlphi_real(Nx), stat=alloc_err)
     allocate(tphi_real(Nx), stat=alloc_err)
 
-    allocate(tT_comp(Nx), stat=alloc_err)
-    allocate(tux_comp(Nx), stat=alloc_err)
-    allocate(tuy_comp(Nx), stat=alloc_err)
-    allocate(tnlT_comp(Nx), stat=alloc_err)
-    allocate(tnlphi_comp(Nx), stat=alloc_err)
-    allocate(tphi_comp(Nx), stat=alloc_err)
+    allocate(tT_comp(Nx/2+1), stat=alloc_err)
+    allocate(tux_comp(Nx/2+1), stat=alloc_err)
+    allocate(tuy_comp(Nx/2+1), stat=alloc_err)
+    allocate(tnlT_comp(Nx/2+1), stat=alloc_err)
+    allocate(tnlphi_comp(Nx/2+1), stat=alloc_err)
+    allocate(tphi_comp(Nx/2+1), stat=alloc_err)
 
     allocate(xp(Nx), stat=alloc_err)
     allocate(yp(Ny), stat=alloc_err)

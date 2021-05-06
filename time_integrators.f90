@@ -103,7 +103,7 @@ do ! while (time < t_final)
     flush(7000)
    end do
 
-   do it = 1,Nx ! kx loop
+   do it = 1,Nx/2+1 ! kx loop
       ! Compute phi1 and T1
       call calc_vari(tmp_phi, tmp_T, acoeffs(1,1), 1)
       ! Compute v1 from phi1 
@@ -138,7 +138,7 @@ do ! while (time < t_final)
    !:::::::::::
    ! STAGE 2 ::
    !:::::::::::
-   do it = 1,Nx ! kx loop
+   do it = 1,Nx/2+1 ! kx loop
       ! Compute phi2 and T2
       call calc_vari(tmp_phi, tmp_T, acoeffs(2,2), 2)
       ! Compute v1 from phi1 
@@ -173,7 +173,7 @@ do ! while (time < t_final)
    !:::::::::::
    ! STAGE 3 ::
    !:::::::::::
-   do it = 1,Nx ! kx loop
+   do it = 1,Nx/2+1 ! kx loop
       ! Compute phi3 and T3
       call calc_vari(tmp_phi, tmp_T, acoeffs(3,3), 3)
       ! Compute v1 from phi1
@@ -220,7 +220,7 @@ do ! while (time < t_final)
                   &                   b(3)*(K3_T(2:Ny-1,:) + K4hat_T(2:Ny-1,:)))
 
    ! Get ux and uy
-   do it = 1,Nx
+   do it = 1,Nx/2+1
       ! Solve for v
       call calc_vi(tmp_uy, phi(:,it))
       uy(:,it) = tmp_uy
@@ -428,7 +428,7 @@ select case(stage)
       end do
 end select
 
-do i=1,Nx
+do i=1,Nx/2+1
    ! Compute dx(T) in Fourier space
    nlT  (:,i) =  kx(i)*Ti(:,i)
    ! Compute D2(ux)
@@ -482,6 +482,7 @@ end do
 !   write(7000, *) nlT(Ny-1, i)
 !   flush(7000)
 ! end do
+
 ! Calculate nonlinear term
 do i = 1,Nx
    ! Temperature
@@ -497,12 +498,8 @@ do j = 1,Ny
    ! Previous code: FFTW_FORWARD, use r2c
    call fftw_execute_dft_r2c(plannlT, tnlT_real, tnlT_comp)
    call fftw_execute_dft_r2c(plannlphi, tnlphi_real, tnlphi_comp)
-   do ii=1,Nx/2
-    tnlT_comp(Nx - ii + 1) = conjg(tnlT_comp(ii))
-    tnlphi_comp(Nx - ii + 1) = conjg(tnlphi_comp(ii))
-   end do
    ! Dealias
-   do i = 1,Nx
+   do i = 1,Nx/2+1
       if (abs(kx(i))/alpha >= Nf/2) then
          tnlT_comp(i)   = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
          tnlphi_comp(i) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
