@@ -156,7 +156,7 @@ else
 
 end if 
 
-! call MPI_BARRIER(MPI_COMM_WORLD, mpierror) 
+call MPI_BARRIER(MPI_COMM_WORLD, mpierror) 
 
 ! Time integration
 do ! while (time < t_final)
@@ -354,7 +354,7 @@ do ! while (time < t_final)
     end do
     !$OMP END PARALLEL DO
     finish = OMP_GET_WTIME()
-    ! call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
+    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
     ! write(*,*) " - stage 1 mid timing: ", finish-start, "(s)"
 
     ! Compute K2hat
@@ -362,7 +362,7 @@ do ! while (time < t_final)
     call calc_explicit_MPI(2, proc_id, num_procs, proc_id_str)
     finish = OMP_GET_WTIME()
     ! write(*,*) " - calc_explicit(2) timing: ", finish-start, "(s)"
-    ! call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
+    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
 
     !:::::::::::
     ! STAGE 2 ::
@@ -571,7 +571,7 @@ do ! while (time < t_final)
     !$OMP END PARALLEL DO
     finish = OMP_GET_WTIME()
     ! write(*,*) " - stage 2 mid timing: ", finish-start, "(s)"
-    ! call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
+    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
     ! Compute K3hat
     start = OMP_GET_WTIME()
     call calc_explicit_MPI(3, proc_id, num_procs, proc_id_str)
@@ -809,7 +809,7 @@ do ! while (time < t_final)
     !$OMP END PARALLEL DO
     finish = OMP_GET_WTIME()
     ! write(*,*) " - stage 3 mid timing: ", finish-start, "(s)"
-    ! call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
+    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
     ! Compute K4hat
     start = OMP_GET_WTIME()
     call calc_explicit_MPI(4, proc_id, num_procs, proc_id_str)
