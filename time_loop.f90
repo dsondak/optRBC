@@ -353,7 +353,7 @@ write(*,'(A70)')                  '                                             
 
 flush(6)
 
-open(unit=8000, file="Nu_data.txt", action="write", status="unknown", position="append")
+open(unit=8000, file="Nu_data.txt", action="write", status="unknown")
 
 ! Get nu0 and kappa0
 call global_params_Ra(Ra)
