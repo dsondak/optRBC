@@ -72,17 +72,6 @@ nti = 0
 ! Format for writing out single values.
 1000 format(E25.16E3)
 
-open(unit=9010, file="T_real_update.txt", action="write", status="unknown")
-open(unit=9011, file="T_im_update.txt", action="write", status="unknown")
-do i=1,Ny
-   do j=1,Nx
-         write (9010,*) REAL(T(i,j))
-         write (9011,*) AIMAG(T(i,j))
-   end do
-end do
-close(unit=9010)
-close(unit=9011)
-write(*,*) "done writing T!"
 
 ! Time integration
 do ! while (time < t_final)
@@ -274,6 +263,17 @@ do ! while (time < t_final)
 
 
    if (time == t_final) then
+      open(unit=9010, file="T_real_update.txt", action="write", status="unknown")
+      open(unit=9011, file="T_im_update.txt", action="write", status="unknown")
+      do i=1,Ny
+         do j=1,Nx
+               write (9010,*) REAL(T(i,j))
+               write (9011,*) AIMAG(T(i,j))
+         end do
+      end do
+      close(unit=9010)
+      close(unit=9011)
+      write(*,*) "done writing T!"
       exit
    end if
 

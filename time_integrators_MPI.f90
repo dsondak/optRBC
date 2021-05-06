@@ -116,17 +116,6 @@ end if
 
 call MPI_BARRIER(MPI_COMM_WORLD, mpierror) 
 
-open(unit=9010, file="P"//proc_id_str//"T_real_update.txt", action="write", status="unknown")
-open(unit=9011, file="P"//proc_id_str//"T_im_update.txt", action="write", status="unknown")
-do i=1,Ny
-    do j=1,Nx
-        write (9010,*) REAL(T(i,j))
-        write (9011,*) AIMAG(T(i,j))
-    end do
-end do
-close(unit=9010)
-close(unit=9011)
-write(*,*) "done writing T!"
 
 ! Time integration
 do ! while (time < t_final)
@@ -1184,7 +1173,20 @@ do ! while (time < t_final)
     ! close(unit=9011)
     ! write(*,*) "done writing uy!"
    
-    
+    if (time == t_final) then
+        open(unit=9010, file="P"//proc_id_str//"T_real_update.txt", action="write", status="unknown")
+        open(unit=9011, file="P"//proc_id_str//"T_im_update.txt", action="write", status="unknown")
+        do i=1,Ny
+            do j=1,Nx
+                write (9010,*) REAL(T(i,j))
+                write (9011,*) AIMAG(T(i,j))
+            end do
+        end do
+        close(unit=9010)
+        close(unit=9011)
+        write(*,*) "done writing T!"
+        exit
+    end if
 
     if (wvtk) then
         call write_to_vtk(nti, .false., proc_id_str) ! false = Fourier space
@@ -1192,10 +1194,6 @@ do ! while (time < t_final)
 
     call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
     write(*,*) "proc ", proc_id_str, " write vtk complete for t", time 
-
-    if (time == t_final) then
-        exit
-    end if
  
  end do
 
