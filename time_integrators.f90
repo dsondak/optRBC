@@ -81,7 +81,7 @@ do ! while (time < t_final)
       time = time + dt
    end if
 
-   !write(*,*) "time = ", time, "dt = ", dt
+   write(*,*) "time = ", time, "dt = ", dt
 
    nti = nti + 1
 
