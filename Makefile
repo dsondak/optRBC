@@ -7,15 +7,19 @@ LDFLAGS   = -I/usr/local/fftw/include
 # MAIN = Ra_loop
 # MAIN = Ra_loop_no_opt
 # MAIN = time_loop
-MAIN = time_loop_MPI
+# MAIN = time_loop_MPI
 
-OBJECTS = fftw.o global.o allocate_vars.o precmod.o stringmod.o write_pack.o interpolation_pack.o mesh_pack.o imod.o bc_setup.o statistics.o time_integrators.o time_integrators_MPI.o jacobians.o gmres_pack.o nonlinear_solvers.o $(MAIN).o
-PROGRAMS = $(MAIN).exe
+OBJECTS = fftw.o global.o allocate_vars.o precmod.o stringmod.o write_pack.o interpolation_pack.o mesh_pack.o imod.o bc_setup.o statistics.o time_integrators.o time_integrators_MPI.o jacobians.o gmres_pack.o nonlinear_solvers.o time_loop.o
+OBJECTS_MPI = fftw.o global.o allocate_vars.o precmod.o stringmod.o write_pack.o interpolation_pack.o mesh_pack.o imod.o bc_setup.o statistics.o time_integrators.o time_integrators_MPI.o jacobians.o gmres_pack.o nonlinear_solvers.o time_loop_MPI.o
+# PROGRAMS = $(MAIN).exe
 
-all: $(PROGRAMS)
+all : time_loop.exe time_loop_MPI.exe
 
-$(PROGRAMS) : $(OBJECTS)
-	$(FC) -fopenmp -fallow-argument-mismatch $(LDFLAGS) -o $(PROGRAMS) $(OBJECTS) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
+time_loop.exe : $(OBJECTS)
+	$(FC) -fopenmp -fallow-argument-mismatch $(LDFLAGS) -o time_loop.exe $(OBJECTS) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
+
+time_loop_MPI.exe : $(OBJECTS_MPI)
+	$(FC) -fopenmp -fallow-argument-mismatch $(LDFLAGS) -o time_loop_MPI.exe $(OBJECTS_MPI) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
 
 fftw.o : fftw.f90
 	$(FC) $(FFLAGS) fftw.f90
@@ -65,8 +69,11 @@ gmres_pack.o : gmres_pack.f90
 nonlinear_solvers.o : nonlinear_solvers.f90
 	$(FC) $(FFLAGS) nonlinear_solvers.f90
 
-$(MAIN).o : $(MAIN).f90
-	$(FC) $(FFLAGS) $(MAIN).f90
+time_loop.o : time_loop.f90
+	$(FC) $(FFLAGS) time_loop.f90
+
+time_loop_MPI.o : time_loop_MPI.f90
+	$(FC) $(FFLAGS) time_loop_MPI.f90
 
 clean :
 	rm -rf *.mod $(OBJECTS) $(PROGRAMS) 
