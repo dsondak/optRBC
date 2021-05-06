@@ -901,18 +901,18 @@ do ! while (time < t_final)
     call MPI_BARRIER(MPI_COMM_WORLD, mpierror)    
 
     if (time == t_final) then
-        open(unit=9010, file="P"//proc_id_str//"T_real_update.txt", action="write", status="unknown")
-        open(unit=9011, file="P"//proc_id_str//"T_im_update.txt", action="write", status="unknown")
-        do i=1,Ny
-            do j=1,Nx
-                write (9010,*) REAL(T(i,j))
-                write (9011,*) AIMAG(T(i,j))
-            end do
-        end do
-        close(unit=9010)
-        close(unit=9011)
-        write(*,*) Ny
-        write(*,*) "done writing T!"
+        ! open(unit=9010, file="P"//proc_id_str//"T_real_update.txt", action="write", status="unknown")
+        ! open(unit=9011, file="P"//proc_id_str//"T_im_update.txt", action="write", status="unknown")
+        ! do i=1,Ny
+        !     do j=1,Nx
+        !         write (9010,*) REAL(T(i,j))
+        !         write (9011,*) AIMAG(T(i,j))
+        !     end do
+        ! end do
+        ! close(unit=9010)
+        ! close(unit=9011)
+        ! write(*,*) Ny
+        ! write(*,*) "done writing T!"
         exit
     end if
 
