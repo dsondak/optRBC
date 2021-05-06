@@ -81,7 +81,7 @@ do ! while (time < t_final)
       time = time + dt
    end if
 
-   write(*,*) "time = ", time, "dt = ", dt
+   !write(*,*) "time = ", time, "dt = ", dt
 
    nti = nti + 1
 
@@ -95,7 +95,7 @@ do ! while (time < t_final)
    start = OMP_GET_WTIME()
    call calc_explicit(1)
    finish = OMP_GET_WTIME()
-   write(*,*) " - calc_explicit(1) timing: ", finish-start, "(s)"
+   ! write(*,*) " - calc_explicit(1) timing: ", finish-start, "(s)"
    start = OMP_GET_WTIME()
    !$OMP PARALLEL DO private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
    do it = 1,Nx ! kx loop
@@ -130,12 +130,12 @@ do ! while (time < t_final)
    end do
    !$OMP END PARALLEL DO
    finish = OMP_GET_WTIME()
-   write(*,*) " - stage 1 mid timing: ", finish-start, "(s)"
+   ! write(*,*) " - stage 1 mid timing: ", finish-start, "(s)"
    ! Compute K2hat
    start = OMP_GET_WTIME()
    call calc_explicit(2)
    finish = OMP_GET_WTIME()
-   write(*,*) " - calc_explicit(2) timing: ", finish-start, "(s)"
+   ! write(*,*) " - calc_explicit(2) timing: ", finish-start, "(s)"
 
    !:::::::::::
    ! STAGE 2 ::
@@ -174,12 +174,12 @@ do ! while (time < t_final)
       uyi (:,it) = tmp_uy
    end do
    finish = OMP_GET_WTIME()
-   write(*,*) " - stage 2 mid timing: ", finish-start, "(s)"
+   ! write(*,*) " - stage 2 mid timing: ", finish-start, "(s)"
    ! Compute K3hat
    start = OMP_GET_WTIME()
    call calc_explicit(3)
    finish = OMP_GET_WTIME()
-   write(*,*) " - calc_explicit(3) timing: ", finish-start, "(s)"
+   ! write(*,*) " - calc_explicit(3) timing: ", finish-start, "(s)"
 
    !:::::::::::
    ! STAGE 3 ::
@@ -219,12 +219,12 @@ do ! while (time < t_final)
    end do
    !$OMP END PARALLEL DO
    finish = OMP_GET_WTIME()
-   write(*,*) " - stage 3 mid timing: ", finish-start, "(s)"
+   ! write(*,*) " - stage 3 mid timing: ", finish-start, "(s)"
    ! Compute K4hat
    start = OMP_GET_WTIME()
    call calc_explicit(4)
    finish = OMP_GET_WTIME()
-   write(*,*) " - calc_explicit(4) timing: ", finish-start, "(s)"
+   ! write(*,*) " - calc_explicit(4) timing: ", finish-start, "(s)"
 
    ! UPDATE SOLUTIONS
 
@@ -255,7 +255,7 @@ do ! while (time < t_final)
    end do
    !$OMP END PARALLEL DO
    finish = OMP_GET_WTIME()
-   write(*,*) " - update sols timing: ", finish-start, "(s)"
+   ! write(*,*) " - update sols timing: ", finish-start, "(s)"
 
    if (time == t_final) then
       ! open(unit=9010, file="T_real_update.txt", action="write", status="unknown")
@@ -286,7 +286,7 @@ do ! while (time < t_final)
 
    
    finish_overall = OMP_GET_WTIME()
-   write(*,*) "overall timing: ", finish_overall-start_overall, "(s)"
+   ! write(*,*) "overall timing: ", finish_overall-start_overall, "(s)"
 
 end do ! time loop
 
@@ -639,7 +639,7 @@ select case(stage)
       !$OMP END PARALLEL DO
 end select
 finish = OMP_GET_WTIME()
-write(*,*) " - - l1 timing: ", finish-start, "(s)"
+! write(*,*) " - - l1 timing: ", finish-start, "(s)"
 
 start = OMP_GET_WTIME()
 !$OMP PARALLEL DO schedule(dynamic)
@@ -651,7 +651,7 @@ do i=1,Nx
 end do
 !$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
-write(*,*) " - - l2 timing: ", finish-start, "(s)"
+! write(*,*) " - - l2 timing: ", finish-start, "(s)"
 
 !nlT = -CI*nlT
 nlT = CI*nlT
@@ -681,7 +681,7 @@ do j = 1,Ny
 end do
 !$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
-write(*,*) " - - l3 timing: ", finish-start, "(s)"
+! write(*,*) " - - l3 timing: ", finish-start, "(s)"
 
 ! Calculate nonlinear term
 start = OMP_GET_WTIME()
@@ -695,7 +695,7 @@ do i = 1,Nx
 end do
 !$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
-write(*,*) " - - l4 timing: ", finish-start, "(s)"
+! write(*,*) " - - l4 timing: ", finish-start, "(s)"
 
 ! Bring nonlinear terms back to Fourier space
 start = OMP_GET_WTIME()
@@ -717,7 +717,7 @@ do j = 1,Ny
 end do
 !$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
-write(*,*) " - - l5 timing: ", finish-start, "(s)"
+! write(*,*) " - - l5 timing: ", finish-start, "(s)"
 
 nlT   = nlT   / real(Nx,kind=dp)
 nlphi = nlphi / real(Nx,kind=dp)
@@ -758,7 +758,7 @@ select case (stage)
       K4hat_T = -nlT
 end select
 finish = OMP_GET_WTIME()
-write(*,*) " - - l6 timing: ", finish-start, "(s)"
+! write(*,*) " - - l6 timing: ", finish-start, "(s)"
 
 end subroutine calc_explicit
 

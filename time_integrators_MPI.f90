@@ -63,7 +63,7 @@ else
     nprint = 100
 end if
 
-write(*,*) "imex_rk_MPI from proc ", proc_id_str
+! write(*,*) "imex_rk_MPI from proc ", proc_id_str
 
 if (wvtk) then
     call write_to_vtk(0, .false., proc_id_str) ! false = Fourier space
@@ -185,7 +185,7 @@ do ! while (time < t_final)
     start = OMP_GET_WTIME()
     call calc_explicit_MPI(1, proc_id, num_procs, proc_id_str)
     finish = OMP_GET_WTIME()
-    write(*,*) " - calc_explicit(1) timing: ", finish-start, "(s)"
+    ! write(*,*) " - calc_explicit(1) timing: ", finish-start, "(s)"
     start = OMP_GET_WTIME()
     !$OMP PARALLEL DO private(tmp_phi, tmp_T, tmp_uy, tmp_phi1, tmp_uy1, tmp_K_phi, tmp_K_T) schedule(dynamic)
     do it = 1,Nx ! kx loop
@@ -355,13 +355,13 @@ do ! while (time < t_final)
     end do
     !$OMP END PARALLEL DO
     finish = OMP_GET_WTIME()
-    write(*,*) " - stage 1 mid timing: ", finish-start, "(s)"
+    ! write(*,*) " - stage 1 mid timing: ", finish-start, "(s)"
 
     ! Compute K2hat
     start = OMP_GET_WTIME()
     call calc_explicit_MPI(2, proc_id, num_procs, proc_id_str)
     finish = OMP_GET_WTIME()
-    write(*,*) " - calc_explicit(2) timing: ", finish-start, "(s)"
+    ! write(*,*) " - calc_explicit(2) timing: ", finish-start, "(s)"
     call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
 
     !:::::::::::
@@ -570,13 +570,13 @@ do ! while (time < t_final)
     end do
     !$OMP END PARALLEL DO
     finish = OMP_GET_WTIME()
-    write(*,*) " - stage 2 mid timing: ", finish-start, "(s)"
+    ! write(*,*) " - stage 2 mid timing: ", finish-start, "(s)"
     call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
     ! Compute K3hat
     start = OMP_GET_WTIME()
     call calc_explicit_MPI(3, proc_id, num_procs, proc_id_str)
     finish = OMP_GET_WTIME()
-    write(*,*) " - calc_explicit(3) timing: ", finish-start, "(s)"
+    ! write(*,*) " - calc_explicit(3) timing: ", finish-start, "(s)"
     call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
 
     !:::::::::::
@@ -808,13 +808,13 @@ do ! while (time < t_final)
     end do
     !$OMP END PARALLEL DO
     finish = OMP_GET_WTIME()
-    write(*,*) " - stage 3 mid timing: ", finish-start, "(s)"
+    ! write(*,*) " - stage 3 mid timing: ", finish-start, "(s)"
     call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
     ! Compute K4hat
     start = OMP_GET_WTIME()
     call calc_explicit_MPI(4, proc_id, num_procs, proc_id_str)
     finish = OMP_GET_WTIME()
-    write(*,*) " - calc_explicit(4) timing: ", finish-start, "(s)"
+    ! write(*,*) " - calc_explicit(4) timing: ", finish-start, "(s)"
     call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
 
     start = OMP_GET_WTIME()
@@ -897,7 +897,7 @@ do ! while (time < t_final)
     end do
     !$OMP END PARALLEL DO
     finish = OMP_GET_WTIME()
-    write(*,*) " - update sols timing: ", finish-start, "(s)"
+    ! write(*,*) " - update sols timing: ", finish-start, "(s)"
     call MPI_BARRIER(MPI_COMM_WORLD, mpierror)    
 
     if (time == t_final) then
@@ -921,7 +921,7 @@ do ! while (time < t_final)
     end if
 
     call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
-    write(*,*) "proc ", proc_id_str, " write vtk complete for t", time 
+    ! write(*,*) "proc ", proc_id_str, " write vtk complete for t", time 
  
  end do
 
@@ -964,7 +964,7 @@ select case(stage)
         !$OMP END PARALLEL DO
 end select
 finish = OMP_GET_WTIME()
-write(*,*) " - - l1 timing: ", finish-start, "(s)"
+! write(*,*) " - - l1 timing: ", finish-start, "(s)"
 
 start = OMP_GET_WTIME()
 !$OMP PARALLEL DO schedule(dynamic)
@@ -977,7 +977,7 @@ end do
 !$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
 
-write(*,*) " - - l2 timing: ", finish-start, "(s)"
+! write(*,*) " - - l2 timing: ", finish-start, "(s)"
 
 !nlT = -CI*nlT
 nlT = CI*nlT
@@ -1007,7 +1007,7 @@ do j = 1,Ny
 end do
 !$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
-write(*,*) " - - l3 timing: ", finish-start, "(s)"
+! write(*,*) " - - l3 timing: ", finish-start, "(s)"
 
 ! Calculate nonlinear term
 start = OMP_GET_WTIME()
@@ -1021,7 +1021,7 @@ do i = 1,Nx
 end do
 !$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
-write(*,*) " - - l4 timing: ", finish-start, "(s)"
+! write(*,*) " - - l4 timing: ", finish-start, "(s)"
 
 ! Bring nonlinear terms back to Fourier space
 start = OMP_GET_WTIME()
@@ -1043,7 +1043,7 @@ do j = 1,Ny
 end do
 !$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
-write(*,*) " - - l5 timing: ", finish-start, "(s)"
+! write(*,*) " - - l5 timing: ", finish-start, "(s)"
 
 nlT   = nlT   / real(Nx,kind=dp)
 nlphi = nlphi / real(Nx,kind=dp)
@@ -1084,7 +1084,7 @@ select case (stage)
       K4hat_T = -nlT
 end select
 finish = OMP_GET_WTIME()
-write(*,*) " - - l6 timing: ", finish-start, "(s)"
+! write(*,*) " - - l6 timing: ", finish-start, "(s)"
 
 end subroutine calc_explicit_MPI
 
