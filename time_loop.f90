@@ -21,7 +21,7 @@ integer                                                :: refine_flag_x, refine_
 integer                                                :: vtk_flag, rstrt_flag, opt_flag
 logical                                                :: wvtk, save_restart, calc_opt
 logical                                                :: refine_x, refine_y, refine_z, refine_xy
-logical                                                :: fTexist, fuyexist
+logical                                                :: fTexist, fuyexist, write_nusselt
 logical                                                :: ex_Tptrb
 real(dp)                                               :: temp
 real(dp)                                               :: dxc
@@ -100,9 +100,9 @@ do ii = 1,7
              save_restart = .false.
           end if
           if (opt_flag == 1) then
-             calc_opt = .true.
+              write_nusselt = .true.
           else
-             calc_opt = .false.
+              write_nusselt = .false.
           end if
       end select
    end if
@@ -354,7 +354,7 @@ open(unit=8000, file="Nu_data.txt", action="write", status="unknown")
 call global_params_Ra(Ra)
 
 ! Get solution with time integration
-call imex_rk(.true., wvtk) ! true causes writing of nusselt number.
+call imex_rk(write_nusselt, wvtk)
 
 write(*,*) " "
 flush(6)
