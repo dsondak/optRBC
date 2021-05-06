@@ -200,9 +200,9 @@ else
       call fftw_execute_dft_c2r(iplanux, tux_comp, tux_real)
       call fftw_execute_dft_c2r(iplanuy, tuy_comp, tuy_real)
       call fftw_execute_dft_c2r(iplanT, tT_comp, tT_real)
-      T(j,:)   = tT_real
-      ux(j,:)  = tux_real
-      uy(j,:)  = tuy_real
+      T(j,:)   = cmplx(tT_real, kind=C_DOUBLE_COMPLEX) 
+      ux(j,:)  = cmplx(tux_real, kind=C_DOUBLE_COMPLEX) 
+      uy(j,:)  = cmplx(tuy_real, kind=C_DOUBLE_COMPLEX) 
    end do
    call write_vtk_structured_grid(step)
    do j = 1,Ny
@@ -213,6 +213,11 @@ else
       call fftw_execute_dft_r2c(planux, tux_real, tux_comp)
       call fftw_execute_dft_r2c(planuy, tuy_real, tuy_comp)
       call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
+      do ii=1,Nx/2
+         tux_comp(Nx - ii + 1) = conjg(tux_comp(ii))
+         tuy_comp(Nx - ii + 1) = conjg(tuy_comp(ii))
+         tT_comp(Nx - ii + 1) = conjg(tT_comp(ii))
+      end do
       T(j,:)   = tT_comp
       ux(j,:)  = tux_comp
       uy(j,:)  = tuy_comp
@@ -257,8 +262,8 @@ else
       tuy_comp = uy(j,:)
       call fftw_execute_dft_c2r(iplanuy, tuy_comp, tuy_real)
       call fftw_execute_dft_c2r(iplanT, tT_comp, tT_real)
-      T(j,:)   = tT_real
-      uy(j,:)  = tuy_real
+      T(j,:)   = cmplx(tT_real, kind=C_DOUBLE_COMPLEX) 
+      uy(j,:)  = cmplx(tuy_real, kind=C_DOUBLE_COMPLEX) 
    end do
 
    ! Write restart
@@ -284,6 +289,10 @@ else
       tuy_real = real(uy(j,:))
       call fftw_execute_dft_r2c(planuy, tuy_real, tuy_comp)
       call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
+      do ii=1,Nx/2
+         tuy_comp(Nx - ii + 1) = conjg(tuy_comp(ii))
+         tT_comp(Nx - ii + 1) = conjg(tT_comp(ii))
+      end do
       T(j,:)   = tT_comp
       uy(j,:)  = tuy_comp
    end do
@@ -338,9 +347,9 @@ else
       call fftw_execute_dft_c2r(iplanux, tux_comp, tux_real)
       call fftw_execute_dft_c2r(iplanuy, tuy_comp, tuy_real)
       call fftw_execute_dft_c2r(iplanT, tT_comp, tT_real)
-      T(j,:)   = tT_real
-      ux(j,:)  = tux_real
-      uy(j,:)  = tuy_real
+      T(j,:)   = cmplx(tT_real, kind=C_DOUBLE_COMPLEX)
+      ux(j,:)  = cmplx(tux_real, kind=C_DOUBLE_COMPLEX)
+      uy(j,:)  = cmplx(tuy_real, kind=C_DOUBLE_COMPLEX) 
    end do
 
    ! Write to VTK
@@ -371,6 +380,11 @@ else
       call fftw_execute_dft_r2c(planux, tux_real, tux_comp)
       call fftw_execute_dft_r2c(planuy, tuy_real, tuy_comp)
       call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
+      do ii=1,Nx/2
+         tux_comp(Nx - ii + 1) = conjg(tux_comp(ii))
+         tuy_comp(Nx - ii + 1) = conjg(tuy_comp(ii))
+         tT_comp(Nx - ii + 1) = conjg(tT_comp(ii))
+      end do
       T(j,:)   = tT_comp
       ux(j,:)  = tux_comp
       uy(j,:)  = tuy_comp

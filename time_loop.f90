@@ -437,6 +437,16 @@ do jj = 1,Ny
    tuy_real = real(uy(jj,:))
    call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
    call fftw_execute_dft_r2c(planuy, tuy_real, tuy_comp)
+   do ii=1,Nx/2
+      tT_comp(Nx - ii + 1) = conjg(tT_comp(ii))
+      tuy_comp(Nx - ii + 1) = conjg(tuy_comp(ii))
+      ! if (ii == 1) then
+      !    print *, "tT_comp(1)"
+      !    print *, tT_comp(ii)
+      !    print *, "tT_comp(Nx)"
+      !    print *, tT_comp(Nx - ii + 1)
+      ! end if 
+   end do
    ! Truncate modes
    do ii = 1,Nx
       if (abs(kx(ii))/alpha >= Nf/2) then
@@ -450,6 +460,9 @@ do jj = 1,Ny
    if (ex_Tptrb) then
       tT_real = real(Tptrb(jj,:))
       call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
+      do ii=1,Nx/2
+         tT_comp(Nx - ii + 1) = conjg(tT_comp(ii))
+      end do
       ! Truncate modes
       do ii = 1,Nx
          if (abs(kx(ii))/alpha >= Nf/2) then

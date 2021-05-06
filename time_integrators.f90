@@ -95,6 +95,7 @@ do ! while (time < t_final)
    end do
 
    call calc_explicit(1)
+
    write(7000, *) '("Output after calc_explicit(1)")'
    flush(7000)
    do it=Nx-100,Nx
@@ -459,12 +460,12 @@ do j = 1,Ny
    call fftw_execute_dft_c2r(iplanuy, tuy_comp, tuy_real)
    call fftw_execute_dft_c2r(iplanphi, tphi_comp, tphi_real)
 
-   nlT(j,:)   = tnlT_real
-   nlphi(j,:) = tnlphi_real
-   Ti(j,:)   = tT_real
-   uxi(j,:)  = tux_real
-   uyi(j,:)  = tuy_real
-   phii(j,:) = tphi_real
+   nlT(j,:)   = cmplx(tnlT_real, kind=C_DOUBLE_COMPLEX)
+   nlphi(j,:) = cmplx(tnlphi_real, kind=C_DOUBLE_COMPLEX) 
+   Ti(j,:)   = cmplx(tT_real, kind=C_DOUBLE_COMPLEX) 
+   uxi(j,:)  = cmplx(tux_real, kind=C_DOUBLE_COMPLEX) 
+   uyi(j,:)  = cmplx(tuy_real, kind=C_DOUBLE_COMPLEX)
+   phii(j,:) = cmplx(tphi_real, kind=C_DOUBLE_COMPLEX) 
 end do
 
 write(7000, *) '("nlT in calc explicit AFTER FFTW execute")'
@@ -491,11 +492,15 @@ do i = 1,Nx
 end do
 ! Bring nonlinear terms back to Fourier space
 do j = 1,Ny
-   tnlT_real   = real(nlT(j,:))
-   tnlphi_real = real(nlphi(j,:))
+   tnlT_real   = real(nlT(j,:), kind=C_DOUBLE)
+   tnlphi_real = real(nlphi(j,:), kind=C_DOUBLE)
    ! Previous code: FFTW_FORWARD, use r2c
    call fftw_execute_dft_r2c(plannlT, tnlT_real, tnlT_comp)
    call fftw_execute_dft_r2c(plannlphi, tnlphi_real, tnlphi_comp)
+   do ii=1,Nx/2
+    tnlT_comp(Nx - ii + 1) = conjg(tnlT_comp(ii))
+    tnlphi_comp(Nx - ii + 1) = conjg(tnlphi_comp(ii))
+   end do
    ! Dealias
    do i = 1,Nx
       if (abs(kx(i))/alpha >= Nf/2) then
@@ -655,8 +660,8 @@ do jj = 1,Ny
    tuy_comp    = uyi(jj,:)
    call fftw_execute_dft_c2r(iplanux, tux_comp, tux_real)
    call fftw_execute_dft_c2r(iplanuy, tuy_comp, tuy_real)
-   uxi(jj,:)  = tux_real
-   uyi(jj,:)  = tuy_real
+   uxi(jj,:)  = cmplx(tux_real, kind=C_DOUBLE_COMPLEX) 
+   uyi(jj,:)  = cmplx(tuy_real, kind=C_DOUBLE_COMPLEX) 
 end do
 
 dt_old = dt
