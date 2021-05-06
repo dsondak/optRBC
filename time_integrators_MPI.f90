@@ -63,7 +63,7 @@ else
     nprint = 100
 end if
 
-! write(*,*) "imex_rk_MPI from proc ", proc_id_str
+write(*,*) "imex_rk_MPI from proc ", proc_id_str
 
 if (wvtk) then
     call write_to_vtk(0, .false., proc_id_str) ! false = Fourier space
@@ -72,6 +72,8 @@ end if
 dt = dt_init
 
 call init_bc_MPI(acoeffs(1,1), proc_id, num_procs, proc_id_str)
+
+write(*,*) "init_bc_MPI from proc ", proc_id_str
 
 time = 0.0_dp
 
@@ -153,7 +155,6 @@ else
 
     ! Send dynu to main.
     call MPI_SEND(dynu(1), Ny, MPI_DOUBLE, 0, 66, MPI_COMM_WORLD, mpierror)
-
 
 end if 
 
