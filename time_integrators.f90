@@ -69,7 +69,6 @@ nti = 0
 !$OMP PARALLEL
 !$OMP SINGLE
 write(*,*) "Running with ", OMP_GET_NUM_THREADS(), " threads"
-write(*,*) save_nusselt
 !$OMP END SINGLE
 !$OMP END PARALLEL
 

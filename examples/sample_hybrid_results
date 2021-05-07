@@ -1,37 +1,37 @@
 make: Nothing to be done for 'all'.
 Serial version running ...
 
-real	0m32.305s
-user	0m31.629s
-sys	0m0.676s
+real	0m25.964s
+user	0m25.295s
+sys	0m0.668s
 2 processors 2 threads running ...
 
-real	0m19.312s
-user	0m41.636s
-sys	0m6.903s
+real	0m16.958s
+user	0m34.014s
+sys	0m6.675s
 4 threads running ...
 
-real	0m10.131s
-user	0m33.707s
+real	0m8.166s
+user	0m27.585s
 sys	0m0.521s
 4 processors running ...
 
-real	0m19.545s
-user	0m58.278s
-sys	0m15.501s
+real	0m14.055s
+user	0m43.164s
+sys	0m12.443s
 2 processors 4 threads running ...
 
-real	0m20.091s
-user	0m44.420s
-sys	0m7.312s
+real	0m15.401s
+user	0m36.810s
+sys	0m6.521s
 4 processors 2 threads running ...
 
-real	0m18.704s
-user	0m57.385s
-sys	0m14.923s
+real	0m12.785s
+user	0m45.825s
+sys	0m12.140s
 8 threads running ...
 
-real	0m10.731s
-user	0m37.084s
-sys	0m0.239s
+real	0m5.038s
+user	0m29.385s
+sys	0m0.267s
 done!
