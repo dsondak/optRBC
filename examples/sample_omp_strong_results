@@ -1,0 +1,45 @@
+make: Nothing to be done for 'all'.
+########################
+#  omp strong scaling  #
+########################
+Serial version running ...
+
+real	1m19.638s
+user	1m17.490s
+sys	0m2.144s
+2 threads running ...
+
+real	0m42.683s
+user	1m20.150s
+sys	0m1.612s
+3 threads running ...
+
+real	0m29.395s
+user	1m20.630s
+sys	0m0.293s
+4 threads running ...
+
+real	0m24.157s
+user	1m24.559s
+sys	0m1.126s
+5 threads running ...
+
+real	0m19.719s
+user	1m23.223s
+sys	0m0.885s
+6 threads running ...
+
+real	0m17.356s
+user	1m25.058s
+sys	0m0.931s
+7 threads running ...
+
+real	0m15.431s
+user	1m25.839s
+sys	0m0.365s
+8 threads running ...
+
+real	0m14.410s
+user	1m29.505s
+sys	0m0.356s
+done!
