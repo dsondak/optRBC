@@ -94,12 +94,15 @@ do ! while (time < t_final)
     flush(7000)
    end do
 
+   print *, '("Before calc_explicit(1), using Ti matrix")'
+   call nusselt_Ti(nusselt_num, .true.)
+
    call calc_explicit(1)
 
    print *, '("After calc_explicit(1), using Ti matrix")'
    call nusselt_Ti(nusselt_num, .false.)
 
-   write(7000, *) '("Output after calxc_explicit(1)")'
+   write(7000, *) '("Output after calc_explicit(1)")'
    flush(7000)
    do it=Nx-100,Nx
     write(7000, *) nlT(Ny-1,it)
@@ -412,6 +415,7 @@ subroutine calc_explicit(stage)
 
 integer             :: i, j
 integer, intent(in) :: stage
+real(dp) :: nusselt_num
 
 select case(stage)
    case (1)
@@ -441,12 +445,8 @@ end do
 !nlT = -CI*nlT
 nlT = CI*nlT
 
-write(7000, *) '("nlT in calc explicit BEFORE FFTW execute")'
-flush(7000)
-do it=Nx-100,Nx
- write(7000, *) nlT(Ny-1,it)
- flush(7000)
-end do
+print *, '("Before all executes calc_explicit")'
+call nusselt_Ti(nusselt_num, .true.)
 
 do j = 1,Ny
    ! Bring everything to physical space
@@ -456,7 +456,7 @@ do j = 1,Ny
    tux_comp    = uxi(j,:)
    tuy_comp    = uyi(j,:)
    tphi_comp   = phii(j,:)
-   ! Previous code: FFTW_BACKWARD, use c2r
+
    call fftw_execute_dft_c2r(iplannlT, tnlT_comp, tnlT_real)
    call fftw_execute_dft_c2r(iplannlphi, tnlphi_comp, tnlphi_real)
    call fftw_execute_dft_c2r(iplanT, tT_comp, tT_real)
@@ -472,20 +472,8 @@ do j = 1,Ny
    phii(j,:) = cmplx(tphi_real, kind=C_DOUBLE_COMPLEX) 
 end do
 
-write(7000, *) '("nlT in calc explicit AFTER FFTW execute")'
-flush(7000)
-do it=Nx-100,Nx
- write(7000, *) nlT(Ny-1,it)
- flush(7000)
-end do
-! write(7000, *) '("After first do=1,Ny loop in calc_explicit")'
-! flush(7000)
-! write(7000, *) '("nlT")'
-! flush(7000)
-! do i=Nx-100,Nx
-!   write(7000, *) nlT(Ny-1, i)
-!   flush(7000)
-! end do
+print *, '("After all executes")'
+call nusselt_Ti(nusselt_num, .false.)
 
 ! Calculate nonlinear term
 ! Done in physical space

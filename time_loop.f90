@@ -111,22 +111,22 @@ close(unit=2)
 
 ! Create FFT plans
 planuy = fftw_plan_dft_r2c_1d(Nx,tuy_real,tuy_comp,FFTW_ESTIMATE)
-iplanuy = fftw_plan_dft_c2r_1d(Nx,tuy_comp,tuy_real,IOR(FFTW_ESTIMATE,FFTW_PRESERVE_INPUT))
+iplanuy = fftw_plan_dft_c2r_1d(Nx,tuy_comp,tuy_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT+FFTW_UNALIGNED))
 
 planux = fftw_plan_dft_r2c_1d(Nx,tux_real,tux_comp,FFTW_ESTIMATE)
-iplanux = fftw_plan_dft_c2r_1d(Nx,tux_comp,tux_real,IOR(FFTW_ESTIMATE,FFTW_PRESERVE_INPUT))
+iplanux = fftw_plan_dft_c2r_1d(Nx,tux_comp,tux_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT+FFTW_UNALIGNED))
 
 planphi = fftw_plan_dft_r2c_1d(Nx,tphi_real,tphi_comp,FFTW_ESTIMATE)
-iplanphi = fftw_plan_dft_c2r_1d(Nx,tphi_comp,tphi_real,IOR(FFTW_ESTIMATE,FFTW_PRESERVE_INPUT))
+iplanphi = fftw_plan_dft_c2r_1d(Nx,tphi_comp,tphi_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT+FFTW_UNALIGNED))
 
 planT = fftw_plan_dft_r2c_1d(Nx,tT_real,tT_comp,FFTW_ESTIMATE)
-iplanT = fftw_plan_dft_c2r_1d(Nx,tT_comp,tT_real,IOR(FFTW_ESTIMATE,FFTW_PRESERVE_INPUT))
+iplanT = fftw_plan_dft_c2r_1d(Nx,tT_comp,tT_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT+FFTW_UNALIGNED))
 
 plannlT = fftw_plan_dft_r2c_1d(Nx,tnlT_real,tnlT_comp,FFTW_ESTIMATE)
-iplannlT = fftw_plan_dft_c2r_1d(Nx,tnlT_comp,tnlT_real,IOR(FFTW_ESTIMATE,FFTW_PRESERVE_INPUT))
+iplannlT = fftw_plan_dft_c2r_1d(Nx,tnlT_comp,tnlT_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT+FFTW_UNALIGNED))
 
 plannlphi = fftw_plan_dft_r2c_1d(Nx,tnlphi_real,tnlphi_comp,FFTW_ESTIMATE)
-iplannlphi = fftw_plan_dft_c2r_1d(Nx,tnlphi_comp,tnlphi_real,IOR(FFTW_ESTIMATE,FFTW_PRESERVE_INPUT))
+iplannlphi = fftw_plan_dft_c2r_1d(Nx,tnlphi_comp,tnlphi_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT+FFTW_UNALIGNED))
 
 call global_params
 call global_allocations
