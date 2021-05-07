@@ -53,9 +53,9 @@ else
    nprint = 100
 end if
 
-if (wvtk) then
-   call write_to_vtk(0, .false.) ! false = Fourier space
-end if
+!if (wvtk) then
+!   call write_to_vtk(0, .false.) ! false = Fourier space
+!end if
 
 dt = dt_init
 
