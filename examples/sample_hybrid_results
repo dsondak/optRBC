@@ -1,0 +1,37 @@
+make: Nothing to be done for 'all'.
+Serial version running ...
+
+real	0m32.305s
+user	0m31.629s
+sys	0m0.676s
+2 processors 2 threads running ...
+
+real	0m19.312s
+user	0m41.636s
+sys	0m6.903s
+4 threads running ...
+
+real	0m10.131s
+user	0m33.707s
+sys	0m0.521s
+4 processors running ...
+
+real	0m19.545s
+user	0m58.278s
+sys	0m15.501s
+2 processors 4 threads running ...
+
+real	0m20.091s
+user	0m44.420s
+sys	0m7.312s
+4 processors 2 threads running ...
+
+real	0m18.704s
+user	0m57.385s
+sys	0m14.923s
+8 threads running ...
+
+real	0m10.731s
+user	0m37.084s
+sys	0m0.239s
+done!
