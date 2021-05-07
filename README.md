@@ -10,8 +10,18 @@ details on the approach and the numerics can be found in [[1]](#1).
 
 <span style="color:red">Pull from **Proposal Presentation** and Prof. Sondak's papers</span>
 - High level overview (more detail in section #3)
+
+Rayleigh-Benard convection (RBC) is phenomena that takes place when a liquid is placed between two (approximately) infinite plates held at some temperature difference. When the bottom plate is kept at a higher temperature than the top plate, this creates competing buoyancy and gravitational effects.
+
+The temperature flow of this liquid can be described by the Oberbeck-Boussinesq partial differential equations. These PDEs can be solved at each location and time step to numerically compute the temperature field and its evolution. 
+
 - 2D Rayleigh-Benard convection
+
+Though Rayleigh-Benard convection is a physical and therefore 3D problem, this particular code implements 2D Rayleigh-Benard convection (talk about why this is ok)
+
 - HPC problem: compute-intensive, originally full serial
+
+The low Rayleigh number regime in RBC has been studied extensively; a more interesting exploration would be into the high Rayleigh number regime. To study this regime, we need to reduce both time and space steps because (talk more about this). This implies that we need to solve the PDE in more locations at more time steps, which means that as we increase the Rayleigh number, the execution time scales roughly like its cube. Therefore to push this code into extremely high Rayleigh number regimes, we needed to parallelize using both OpenMP and MPI, as well as do some exploration into how to get algorithmic speedup. 
 
 
 ## 2. Description of Solution and Comparison to Existing Work
@@ -19,6 +29,12 @@ details on the approach and the numerics can be found in [[1]](#1).
 - Reference Prof. Sondak's paper
 - I think "solution" here means 2-3 sentences about parallelized implementation
 - <span style="color:red">Additional papers?</span>
+
+There are two parallel solutions given in this project: 
+- OpenMP: For independent computations of quantities 
+- MPI
+
+
 
 
 ## 3. Model Description in Detail
