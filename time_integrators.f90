@@ -39,7 +39,11 @@ integer, EXTERNAL              :: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
 real(dp), EXTERNAL             :: OMP_GET_WTIME
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-call OMP_SET_NUM_THREADS(8)
+!$OMP PARALLEL
+!$OMP SINGLE
+write(*,*) "Running with ", OMP_GET_NUM_THREADS(), " threads"
+!$OMP END SINGLE
+!$OMP END PARALLEL
 
 if (present(vtk_print)) then
    wvtk = .true.
