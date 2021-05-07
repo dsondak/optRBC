@@ -112,14 +112,20 @@ do ! while (time < t_final)
                            K1hat_T(2:Ny-1,it),K2hat_T(2:Ny-1,it),K3hat_T(2:Ny-1,it),&
                            K1_phi(2:Ny-1,it), K2_phi(2:Ny-1,it), K1_T(2:Ny-1,it), K2_T(2:Ny-1,it),&
                            T(:,it))
+
       ! Compute v1 from phi1
       call calc_vi_mod(tmp_uy, tmp_phi, kx(it))
       ! BOUNDAY CONDITIONS!
+      ! do j = 1,Ny
+      !    write(*,*) j, V1(j,it)
+      ! end do
+      ! write(*,*) "sanity"
       call update_bcs_mod(tmp_phi1,tmp_uy1, tmp_phi,tmp_uy,dyv1_T(it),dyv2_T(it),&
                            dyv1_B(it),dyv2_B(it),&
                            V1(:,it),V2(:,it),phi1(:,it),phi2(:,it))
       tmp_phi = tmp_phi1
       tmp_uy  = tmp_uy1
+      
       call calc_implicit_mod(tmp_K_phi,tmp_K_T, tmp_phi,tmp_T, kx(it))
       K1_phi(:,it) = tmp_K_phi
       K1_T(:,it)   = tmp_K_T
@@ -935,7 +941,15 @@ subroutine update_bcs_mod(phiout,vout, phiin,vin,dyv1_T_it,dyv2_T_it,dyv1_B_it,d
 
    dyV_T = h1(Ny)*vin(Ny-2) + h2(Ny)*vin(Ny-1) + h3(Ny)*vin(Ny)
    dyV_B = h1(1)*vin(1) + h2(1)*vin(2) + h3(1)*vin(3)
+   
+   ! write(*,*) dyV_T, dyV_B
+   ! write(*,*) vin(Ny-2), vin(Ny-1), vin(Ny)
 
+   ! open(unit=9010, file="T_real_update.txt", action="write", status="unknown")
+   !    do i=1,Ny
+   !       write (9010,*) REAL(tmp_phi(i))
+   !    end do
+   !    close(unit=9010)
    ! Need to negate b/c want to solve Cx = -c12.
    c1 = -dyV_T
    c2 = -dyV_B

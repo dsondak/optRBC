@@ -149,10 +149,10 @@ else
 
     ! Send dynu to main.
     call MPI_SEND(dynu(1), Ny, MPI_DOUBLE, 0, 66, MPI_COMM_WORLD, mpierror)
-
 end if 
 
 call MPI_BARRIER(MPI_COMM_WORLD, mpierror) 
+
 
 ! Time integration
 do ! while (time < t_final)
@@ -217,7 +217,6 @@ do ! while (time < t_final)
             call MPI_RECV(T_MPI(stind+1), Ny, MPI_C_DOUBLE_COMPLEX, & 
                           num_procs-1, 53, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
 
-
             ! Call vari mod
             call calc_vari_mod_MPI(tmp_phi_MPI, tmp_T_MPI, acoeffs(1,1), 1, total_ny,&
                                 kx(it), phi_MPI,&
@@ -227,9 +226,11 @@ do ! while (time < t_final)
                                 g1_total, g2_total, g3_total,&
                                 T_MPI)
             
+            
             ! Compute v1 from phi1
             call calc_vi_mod_MPI(tmp_uy_MPI, tmp_phi_MPI, kx(it), total_ny, g1_total, g2_total, g3_total)
-            
+
+
             ! Receive dyv1 and dyv2
             call MPI_RECV(dyv1_T_it_MPI, 1, MPI_DOUBLE, num_procs-1, 57, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
             call MPI_RECV(dyv2_T_it_MPI, 1, MPI_DOUBLE, num_procs-1, 58, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
@@ -249,6 +250,16 @@ do ! while (time < t_final)
             phi2_MPI(1:Ny) = phi2(1:Ny, it)
 
             ! BOUNDAY CONDITIONS!
+            ! open(unit=9010, file="P"//proc_id_str//"T_real_update.txt", action="write", status="unknown")
+            ! do i=1,total_ny
+            !     write (9010,*) REAL(tmp_phi_MPI(i))            
+            ! end do
+            ! close(unit=9010)
+            
+            ! do j = 1,total_ny
+            !     write(*,*) j, V1_MPI(j)
+            ! end do
+            ! write(*,*) "sanity"
             call update_bcs_mod_MPI(tmp_phi1_MPI,tmp_uy1_MPI, tmp_phi_MPI,tmp_uy_MPI,&
                                 dyv1_T_it_MPI,dyv2_T_it_MPI,&
                                 dyv1_B(it),dyv2_B(it),&
@@ -257,6 +268,7 @@ do ! while (time < t_final)
             
             tmp_phi_MPI = tmp_phi1_MPI
             tmp_uy_MPI  = tmp_uy1_MPI
+            
             
             ! Implicit.
             call calc_implicit_mod_MPI(tmp_K_phi_MPI,tmp_K_T_MPI, tmp_phi_MPI,tmp_T_MPI,&
@@ -301,6 +313,10 @@ do ! while (time < t_final)
             call MPI_SEND(dyv2_T(it), 1, MPI_DOUBLE, 0, 58, MPI_COMM_WORLD, mpierror)
 
             ! Send V1, V2, phi1, phi2
+            ! do j = 1,Ny
+            !     write(*,*) j, V1(j,it)
+            ! end do
+            ! write(*,*) "sanity"
             call MPI_SEND(V1(1:Ny,it), Ny, MPI_DOUBLE, 0, 59, MPI_COMM_WORLD, mpierror)
             call MPI_SEND(V2(1:Ny,it), Ny, MPI_DOUBLE, 0, 60, MPI_COMM_WORLD, mpierror)
             call MPI_SEND(phi1(1:Ny,it), Ny, MPI_DOUBLE, 0, 61, MPI_COMM_WORLD, mpierror)
@@ -1305,6 +1321,16 @@ detC = C(1,1)*C(2,2) - C(1,2)*C(2,1)
 
 dyV_T = h1_end*vin(total_ny-2) + h2_end*vin(total_ny-1) + h3_end*vin(total_ny)
 dyV_B = h1(1)*vin(1) + h2(1)*vin(2) + h3(1)*vin(3)
+
+! write(*,*) dyV_T, dyV_B
+! write(*,*) vin(total_ny-2), vin(total_ny-1), vin(total_ny)
+
+! open(unit=9010, file="P"//proc_id_str//"T_real_update.txt", action="write", status="unknown")
+! do i=1,total_ny
+!     write (9010,*) REAL(tmp_phi_MPI(i))            
+! end do
+! close(unit=9010)
+! write(*,*) "done writing T!"
 
 ! Need to negate b/c want to solve Cx = -c12.
 c1 = -dyV_T
