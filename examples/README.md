@@ -176,3 +176,52 @@ The figure below shows the runtimes and scalings for each of the 7 configuration
 
 For a discussion on these results, please refer to the main README.
 
+### 4. Nusselt number calculation.
+
+### 5. Temperature field visualization.
+
+### 6. MPI strong scaling.
+
+NOTE: From this example onward, the performance results are much harder to replicate in our experience, and we have found that running these examples degrades the performance of the machine overall. We aren't sure what exactly could be causing this, but in the meantime this is just a heads up!
+
+This example demonstrates strong scaling according to Amdahl's law for the MPI multi-process version of the code. The problem size is
+fixed to a grid of size Nx=1280 and Ny=960. With a timestep of 0.1, we iterate for 10 steps and time the entire execution. Since the problem
+size is fixed, this is an example of strong scaling. 
+
+To run this example, run the shell script:
+
+```
+./run_mpi_strong.sh
+```
+
+The total runtime of the script with be about 2 minutes on a `t2.2xlarge` instance. The file `sample_mpi_strong_results` has an example output from the 
+bash script to compare to. 
+
+The figure below shows the runtimes and scalings for various problem sizes. The problem size in the 
+bash script corresponds to the black circles on the plot below. 
+
+![mpi_strong](../figs/mpi_strong_scaling.png)
+
+For a discussion on these results, please refer to the main README.
+
+### 6. MPI weak scaling.
+
+This example demonstrates weak scaling according to Gustafson's law for the MPI multi-process version of the code. In order to allow the problem size to 
+grow as we increase the number of threads used, we fix the grid size to Nx=1280 and Ny=960, but allow every version of the code to run for 30 seconds. As a
+result, the serial portion of the code (initialization of the matrices) is fixed for each run, and we can measure how much work each version of the code can 
+do in a fixed amount of time.
+
+To run this example, run the shell script:
+
+```
+./run_mpi_weak.sh
+```
+
+The total runtime of the script will be 240 seconds (4 minutes). The file `sample_mpi_weak_results` has an example output from the 
+bash script to compare to. We use the same technique as Example 2 to read the output.
+
+This data corresponds to the magenta triangles in the figure below, which plots iteration count and weak scaling speedup for two different problem sizes.
+
+![mpi_weak](../figs/mpi_weak_scaling.png)
+
+For a discussion on these results, please refer to the main README.
