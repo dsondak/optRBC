@@ -111,22 +111,22 @@ close(unit=2)
 
 ! Create FFT plans
 planuy = fftw_plan_dft_r2c_1d(Nx,tuy_real,tuy_comp,FFTW_ESTIMATE)
-iplanuy = fftw_plan_dft_c2r_1d(Nx,tuy_comp,tuy_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT+FFTW_UNALIGNED))
+iplanuy = fftw_plan_dft_c2r_1d(Nx,tuy_comp,tuy_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT))
 
 planux = fftw_plan_dft_r2c_1d(Nx,tux_real,tux_comp,FFTW_ESTIMATE)
-iplanux = fftw_plan_dft_c2r_1d(Nx,tux_comp,tux_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT+FFTW_UNALIGNED))
+iplanux = fftw_plan_dft_c2r_1d(Nx,tux_comp,tux_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT))
 
 planphi = fftw_plan_dft_r2c_1d(Nx,tphi_real,tphi_comp,FFTW_ESTIMATE)
-iplanphi = fftw_plan_dft_c2r_1d(Nx,tphi_comp,tphi_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT+FFTW_UNALIGNED))
+iplanphi = fftw_plan_dft_c2r_1d(Nx,tphi_comp,tphi_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT))
 
 planT = fftw_plan_dft_r2c_1d(Nx,tT_real,tT_comp,FFTW_ESTIMATE)
-iplanT = fftw_plan_dft_c2r_1d(Nx,tT_comp,tT_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT+FFTW_UNALIGNED))
+iplanT = fftw_plan_dft_c2r_1d(Nx,tT_comp,tT_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT))
 
 plannlT = fftw_plan_dft_r2c_1d(Nx,tnlT_real,tnlT_comp,FFTW_ESTIMATE)
-iplannlT = fftw_plan_dft_c2r_1d(Nx,tnlT_comp,tnlT_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT+FFTW_UNALIGNED))
+iplannlT = fftw_plan_dft_c2r_1d(Nx,tnlT_comp,tnlT_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT))
 
 plannlphi = fftw_plan_dft_r2c_1d(Nx,tnlphi_real,tnlphi_comp,FFTW_ESTIMATE)
-iplannlphi = fftw_plan_dft_c2r_1d(Nx,tnlphi_comp,tnlphi_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT+FFTW_UNALIGNED))
+iplannlphi = fftw_plan_dft_c2r_1d(Nx,tnlphi_comp,tnlphi_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT))
 
 call global_params
 call global_allocations
@@ -310,7 +310,7 @@ if (wvtk) then
 end if
 
 ! Initialize fields.
-! open(unit=7000, file="Debug_data.txt", action="write", status="unknown", position="append")
+open(unit=7000, file="Debug_data.txt", action="write", status="unknown", position="append")
 
 call init_fields(ex_Tptrb, fTexist, Ra)
 call init_to_fourier(ex_Tptrb)
@@ -425,13 +425,6 @@ implicit none
 logical, intent(in) :: ex_Tptrb
 integer             :: ii, jj
 real(dp)            :: nusselt_num
-
-write(7000, *) '("T at beginning of init_to_fourier (prior to any fft execution)")'
-flush(7000)
-do ii=Nx-100,Nx
- write(7000, *) T(Ny-1,ii)
- flush(7000)
-end do
 
 ! Bring temperature and velocity to Fourier space.
 do jj = 1,Ny

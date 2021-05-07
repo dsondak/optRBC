@@ -87,13 +87,6 @@ do ! while (time < t_final)
    uxi  = ux
    uyi  = uy
    
-   write(7000, *) '("T before calc_explicit(1)")'
-   flush(7000)
-   do it=Nx-100,Nx
-    write(7000, *) T(Ny-1,it)
-    flush(7000)
-   end do
-
    print *, '("Before calc_explicit(1), using Ti matrix")'
    call nusselt_Ti(nusselt_num, .true.)
 
@@ -101,13 +94,6 @@ do ! while (time < t_final)
 
    print *, '("After calc_explicit(1), using Ti matrix")'
    call nusselt_Ti(nusselt_num, .false.)
-
-   write(7000, *) '("Output after calc_explicit(1)")'
-   flush(7000)
-   do it=Nx-100,Nx
-    write(7000, *) nlT(Ny-1,it)
-    flush(7000)
-   end do
 
    do it = 1,Nx/2+1 ! kx loop
       ! Compute phi1 and T1
@@ -136,12 +122,6 @@ do ! while (time < t_final)
    ! Compute K2hat
    call calc_explicit(2)
 
-   write(7000, *) '("Output after calc_explicit(2) (End of stage 1)")'
-   flush(7000)
-   do it=Nx-100,Nx
-    write(7000, *) nlT(Ny-1,it)
-    flush(7000)
-   end do
    !:::::::::::
    ! STAGE 2 ::
    !:::::::::::
@@ -171,12 +151,7 @@ do ! while (time < t_final)
    end do
    ! Compute K3hat
    call calc_explicit(3)
-   write(7000, *) '("Output after calc_explicit(3) (End of stage 2)")'
-   flush(7000)
-   do it=Nx-100,Nx
-    write(7000, *) nlT(Ny-1,it)
-    flush(7000)
-   end do
+
    !:::::::::::
    ! STAGE 3 ::
    !:::::::::::
@@ -206,13 +181,6 @@ do ! while (time < t_final)
    end do
    ! Compute K4hat
    call calc_explicit(4)
-
-   write(7000, *) '("Output after calc_explicit(4) (End of stage 3)")'
-   flush(7000)
-   do it=Nx-100,Nx
-    write(7000, *) nlT(Ny-1,it)
-    flush(7000)
-   end do
 
    ! UPDATE SOLUTIONS
 
@@ -450,12 +418,12 @@ call nusselt_Ti(nusselt_num, .true.)
 
 do j = 1,Ny
    ! Bring everything to physical space
-   tnlT_comp   = nlT(j,:)
-   tnlphi_comp = nlphi(j,:)
-   tT_comp     = Ti(j,:)
-   tux_comp    = uxi(j,:)
-   tuy_comp    = uyi(j,:)
-   tphi_comp   = phii(j,:)
+   tnlT_comp   = nlT(j,1:Nx/2+1)
+   tnlphi_comp = nlphi(j,1:Nx/2+1)
+   tT_comp     = Ti(j,1:Nx/2+1)
+   tux_comp    = uxi(j,1:Nx/2+1)
+   tuy_comp    = uyi(j,1:Nx/2+1)
+   tphi_comp   = phii(j,1:Nx/2+1)
 
    call fftw_execute_dft_c2r(iplannlT, tnlT_comp, tnlT_real)
    call fftw_execute_dft_c2r(iplannlphi, tnlphi_comp, tnlphi_real)
@@ -474,6 +442,13 @@ end do
 
 print *, '("After all executes")'
 call nusselt_Ti(nusselt_num, .false.)
+
+write(7000, *) '("Ti after calc_explicit(1)")'
+flush(7000)
+do it=1,Nx
+ write(7000, *) Ti(Ny,it)
+ flush(7000)
+end do
 
 ! Calculate nonlinear term
 ! Done in physical space
@@ -503,15 +478,6 @@ do j = 1,Ny
 end do
 nlT   = nlT   / real(Nx,kind=dp)
 nlphi = nlphi / real(Nx,kind=dp)
-
-! write(7000, *) '("After second do=1,Ny loop in calc_explicit")'
-! flush(7000)
-! write(7000, *) '("nlT")'
-! flush(7000)
-! do i=Nx-100,Nx
-!   write(7000, *) nlT(Ny-1, i)
-!   flush(7000)
-! end do
 
 select case (stage)
    case (1)
