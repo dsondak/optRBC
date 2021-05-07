@@ -1,3 +1,4 @@
+export OMP_NUM_THREADS=1
 echo "Serial version running ..."
 time ./time_loop.exe > out
 echo "2 processors running ..."
