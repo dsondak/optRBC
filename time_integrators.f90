@@ -39,7 +39,7 @@ integer, EXTERNAL              :: OMP_GET_THREAD_NUM, OMP_GET_NUM_THREADS
 real(dp), EXTERNAL             :: OMP_GET_WTIME
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-call OMP_SET_NUM_THREADS(1)
+call OMP_SET_NUM_THREADS(8)
 
 if (present(vtk_print)) then
    wvtk = .true.
