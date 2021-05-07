@@ -1,0 +1,35 @@
+make: Nothing to be done for 'all'.
+########################
+#  MPI strong scaling  #
+########################
+Serial version running ...
+
+real	0m25.685s
+user	0m24.955s
+sys	0m0.728s
+2 processors running ...
+
+real	0m19.849s
+user	0m32.744s
+sys	0m6.692s
+3 processors running ...
+
+real	0m19.178s
+user	0m41.946s
+sys	0m15.161s
+4 processors running ...
+
+real	0m14.063s
+user	0m43.339s
+sys	0m12.321s
+5 processors running ...
+
+real	0m13.426s
+user	0m49.529s
+sys	0m16.825s
+6 processors running ...
+
+real	0m13.199s
+user	0m56.193s
+sys	0m22.040s
+done!
