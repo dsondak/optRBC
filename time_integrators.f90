@@ -645,7 +645,7 @@ select case(stage)
       !$OMP END PARALLEL DO
 end select
 finish = OMP_GET_WTIME()
-write(*,*) " - - l1 timing: ", finish-start, "(s)"
+! write(*,*) " - - l1 timing: ", finish-start, "(s)"
 
 start = OMP_GET_WTIME()
 !$OMP PARALLEL DO schedule(dynamic)
@@ -657,7 +657,7 @@ do i=1,Nx
 end do
 !$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
-write(*,*) " - - l2 timing: ", finish-start, "(s)"
+! write(*,*) " - - l2 timing: ", finish-start, "(s)"
 
 !nlT = -CI*nlT
 nlT = CI*nlT
@@ -687,7 +687,7 @@ do j = 1,Ny
 end do
 !$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
-write(*,*) " - - l3 timing: ", finish-start, "(s)"
+! write(*,*) " - - l3 timing: ", finish-start, "(s)"
 
 ! Calculate nonlinear term
 start = OMP_GET_WTIME()
@@ -701,7 +701,7 @@ do i = 1,Nx
 end do
 !$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
-write(*,*) " - - l4 timing: ", finish-start, "(s)"
+! write(*,*) " - - l4 timing: ", finish-start, "(s)"
 
 ! Bring nonlinear terms back to Fourier space
 start = OMP_GET_WTIME()
@@ -723,7 +723,7 @@ do j = 1,Ny
 end do
 !$OMP END PARALLEL DO
 finish = OMP_GET_WTIME()
-write(*,*) " - - l5 timing: ", finish-start, "(s)"
+! write(*,*) " - - l5 timing: ", finish-start, "(s)"
 
 nlT   = nlT   / real(Nx,kind=dp)
 nlphi = nlphi / real(Nx,kind=dp)
@@ -764,7 +764,7 @@ select case (stage)
       K4hat_T = -nlT
 end select
 finish = OMP_GET_WTIME()
-write(*,*) " - - l6 timing: ", finish-start, "(s)"
+! write(*,*) " - - l6 timing: ", finish-start, "(s)"
 
 end subroutine calc_explicit
 
