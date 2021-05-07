@@ -95,15 +95,45 @@ do ! while (time < t_final)
    print *, '("After calc_explicit(1), using Ti matrix")'
    call nusselt_Ti(nusselt_num, .false.)
 
-   do it = 1,Nx/2+1 ! kx loop
+   print *, '("After calc_explicit(1), using K1hat_phi matrix")'
+   call nusselt_var(nusselt_num, K1hat_phi, .false.)
+
+   print *, '("After calc_explicit(1), using K1hat_T matrix")'
+   call nusselt_var(nusselt_num, K1hat_T, .false.)
+
+   do it = 1,Nx ! kx loop
       ! Compute phi1 and T1
       call calc_vari(tmp_phi, tmp_T, acoeffs(1,1), 1)
+
+      ! write(7000, *) '("tmp_T after calc_vari")'
+      ! flush(7000)
+      ! do jt=1,Nx
+      !  write(7000, *) tmp_T(jt)
+      !  flush(7000)
+      ! end do
+
+      ! exit
+
       ! Compute v1 from phi1 
       call calc_vi(tmp_uy, tmp_phi)
+
+      ! write(7000, *) '("tmp_uy after calc_vi")'
+      ! flush(7000)
+      ! do jt=1,Nx
+      !  write(7000, *) tmp_uy(jt)
+      !  flush(7000)
+      ! end do
       ! BOUNDAY CONDITIONS!
       call update_bcs(tmp_phi1,tmp_uy1, tmp_phi,tmp_uy)
       tmp_phi = tmp_phi1
       tmp_uy  = tmp_uy1
+
+      ! write(7000, *) '("tmp_phi after update_bcs")'
+      ! flush(7000)
+      ! do jt=1,Nx
+      !  write(7000, *) tmp_phi(jt)
+      !  flush(7000)
+      ! end do
       ! Compute K1_T and K1_phi
       call calc_implicit(tmp_K_phi,tmp_K_T, tmp_phi,tmp_T)
       K1_phi(:,it) = tmp_K_phi
@@ -119,13 +149,19 @@ do ! while (time < t_final)
       Ti  (:,it) = tmp_T
       uyi (:,it) = tmp_uy
    end do
+   ! exit
+   print *, '("After do loop after calc_explicit(1), using Ti matrix")'
+   call nusselt_Ti(nusselt_num, .false.)
+
+   ! exit 
+
    ! Compute K2hat
    call calc_explicit(2)
 
    !:::::::::::
    ! STAGE 2 ::
    !:::::::::::
-   do it = 1,Nx/2+1 ! kx loop
+   do it = 1,Nx ! kx loop
       ! Compute phi2 and T2
       call calc_vari(tmp_phi, tmp_T, acoeffs(2,2), 2)
       ! Compute v1 from phi1 
@@ -155,7 +191,7 @@ do ! while (time < t_final)
    !:::::::::::
    ! STAGE 3 ::
    !:::::::::::
-   do it = 1,Nx/2+1 ! kx loop
+   do it = 1,Nx ! kx loop
       ! Compute phi3 and T3
       call calc_vari(tmp_phi, tmp_T, acoeffs(3,3), 3)
       ! Compute v1 from phi1
@@ -195,7 +231,7 @@ do ! while (time < t_final)
                   &                   b(3)*(K3_T(2:Ny-1,:) + K4hat_T(2:Ny-1,:)))
 
    ! Get ux and uy
-   do it = 1,Nx/2+1
+   do it = 1,Nx
       ! Solve for v
       call calc_vi(tmp_uy, phi(:,it))
       uy(:,it) = tmp_uy
@@ -387,22 +423,41 @@ real(dp) :: nusselt_num
 
 select case(stage)
    case (1)
-      do i = 1,Nx/2+1
-         K1hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
+      do i = 1,Nx
+         if (i <= Nx/2 + 1) then
+            K1hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
+         else
+            K1hat_phi(:,i) = -kx(i)**2.0_dp*conjg(Ti(:,Nx - i + 2))
+         end if
       end do
    case (2)
-      do i = 1,Nx/2+1
-         K2hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
+      do i = 1,Nx
+         if (i <= Nx/2 + 1) then
+            K2hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
+         else
+            K2hat_phi(:,i) = -kx(i)**2.0_dp*conjg(Ti(:,Nx - i + 2))
+         end if
       end do
    case (3)
-      do i = 1,Nx/2+1
-         K3hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
+      do i = 1,Nx
+         if (i <= Nx/2 + 1) then
+            K3hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
+         else
+            K3hat_phi(:,i) = -kx(i)**2.0_dp*conjg(Ti(:,Nx - i + 2))
+         end if
       end do
    case (4)
-      do i = 1,Nx/2+1
-         K4hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
+      do i = 1,Nx
+         if (i <= Nx/2 + 1) then
+            K4hat_phi(:,i) = -kx(i)**2.0_dp*Ti(:,i)
+         else
+            K4hat_phi(:,i) = -kx(i)**2.0_dp*conjg(Ti(:,Nx - i + 2))
+         end if
       end do
 end select
+
+print *, '("In calc_explicit(1), using K1hat_phi matrix")'
+call nusselt_var(nusselt_num, K1hat_phi, .false.)
 
 do i=1,Nx/2+1
    ! Compute dx(T) in Fourier space
@@ -479,31 +534,54 @@ end do
 nlT   = nlT   / real(Nx,kind=dp)
 nlphi = nlphi / real(Nx,kind=dp)
 
+print *, '("In calc_explicit(1), using nlphi matrix")'
+call nusselt_var(nusselt_num, nlphi, .false.)
+
 select case (stage)
    case (1)
-      do i = 1,Nx/2+1
+      do i = 1,Nx
+         if (i <= Nx/2 + 1) then
         !K1hat_phi(:,i) = K1hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
-        K1hat_phi(:,i) = K1hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+            K1hat_phi(:,i) = K1hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+            K1hat_T(:,i) = -nlT(:,i)
+         else 
+            K1hat_phi(:,i) = K1hat_phi(:,i) - CI*kx(i)*conjg(nlphi(:,Nx - i + 2))
+            K1hat_T(:,i) = -conjg(nlT(:,Nx - i + 2))
+         end if
       end do
-      K1hat_T = -nlT
    case (2)
-      do i = 1,Nx/2+1
-        !K2hat_phi(:,i) = K2hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
-        K2hat_phi(:,i) = K2hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+      do i = 1,Nx
+         if (i <= Nx/2 + 1) then
+        !K1hat_phi(:,i) = K1hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
+            K2hat_phi(:,i) = K2hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+            K2hat_T(:,i) = -nlT(:,i)
+         else 
+            K2hat_phi(:,i) = K2hat_phi(:,i) - CI*kx(i)*conjg(nlphi(:,Nx - i + 2))
+            K2hat_T(:,i) = -conjg(nlT(:,Nx - i + 2))
+         end if
       end do
-      K2hat_T = -nlT
    case (3)
-      do i = 1,Nx/2+1
-        !K3hat_phi(:,i) = K3hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
-        K3hat_phi(:,i) = K3hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+      do i = 1,Nx
+         if (i <= Nx/2 + 1) then
+        !K1hat_phi(:,i) = K1hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
+            K3hat_phi(:,i) = K3hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+            K3hat_T(:,i) = -nlT(:,i)
+         else 
+            K3hat_phi(:,i) = K3hat_phi(:,i) - CI*kx(i)*conjg(nlphi(:,Nx - i + 2))
+            K3hat_T(:,i) = -conjg(nlT(:,Nx - i + 2))
+         end if
       end do
-      K3hat_T = -nlT
    case (4)
-      do i = 1,Nx/2+1
-        !K4hat_phi(:,i) = K4hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
-        K4hat_phi(:,i) = K4hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+      do i = 1,Nx
+         if (i <= Nx/2 + 1) then
+        !K1hat_phi(:,i) = K1hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
+            K4hat_phi(:,i) = K4hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+            K4hat_T(:,i) = -nlT(:,i)
+         else 
+            K4hat_phi(:,i) = K4hat_phi(:,i) - CI*kx(i)*conjg(nlphi(:,Nx - i + 2))
+            K4hat_T(:,i) = -conjg(nlT(:,Nx - i + 2))
+         end if
       end do
-      K4hat_T = -nlT
 end select
 
 end subroutine calc_explicit

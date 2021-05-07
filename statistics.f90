@@ -144,13 +144,13 @@ subroutine nusselt_Ti(Nuave, in_fourier)
    
    ! Compute Nu at walls!
    if (in_fourier) then
-      dyT_wall = h1(1) * real(T(1,1)) + h2(1) * real(T(2,1)) + h3(1) * real(T(3,1))
+      dyT_wall = real(Ti(1,1)) + real(Ti(2,1)) + real(Ti(3,1))
       Nuave = -dyT_wall
    else
       Nuave = 0.0_dp
       do ii = 1,Nx
          ! Compute temperature gradients at the walls
-         dyT_wall = h1(1)*real(T(1,ii)) + h2(1)*real(T(2,ii)) + h3(1)*real(T(3,ii))
+         dyT_wall = real(Ti(1,ii)) + real(Ti(2,ii)) + real(Ti(3,ii))
          Nuave = Nuave - dyT_wall ! Nu = -dy(T)
       end do
       Nuave = Nuave / Nx
@@ -158,5 +158,38 @@ subroutine nusselt_Ti(Nuave, in_fourier)
    write(*,*) "Nu (Ti) = ", Nuave
    
 end subroutine nusselt_Ti
+
+subroutine nusselt_var(Nuave, comp_array, in_fourier)
+
+   use global
+   use write_pack
+   
+   implicit none
+   
+   real(dp), intent(out) :: Nuave
+   complex(dp), intent(in) :: comp_array(:,:)
+   logical, intent(in) :: in_fourier
+   real(dp) :: dyT_wall
+   integer :: ii
+   
+   write(*,*) "Computing Nu of input array..."
+   
+   
+   ! Compute Nu at walls!
+   if (in_fourier) then
+      dyT_wall = real(comp_array(1,1)) + real(comp_array(2,1)) + real(comp_array(3,1))
+      Nuave = -dyT_wall
+   else
+      Nuave = 0.0_dp
+      do ii = 1,Nx
+         ! Compute temperature gradients at the walls
+         dyT_wall = real(comp_array(1,ii)) + real(comp_array(2,ii)) + real(comp_array(3,ii))
+         Nuave = Nuave - dyT_wall ! Nu = -dy(T)
+      end do
+      Nuave = Nuave / Nx
+   end if
+   write(*,*) "Nu of input = ", Nuave
+   
+end subroutine nusselt_var
 
 end module statistics
