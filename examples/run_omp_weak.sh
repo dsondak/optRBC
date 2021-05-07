@@ -1,3 +1,13 @@
+cd ..
+make
+cp time_loop.exe examples/
+cp time_loop_MPI.exe examples/
+cd examples/
+
+echo "########################"
+echo "#  omp weak scaling    #"
+echo "########################"
+
 echo "Serial version running ..."
 export OMP_NUM_THREADS=1
 timeout 100s ./time_loop.exe
