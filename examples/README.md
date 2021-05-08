@@ -66,8 +66,8 @@ We present the 7 examples below.
 1. OpenMP strong scaling.
 2. OpenMP weak scaling. 
 3. Hybrid OpenMP + MPI performance.
-4. Nusselt number calculation.
-5. Temperature field visualization.
+4. Temperature field visualization.
+5. Nusselt number calculation.
 6. MPI strong scaling.
 7. MPI weak scaling.
 
@@ -176,9 +176,57 @@ The figure below shows the runtimes and scalings for each of the 7 configuration
 
 For a discussion on these results, please refer to the main README.
 
-### 4. Nusselt number calculation.
+### 4. Temperature field visualization.
 
-### 5. Temperature field visualization.
+This example demonstrates how to visualize the temperature fields produced from the the convection equations. A small grid of Nx=64 and Ny=48 is used and we iterate for 50 steps with a step size of 0.1 and a Rayleigh number of 5.0e+04. We run the shared memory version (OpenMP) as well as the distributed memory version (MPI) to demonstrate how we assert correctness of the MPI code. 
+
+To run this example, run the shell script:
+
+```
+./run_temp_viz.sh
+```
+
+The file `sample_temp_viz_results` has an example output from the bash script to compare to. This script should complete within about 4 seconds. This will create a directory called `vtkdata` within the `examples` directory. Run 
+
+```
+ls vtkdata
+```
+
+to confirm that the files were written. The output should look like 
+
+```
+Ra000000000.vtk       Ra000000043.vtk       Ra_P000_000000035.vtk Ra_P001_000000027.vtk Ra_P002_000000019.vtk Ra_P003_000000011.vtk
+Ra000000001.vtk       Ra000000044.vtk       Ra_P000_000000036.vtk Ra_P001_000000028.vtk Ra_P002_000000020.vtk Ra_P003_000000012.vtk
+Ra000000002.vtk       Ra000000045.vtk       Ra_P000_000000037.vtk Ra_P001_000000029.vtk Ra_P002_000000021.vtk Ra_P003_000000013.vtk
+```
+
+The `Ra#########.vtk` files are from the single core version and are full size (48x64), which the `Ra_P###_##########.vtk` files are from the distributed memory
+version. To visualize the data, run the python script with
+
+```
+python3 temp_viz.py
+```
+
+This will first plot the temperature at the beginning of the integration as well as at the end. The file will be written as `single.png`, which is shown below.
+
+![tempsinglecore](../figs/temp_single_core.png)
+
+This shows the temperature field at time t=0 and at t=5. The python script will also write a file called `multi.png`, which is shown below.
+
+![tempmulticore](../figs/temp_multi_core.png)
+
+This plot demonstrates that the temperature field is correctly divided along the y-direction. Lastly, the script will output 
+
+```
+0.0 0.0
+0.0 0.0
+0.0 0.0
+0.0 0.0
+```
+
+which confirms that the two temperature fields are identical (because it is printing the difference between the component parts of the fields). This is how we ensure correctness of the MPI version of the code.
+
+### 5. Nusselt number calculation.
 
 ### 6. MPI strong scaling.
 
@@ -204,7 +252,7 @@ bash script corresponds to the black circles on the plot below.
 
 For a discussion on these results, please refer to the main README.
 
-### 6. MPI weak scaling.
+### 7. MPI weak scaling.
 
 This example demonstrates weak scaling according to Gustafson's law for the MPI multi-process version of the code. In order to allow the problem size to 
 grow as we increase the number of threads used, we fix the grid size to Nx=1280 and Ny=960, but allow every version of the code to run for 30 seconds. As a
