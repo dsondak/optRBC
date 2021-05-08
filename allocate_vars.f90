@@ -58,13 +58,13 @@ subroutine global_allocations
     allocate(tmp_K_phi(Ny), tmp_K_T(Ny), stat=alloc_err)
     allocate(phii(Ny,Nx), Ti(Ny,Nx), stat=alloc_err)
     allocate(uyi(Ny,Nx), uxi(Ny,Nx), stat=alloc_err)
-    allocate(K1_phi(Ny,Nx), K1_T(Ny,Nx), stat=alloc_err)
-    allocate(K2_phi(Ny,Nx), K2_T(Ny,Nx), stat=alloc_err)
-    allocate(K3_phi(Ny,Nx), K3_T(Ny,Nx), stat=alloc_err)
-    allocate(K1hat_phi(Ny,Nx), K1hat_T(Ny,Nx), stat=alloc_err)
-    allocate(K2hat_phi(Ny,Nx), K2hat_T(Ny,Nx), stat=alloc_err)
-    allocate(K3hat_phi(Ny,Nx), K3hat_T(Ny,Nx), stat=alloc_err)
-    allocate(K4hat_phi(Ny,Nx), K4hat_T(Ny,Nx), stat=alloc_err)
+    allocate(K1_phi(Ny,Nx/2+1), K1_T(Ny,Nx/2+1), stat=alloc_err)
+    allocate(K2_phi(Ny,Nx/2+1), K2_T(Ny,Nx/2+1), stat=alloc_err)
+    allocate(K3_phi(Ny,Nx/2+1), K3_T(Ny,Nx/2+1), stat=alloc_err)
+    allocate(K1hat_phi(Ny,Nx/2+1), K1hat_T(Ny,Nx/2+1), stat=alloc_err)
+    allocate(K2hat_phi(Ny,Nx/2+1), K2hat_T(Ny,Nx/2+1), stat=alloc_err)
+    allocate(K3hat_phi(Ny,Nx/2+1), K3hat_T(Ny,Nx/2+1), stat=alloc_err)
+    allocate(K4hat_phi(Ny,Nx/2+1), K4hat_T(Ny,Nx/2+1), stat=alloc_err)
 
     if (alloc_err /= 0) then
        write(*,*) "ERROR:  Global allocations failed."

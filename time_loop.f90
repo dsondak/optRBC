@@ -439,8 +439,8 @@ do jj = 1,Ny
          tuy_comp(ii) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
       end if
    end do
-   T(jj,:) = tT_comp
-   uy(jj,:) = tuy_comp
+   T(jj,1:Nx/2+1) = tT_comp
+   uy(jj,1:Nx/2+1) = tuy_comp
    ! If temperature perturbation needed.
    if (ex_Tptrb) then
       tT_real = real(Tptrb(jj,:))
@@ -451,7 +451,7 @@ do jj = 1,Ny
             tT_comp(ii)  = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
          end if
       end do
-      Tptrb(jj,:) = tT_comp
+      Tptrb(jj,1:Nx/2+1) = tT_comp
    end if
 end do
 T = T / real(Nx, kind=dp)

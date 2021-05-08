@@ -65,8 +65,8 @@ complex(C_DOUBLE_COMPLEX), allocatable :: T(:,:), uy(:,:), phi(:,:), ux(:,:)
 complex(C_DOUBLE_COMPLEX), allocatable :: nlT(:,:), nlphi(:,:)
 complex(C_DOUBLE_COMPLEX), allocatable :: tT_comp(:), tuy_comp(:), tux_comp(:), tnlT_comp(:), tnlphi_comp(:)
 complex(C_DOUBLE_COMPLEX), allocatable :: tphi_comp(:)
-real(C_DOUBLE), allocatable :: tT_real(:), tuy_real(:), tux_real(:), tnlT_real(:), tnlphi_real(:)
-real(C_DOUBLE), allocatable :: tphi_real(:)
+real(dp), allocatable :: tT_real(:), tuy_real(:), tux_real(:), tnlT_real(:), tnlphi_real(:)
+real(dp), allocatable :: tphi_real(:)
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:,:) :: Tptrb
 
 real(dp), allocatable, dimension(:) :: x0, GT
