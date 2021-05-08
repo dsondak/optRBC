@@ -303,10 +303,6 @@ do ! while (time < t_final)
             call MPI_SEND(dyv2_T(it), 1, MPI_DOUBLE, 0, 58, MPI_COMM_WORLD, mpierror)
 
             ! Send V1, V2, phi1, phi2
-            ! do j = 1,Ny
-            !     write(*,*) j, V1(j,it)
-            ! end do
-            ! write(*,*) "sanity"
             call MPI_SEND(V1(1:Ny,it), Ny, MPI_DOUBLE, 0, 59, MPI_COMM_WORLD, mpierror)
             call MPI_SEND(V2(1:Ny,it), Ny, MPI_DOUBLE, 0, 60, MPI_COMM_WORLD, mpierror)
             call MPI_SEND(phi1(1:Ny,it), Ny, MPI_DOUBLE, 0, 61, MPI_COMM_WORLD, mpierror)
