@@ -250,16 +250,6 @@ do ! while (time < t_final)
             phi2_MPI(1:Ny) = phi2(1:Ny, it)
 
             ! BOUNDAY CONDITIONS!
-            ! open(unit=9010, file="P"//proc_id_str//"T_real_update.txt", action="write", status="unknown")
-            ! do i=1,total_ny
-            !     write (9010,*) REAL(tmp_phi_MPI(i))            
-            ! end do
-            ! close(unit=9010)
-            
-            ! do j = 1,total_ny
-            !     write(*,*) j, V1_MPI(j)
-            ! end do
-            ! write(*,*) "sanity"
             call update_bcs_mod_MPI(tmp_phi1_MPI,tmp_uy1_MPI, tmp_phi_MPI,tmp_uy_MPI,&
                                 dyv1_T_it_MPI,dyv2_T_it_MPI,&
                                 dyv1_B(it),dyv2_B(it),&

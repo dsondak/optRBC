@@ -299,10 +299,6 @@ if(proc_id == 0) then
       V1(2:Ny,ii) = FV12(1:Ny-1,1)
       V2(2:Ny,ii) = FV12(1:Ny-1,2)
 
-      ! do j = 2,total_ny-1
-      !     write(*,*) j, FV12(j,1)
-      ! end do
-
       ! Send V1 and V1 columns to each node.
       do otherproc = 1,num_procs-1 
          start = otherproc * Ny
@@ -373,36 +369,6 @@ else if (proc_id == num_procs - 1) then
       dyv2_T(ii) = h1(Ny)*V2(Ny-2,ii) + h2(Ny)*V2(Ny-1,ii) + h3(Ny)*V2(Ny,ii)
    end do
 end if
-
-
-! do it = 1,Nx
-!    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
-!    if (proc_id == 0) then 
-!       do j = 1,Ny
-!             write(*,*) j, V1(j,it)
-!       end do
-!    end if 
-!    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
-!    if (proc_id == 1) then 
-!       do j = 1,Ny
-!             write(*,*) j, V1(j,it)
-!       end do
-!    end if 
-!    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
-!    if (proc_id == 2) then 
-!       do j = 1,Ny
-!             write(*,*) j, V1(j,it)
-!       end do
-!    end if 
-!    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
-!    if (proc_id == 3) then 
-!       do j = 1,Ny
-!             write(*,*) j, V1(j,it)
-!       end do
-!       write(*,*) "sanity"
-!    end if 
-!    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
-! end do
 
 
 end subroutine init_bc_MPI
