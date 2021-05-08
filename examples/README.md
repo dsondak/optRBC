@@ -254,7 +254,7 @@ nu1.txt nu2.txt nu3.txt
 To plot these time series, run the following python script, 
 
 ```
-python nusselt.py
+python3 nusselt.py
 ```
 
 which will write the `nusselt.png` figure to this directory. This figure is shown below.
