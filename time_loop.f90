@@ -21,7 +21,7 @@ integer                                                :: refine_flag_x, refine_
 integer                                                :: vtk_flag, rstrt_flag, opt_flag
 logical                                                :: wvtk, save_restart, calc_opt
 logical                                                :: refine_x, refine_y, refine_z, refine_xy
-logical                                                :: fTexist, fuyexist
+logical                                                :: fTexist, fuyexist, write_nusselt
 logical                                                :: ex_Tptrb
 real(dp)                                               :: temp
 real(dp)                                               :: dxc
@@ -88,7 +88,7 @@ do ii = 1,7
         case (7)
           call value(tokens(1), vtk_flag, ios)
           call value(tokens(2), rstrt_flag, ios)
-          call value(tokens(2), opt_flag, ios)
+          call value(tokens(3), opt_flag, ios)
           if (vtk_flag == 1) then
              wvtk = .true.
           else
@@ -100,9 +100,9 @@ do ii = 1,7
              save_restart = .false.
           end if
           if (opt_flag == 1) then
-             calc_opt = .true.
+              write_nusselt = .true.
           else
-             calc_opt = .false.
+              write_nusselt = .false.
           end if
       end select
    end if
@@ -304,11 +304,6 @@ do ii = Nx/2+1, Nx
 end do
 kx = alpha*kx_modes
 
-! Write initial field to vtk
-if (wvtk) then
-   call write_to_vtk(int(Ra), .true.) ! true = already in physical space
-end if
-
 ! Initialize fields.
 call init_fields(ex_Tptrb, fTexist, Ra)
 call init_to_fourier(ex_Tptrb)
@@ -353,13 +348,13 @@ write(*,'(A70)')                  '                                             
 
 flush(6)
 
-open(unit=8000, file="Nu_data.txt", action="write", status="unknown", position="append")
+open(unit=8000, file="Nu_data.txt", action="write", status="unknown")
 
 ! Get nu0 and kappa0
 call global_params_Ra(Ra)
 
 ! Get solution with time integration
-call imex_rk(1, .true.) ! true causes writing of nusselt number.
+call imex_rk(write_nusselt, wvtk)
 
 write(*,*) " "
 flush(6)

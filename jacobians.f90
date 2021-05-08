@@ -101,7 +101,7 @@ do ii = 1,Nx
 end do
 
 ! Integrate out to some time
-call imex_rk
+call imex_rk(.false., .false.)
 
 ! Form xT_delta from the fields
 call packx(xT_delta)

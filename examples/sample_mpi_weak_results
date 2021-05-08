@@ -1,0 +1,436 @@
+make: Nothing to be done for 'all'.
+########################
+#  mpi weak scaling    #
+########################
+Serial version running ...
+
+*********************************************************************|
+                TWO-DIMENSIONAL THERMAL CONVECTION                   |
+*********************************************************************|
+     COMPUTATION SIZE:                                               |
+                                                                     |
+                    Nx                      1280                     |
+                    Ny                       960                     |
+                    Nz                         1                     |
+                    Number of time steps   10001                     |
+                    Number of Fourier modes  853                     |
+                                                                     |
+*********************************************************************|
+     PROBLEM PARAMETERS:                                             |
+                                                                     |
+          Prandtl number  (Pr)              7.00000000E+00           |
+          Initial Rayleigh number (Ra)      5.00000000E+03           |
+          Initial Reynolds number (Re)      6.68153105E+00           |
+                                                                     |
+*********************************************************************|
+     PHYSICAL PROBLEM SIZE:                                          |
+                                                                     |
+              alpha                     =   1.55850000E+00           |
+              Left coordinate of box    =  -2.01577969E+00           |
+              Right coordinate of box   =   2.01577969E+00           |
+              Coordinate of bottom wall =  -1.00000000E+00           |
+              Coordinate of top wall    =   1.00000000E+00           |
+              Box width                 =   4.03155939E+00           |
+              Box height                =   2.00000000E+00           |
+              Aspect Ratio              =   2.01577969E+00           |
+                                                                     |
+              Integration time (T)      =   1.00000000E+02           |
+              Time step size (Delta t)  =   1.00000000E-02           |
+                                                                     |
+*********************************************************************|
+*********************************************************************|
+
+ Running with            1  threads
+
+ time =    1.0000000000000000E-002 dt =    1.0000000000000000E-002
+ time =    2.0000000000000000E-002 dt =    1.0000000000000000E-002
+ time =    2.9999999999999999E-002 dt =    1.0000000000000000E-002
+ time =    4.0000000000000001E-002 dt =    1.0000000000000000E-002
+ time =    5.0000000000000003E-002 dt =    1.0000000000000000E-002
+ time =    6.0000000000000005E-002 dt =    1.0000000000000000E-002
+ time =    7.0000000000000007E-002 dt =    1.0000000000000000E-002
+ time =    8.0000000000000002E-002 dt =    1.0000000000000000E-002
+ time =    8.9999999999999997E-002 dt =    1.0000000000000000E-002
+ time =    9.9999999999999992E-002 dt =    1.0000000000000000E-002
+ time =   0.10999999999999999      dt =    1.0000000000000000E-002
+ time =   0.11999999999999998      dt =    1.0000000000000000E-002
+ time =   0.12999999999999998      dt =    1.0000000000000000E-002
+2  processes running ...
+
+*********************************************************************|
+                TWO-DIMENSIONAL THERMAL CONVECTION                   |
+*********************************************************************|
+     COMPUTATION SIZE:                                               |
+                                                                     |
+                    Nx                      1280                     |
+                    Ny                       480                     |
+                    Nz                         1                     |
+                    Number of time steps   10001                     |
+                    Number of Fourier modes  853                     |
+                                                                     |
+*********************************************************************|
+     PROBLEM PARAMETERS:                                             |
+                                                                     |
+          Prandtl number  (Pr)              7.00000000E+00           |
+          Initial Rayleigh number (Ra)      5.00000000E+03           |
+          Initial Reynolds number (Re)      6.68153105E+00           |
+                                                                     |
+*********************************************************************|
+     PHYSICAL PROBLEM SIZE:                                          |
+                                                                     |
+              alpha                     =   1.55850000E+00           |
+              Left coordinate of box    =  -2.01577969E+00           |
+              Right coordinate of box   =   2.01577969E+00           |
+              Coordinate of bottom wall =  -1.00000000E+00           |
+              Coordinate of top wall    =   0.00000000E+00           |
+              Box width                 =   4.03155939E+00           |
+              Box height                =   1.00000000E+00           |
+              Aspect Ratio              =   4.03155939E+00           |
+                                                                     |
+              Integration time (T)      =   1.00000000E+02           |
+              Time step size (Delta t)  =   1.00000000E-02           |
+                                                                     |
+*********************************************************************|
+*********************************************************************|
+
+ Ny =          960  divided among            2  processors ->          480  rows per processor.
+ processor            0 initialized with          480 rows.
+ processor            1 initialized with          480 rows.
+ time =    1.0000000000000000E-002 dt =    1.0000000000000000E-002
+ time =    2.0000000000000000E-002 dt =    1.0000000000000000E-002
+ time =    2.9999999999999999E-002 dt =    1.0000000000000000E-002
+ time =    4.0000000000000001E-002 dt =    1.0000000000000000E-002
+ time =    5.0000000000000003E-002 dt =    1.0000000000000000E-002
+ time =    6.0000000000000005E-002 dt =    1.0000000000000000E-002
+ time =    7.0000000000000007E-002 dt =    1.0000000000000000E-002
+ time =    8.0000000000000002E-002 dt =    1.0000000000000000E-002
+ time =    8.9999999999999997E-002 dt =    1.0000000000000000E-002
+ time =    9.9999999999999992E-002 dt =    1.0000000000000000E-002
+ time =   0.10999999999999999      dt =    1.0000000000000000E-002
+ time =   0.11999999999999998      dt =    1.0000000000000000E-002
+ time =   0.12999999999999998      dt =    1.0000000000000000E-002
+ time =   0.13999999999999999      dt =    1.0000000000000000E-002
+ time =   0.14999999999999999      dt =    1.0000000000000000E-002
+ time =   0.16000000000000000      dt =    1.0000000000000000E-002
+ time =   0.17000000000000001      dt =    1.0000000000000000E-002
+--------------------------------------------------------------------------
+The user-provided time limit for job execution has been
+reached:
+
+  MPIEXEC_TIMEOUT: 30 seconds
+
+The job will now be aborted.  Please check your code and/or
+adjust/remove the job execution time limit (as specified by
+MPIEXEC_TIMEOUT in your environment or --timeout on the command line).
+--------------------------------------------------------------------------
+3  processes running ...
+
+*********************************************************************|
+                TWO-DIMENSIONAL THERMAL CONVECTION                   |
+*********************************************************************|
+     COMPUTATION SIZE:                                               |
+                                                                     |
+                    Nx                      1280                     |
+                    Ny                       320                     |
+                    Nz                         1                     |
+                    Number of time steps   10001                     |
+                    Number of Fourier modes  853                     |
+                                                                     |
+*********************************************************************|
+     PROBLEM PARAMETERS:                                             |
+                                                                     |
+          Prandtl number  (Pr)              7.00000000E+00           |
+          Initial Rayleigh number (Ra)      5.00000000E+03           |
+          Initial Reynolds number (Re)      6.68153105E+00           |
+                                                                     |
+*********************************************************************|
+     PHYSICAL PROBLEM SIZE:                                          |
+                                                                     |
+              alpha                     =   1.55850000E+00           |
+              Left coordinate of box    =  -2.01577969E+00           |
+              Right coordinate of box   =   2.01577969E+00           |
+              Coordinate of bottom wall =  -1.00000000E+00           |
+              Coordinate of top wall    =  -3.33333333E-01           |
+              Box width                 =   4.03155939E+00           |
+              Box height                =   6.66666667E-01           |
+              Aspect Ratio              =   6.04733908E+00           |
+                                                                     |
+              Integration time (T)      =   1.00000000E+02           |
+              Time step size (Delta t)  =   1.00000000E-02           |
+                                                                     |
+*********************************************************************|
+*********************************************************************|
+
+ Ny =          960  divided among            3  processors ->          320  rows per processor.
+ processor            1 initialized with          320 rows.
+ processor            2 initialized with          320 rows.
+ processor            0 initialized with          320 rows.
+ time =    1.0000000000000000E-002 dt =    1.0000000000000000E-002
+ time =    2.0000000000000000E-002 dt =    1.0000000000000000E-002
+ time =    2.9999999999999999E-002 dt =    1.0000000000000000E-002
+ time =    4.0000000000000001E-002 dt =    1.0000000000000000E-002
+ time =    5.0000000000000003E-002 dt =    1.0000000000000000E-002
+ time =    6.0000000000000005E-002 dt =    1.0000000000000000E-002
+ time =    7.0000000000000007E-002 dt =    1.0000000000000000E-002
+ time =    8.0000000000000002E-002 dt =    1.0000000000000000E-002
+ time =    8.9999999999999997E-002 dt =    1.0000000000000000E-002
+ time =    9.9999999999999992E-002 dt =    1.0000000000000000E-002
+ time =   0.10999999999999999      dt =    1.0000000000000000E-002
+ time =   0.11999999999999998      dt =    1.0000000000000000E-002
+ time =   0.12999999999999998      dt =    1.0000000000000000E-002
+ time =   0.13999999999999999      dt =    1.0000000000000000E-002
+ time =   0.14999999999999999      dt =    1.0000000000000000E-002
+ time =   0.16000000000000000      dt =    1.0000000000000000E-002
+ time =   0.17000000000000001      dt =    1.0000000000000000E-002
+ time =   0.18000000000000002      dt =    1.0000000000000000E-002
+--------------------------------------------------------------------------
+The user-provided time limit for job execution has been
+reached:
+
+  MPIEXEC_TIMEOUT: 30 seconds
+
+The job will now be aborted.  Please check your code and/or
+adjust/remove the job execution time limit (as specified by
+MPIEXEC_TIMEOUT in your environment or --timeout on the command line).
+--------------------------------------------------------------------------
+4  processes running ...
+
+*********************************************************************|
+                TWO-DIMENSIONAL THERMAL CONVECTION                   |
+*********************************************************************|
+     COMPUTATION SIZE:                                               |
+                                                                     |
+                    Nx                      1280                     |
+                    Ny                       240                     |
+                    Nz                         1                     |
+                    Number of time steps   10001                     |
+                    Number of Fourier modes  853                     |
+                                                                     |
+*********************************************************************|
+     PROBLEM PARAMETERS:                                             |
+                                                                     |
+          Prandtl number  (Pr)              7.00000000E+00           |
+          Initial Rayleigh number (Ra)      5.00000000E+03           |
+          Initial Reynolds number (Re)      6.68153105E+00           |
+                                                                     |
+*********************************************************************|
+     PHYSICAL PROBLEM SIZE:                                          |
+                                                                     |
+              alpha                     =   1.55850000E+00           |
+              Left coordinate of box    =  -2.01577969E+00           |
+              Right coordinate of box   =   2.01577969E+00           |
+              Coordinate of bottom wall =  -1.00000000E+00           |
+              Coordinate of top wall    =  -5.00000000E-01           |
+              Box width                 =   4.03155939E+00           |
+              Box height                =   5.00000000E-01           |
+              Aspect Ratio              =   8.06311878E+00           |
+                                                                     |
+              Integration time (T)      =   1.00000000E+02           |
+              Time step size (Delta t)  =   1.00000000E-02           |
+                                                                     |
+*********************************************************************|
+*********************************************************************|
+
+ Ny =          960  divided among            4  processors ->          240  rows per processor.
+ processor            1 initialized with          240 rows.
+ processor            2 initialized with          240 rows.
+ processor            3 initialized with          240 rows.
+ processor            0 initialized with          240 rows.
+ time =    1.0000000000000000E-002 dt =    1.0000000000000000E-002
+ time =    2.0000000000000000E-002 dt =    1.0000000000000000E-002
+ time =    2.9999999999999999E-002 dt =    1.0000000000000000E-002
+ time =    4.0000000000000001E-002 dt =    1.0000000000000000E-002
+ time =    5.0000000000000003E-002 dt =    1.0000000000000000E-002
+ time =    6.0000000000000005E-002 dt =    1.0000000000000000E-002
+ time =    7.0000000000000007E-002 dt =    1.0000000000000000E-002
+ time =    8.0000000000000002E-002 dt =    1.0000000000000000E-002
+ time =    8.9999999999999997E-002 dt =    1.0000000000000000E-002
+ time =    9.9999999999999992E-002 dt =    1.0000000000000000E-002
+ time =   0.10999999999999999      dt =    1.0000000000000000E-002
+ time =   0.11999999999999998      dt =    1.0000000000000000E-002
+ time =   0.12999999999999998      dt =    1.0000000000000000E-002
+ time =   0.13999999999999999      dt =    1.0000000000000000E-002
+ time =   0.14999999999999999      dt =    1.0000000000000000E-002
+ time =   0.16000000000000000      dt =    1.0000000000000000E-002
+ time =   0.17000000000000001      dt =    1.0000000000000000E-002
+ time =   0.18000000000000002      dt =    1.0000000000000000E-002
+ time =   0.19000000000000003      dt =    1.0000000000000000E-002
+ time =   0.20000000000000004      dt =    1.0000000000000000E-002
+ time =   0.21000000000000005      dt =    1.0000000000000000E-002
+ time =   0.22000000000000006      dt =    1.0000000000000000E-002
+ time =   0.23000000000000007      dt =    1.0000000000000000E-002
+ time =   0.24000000000000007      dt =    1.0000000000000000E-002
+ time =   0.25000000000000006      dt =    1.0000000000000000E-002
+--------------------------------------------------------------------------
+The user-provided time limit for job execution has been
+reached:
+
+  MPIEXEC_TIMEOUT: 30 seconds
+
+The job will now be aborted.  Please check your code and/or
+adjust/remove the job execution time limit (as specified by
+MPIEXEC_TIMEOUT in your environment or --timeout on the command line).
+--------------------------------------------------------------------------
+5  processes running ...
+
+*********************************************************************|
+                TWO-DIMENSIONAL THERMAL CONVECTION                   |
+*********************************************************************|
+     COMPUTATION SIZE:                                               |
+                                                                     |
+                    Nx                      1280                     |
+                    Ny                       192                     |
+                    Nz                         1                     |
+                    Number of time steps   10001                     |
+                    Number of Fourier modes  853                     |
+                                                                     |
+*********************************************************************|
+     PROBLEM PARAMETERS:                                             |
+                                                                     |
+          Prandtl number  (Pr)              7.00000000E+00           |
+          Initial Rayleigh number (Ra)      5.00000000E+03           |
+          Initial Reynolds number (Re)      6.68153105E+00           |
+                                                                     |
+*********************************************************************|
+     PHYSICAL PROBLEM SIZE:                                          |
+                                                                     |
+              alpha                     =   1.55850000E+00           |
+              Left coordinate of box    =  -2.01577969E+00           |
+              Right coordinate of box   =   2.01577969E+00           |
+              Coordinate of bottom wall =  -1.00000000E+00           |
+              Coordinate of top wall    =  -6.00000000E-01           |
+              Box width                 =   4.03155939E+00           |
+              Box height                =   4.00000000E-01           |
+              Aspect Ratio              =   1.00788985E+01           |
+                                                                     |
+              Integration time (T)      =   1.00000000E+02           |
+              Time step size (Delta t)  =   1.00000000E-02           |
+                                                                     |
+*********************************************************************|
+*********************************************************************|
+
+ Ny =          960  divided among            5  processors ->          192  rows per processor.
+ processor            1 initialized with          192 rows.
+ processor            2 initialized with          192 rows.
+ processor            3 initialized with          192 rows.
+ processor            4 initialized with          192 rows.
+ processor            0 initialized with          192 rows.
+ time =    1.0000000000000000E-002 dt =    1.0000000000000000E-002
+ time =    2.0000000000000000E-002 dt =    1.0000000000000000E-002
+ time =    2.9999999999999999E-002 dt =    1.0000000000000000E-002
+ time =    4.0000000000000001E-002 dt =    1.0000000000000000E-002
+ time =    5.0000000000000003E-002 dt =    1.0000000000000000E-002
+ time =    6.0000000000000005E-002 dt =    1.0000000000000000E-002
+ time =    7.0000000000000007E-002 dt =    1.0000000000000000E-002
+ time =    8.0000000000000002E-002 dt =    1.0000000000000000E-002
+ time =    8.9999999999999997E-002 dt =    1.0000000000000000E-002
+ time =    9.9999999999999992E-002 dt =    1.0000000000000000E-002
+ time =   0.10999999999999999      dt =    1.0000000000000000E-002
+ time =   0.11999999999999998      dt =    1.0000000000000000E-002
+ time =   0.12999999999999998      dt =    1.0000000000000000E-002
+ time =   0.13999999999999999      dt =    1.0000000000000000E-002
+ time =   0.14999999999999999      dt =    1.0000000000000000E-002
+ time =   0.16000000000000000      dt =    1.0000000000000000E-002
+ time =   0.17000000000000001      dt =    1.0000000000000000E-002
+ time =   0.18000000000000002      dt =    1.0000000000000000E-002
+ time =   0.19000000000000003      dt =    1.0000000000000000E-002
+ time =   0.20000000000000004      dt =    1.0000000000000000E-002
+ time =   0.21000000000000005      dt =    1.0000000000000000E-002
+ time =   0.22000000000000006      dt =    1.0000000000000000E-002
+ time =   0.23000000000000007      dt =    1.0000000000000000E-002
+ time =   0.24000000000000007      dt =    1.0000000000000000E-002
+ time =   0.25000000000000006      dt =    1.0000000000000000E-002
+ time =   0.26000000000000006      dt =    1.0000000000000000E-002
+--------------------------------------------------------------------------
+The user-provided time limit for job execution has been
+reached:
+
+  MPIEXEC_TIMEOUT: 30 seconds
+
+The job will now be aborted.  Please check your code and/or
+adjust/remove the job execution time limit (as specified by
+MPIEXEC_TIMEOUT in your environment or --timeout on the command line).
+--------------------------------------------------------------------------
+6  processes running ...
+
+*********************************************************************|
+                TWO-DIMENSIONAL THERMAL CONVECTION                   |
+*********************************************************************|
+     COMPUTATION SIZE:                                               |
+                                                                     |
+                    Nx                      1280                     |
+                    Ny                       160                     |
+                    Nz                         1                     |
+                    Number of time steps   10001                     |
+                    Number of Fourier modes  853                     |
+                                                                     |
+*********************************************************************|
+     PROBLEM PARAMETERS:                                             |
+                                                                     |
+          Prandtl number  (Pr)              7.00000000E+00           |
+          Initial Rayleigh number (Ra)      5.00000000E+03           |
+          Initial Reynolds number (Re)      6.68153105E+00           |
+                                                                     |
+*********************************************************************|
+     PHYSICAL PROBLEM SIZE:                                          |
+                                                                     |
+              alpha                     =   1.55850000E+00           |
+              Left coordinate of box    =  -2.01577969E+00           |
+              Right coordinate of box   =   2.01577969E+00           |
+              Coordinate of bottom wall =  -1.00000000E+00           |
+              Coordinate of top wall    =  -6.66666667E-01           |
+              Box width                 =   4.03155939E+00           |
+              Box height                =   3.33333333E-01           |
+              Aspect Ratio              =   1.20946782E+01           |
+                                                                     |
+              Integration time (T)      =   1.00000000E+02           |
+              Time step size (Delta t)  =   1.00000000E-02           |
+                                                                     |
+*********************************************************************|
+*********************************************************************|
+
+ Ny =          960  divided among            6  processors ->          160  rows per processor.
+ processor            2 initialized with          160 rows.
+ processor            4 initialized with          160 rows.
+ processor            0 initialized with          160 rows.
+ processor            1 initialized with          160 rows.
+ processor            3 initialized with          160 rows.
+ processor            5 initialized with          160 rows.
+ time =    1.0000000000000000E-002 dt =    1.0000000000000000E-002
+ time =    2.0000000000000000E-002 dt =    1.0000000000000000E-002
+ time =    2.9999999999999999E-002 dt =    1.0000000000000000E-002
+ time =    4.0000000000000001E-002 dt =    1.0000000000000000E-002
+ time =    5.0000000000000003E-002 dt =    1.0000000000000000E-002
+ time =    6.0000000000000005E-002 dt =    1.0000000000000000E-002
+ time =    7.0000000000000007E-002 dt =    1.0000000000000000E-002
+ time =    8.0000000000000002E-002 dt =    1.0000000000000000E-002
+ time =    8.9999999999999997E-002 dt =    1.0000000000000000E-002
+ time =    9.9999999999999992E-002 dt =    1.0000000000000000E-002
+ time =   0.10999999999999999      dt =    1.0000000000000000E-002
+ time =   0.11999999999999998      dt =    1.0000000000000000E-002
+ time =   0.12999999999999998      dt =    1.0000000000000000E-002
+ time =   0.13999999999999999      dt =    1.0000000000000000E-002
+ time =   0.14999999999999999      dt =    1.0000000000000000E-002
+ time =   0.16000000000000000      dt =    1.0000000000000000E-002
+ time =   0.17000000000000001      dt =    1.0000000000000000E-002
+ time =   0.18000000000000002      dt =    1.0000000000000000E-002
+ time =   0.19000000000000003      dt =    1.0000000000000000E-002
+ time =   0.20000000000000004      dt =    1.0000000000000000E-002
+ time =   0.21000000000000005      dt =    1.0000000000000000E-002
+ time =   0.22000000000000006      dt =    1.0000000000000000E-002
+ time =   0.23000000000000007      dt =    1.0000000000000000E-002
+ time =   0.24000000000000007      dt =    1.0000000000000000E-002
+ time =   0.25000000000000006      dt =    1.0000000000000000E-002
+ time =   0.26000000000000006      dt =    1.0000000000000000E-002
+ time =   0.27000000000000007      dt =    1.0000000000000000E-002
+--------------------------------------------------------------------------
+The user-provided time limit for job execution has been
+reached:
+
+  MPIEXEC_TIMEOUT: 30 seconds
+
+The job will now be aborted.  Please check your code and/or
+adjust/remove the job execution time limit (as specified by
+MPIEXEC_TIMEOUT in your environment or --timeout on the command line).
+--------------------------------------------------------------------------
+done!

@@ -11,10 +11,10 @@ OBJECTS_MPI = fftw.o global.o allocate_vars.o precmod.o stringmod.o write_pack.o
 all : time_loop.exe time_loop_MPI.exe
 
 time_loop.exe : $(OBJECTS)
-	$(FC) -fopenmp -Wno-argument-mismatch $(LDFLAGS) -o time_loop.exe $(OBJECTS) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
+	$(FC) -fopenmp -fallow-argument-mismatch $(LDFLAGS) -o time_loop.exe $(OBJECTS) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
 
 time_loop_MPI.exe : $(OBJECTS_MPI)
-	$(FC) -fopenmp -Wno-argument-mismatch $(LDFLAGS) -o time_loop_MPI.exe $(OBJECTS_MPI) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
+	$(FC) -fopenmp -fallow-argument-mismatch $(LDFLAGS) -o time_loop_MPI.exe $(OBJECTS_MPI) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
 
 fftw.o : fftw.f90
 	$(FC) $(FFLAGS) fftw.f90
@@ -53,7 +53,7 @@ time_integrators.o : time_integrators.f90
 	$(FC) -fopenmp $(FFLAGS) time_integrators.f90
 
 time_integrators_MPI.o : time_integrators_MPI.f90
-	$(FC) -fopenmp -Wno-argument-mismatch  $(FFLAGS) time_integrators_MPI.f90
+	$(FC) -fopenmp -fallow-argument-mismatch  $(FFLAGS) time_integrators_MPI.f90
 
 jacobians.o : jacobians.f90
 	$(FC) $(FFLAGS) jacobians.f90
