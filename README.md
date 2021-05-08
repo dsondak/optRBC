@@ -11,14 +11,14 @@ Rayleigh-Benard convection (RBC) is phenomena that takes place when a liquid is 
 ![rbc_image](figs/rbc_simple.png)
 
 The temperature flow of this liquid can be described by the Oberbeck-Boussinesq partial differential equations. These PDEs can be solved at each location and time step to numerically compute the temperature field and its evolution. The non-dimensional parameters we care about are listed with descriptions below:
-- Rayleigh Number (Ra) is a measure of convection
-- Prandtl Number (Pr) is a measure of viscosity (eg. Pr=7 for water, Pr=98.31 for engine oil)
+- Rayleigh Number (Ra) is a measure of convection. 
+- Prandtl Number (Pr) is a measure of viscosity (eg. Pr=7 for water, Pr=98.31 for engine oil). 
 - Nusselt Number (Nu) is a measure of heat transfer. 
 
 ![nondim_params](figs/ra_pr_nu_eqns.png)
  \* adapted from a presentation based on the paper in [[1]](#1).
 
-The low Rayleigh number regime in RBC has been studied extensively; therefore, this code was written to simulate problems with high Rayleigh numbers.  Though Rayleigh-Benard convection is a physical and therefore 3D problem, this particular code implements 2D Rayleigh-Benard convection.  This simplification reduces the complexity of the algorithm, allowing for exploration of the ratio between Nu : Ra at high values of Ra up to 10^9. 
+The low Rayleigh number regime in RBC has been studied extensively; therefore, this code was written to simulate problems with high Rayleigh numbers.  Though Rayleigh-Benard convection is a physical and therefore 3D problem, this particular code implements 2D Rayleigh-Benard convection.  This simplification reduces the complexity of the algorithm, allowing for exploration of the ratio between Nu and Ra at high values of Ra up to 10^9. 
 
 In order to simulate even higher Ra numbers, we sought to parallelize the existing code using OpenMP and MPI, and explored Fast Fourier Transform (FFT) methods to improve algorithmic efficiency.  (*Note*: our particular FFT implementation is FFTW3 [[2]](#2).  We use FFT and FFTW interchangeably to mean the same thing.)  The serial version of the current algorithm has a time complexity of O(N^3 * log(N)), leading to exceedingly long computation times at large problem sizes.  Since this is a compute-intensive code designed to solve complex PDEs, it is a High Performance Computing (HPC) problem.
 
@@ -62,11 +62,14 @@ As stated in Section 1, this is a High Performance Computing problem.  The origi
 Our design uses both shared memory parallelism (OpenMP) and distributed memory parallelism (MPI).  While we originally intended to create a fully hybrid model, we realized that an important part of the serial code relies on the Basic Linear Algebra Subprograms (BLAS) routine that solves tridiagonal matrices.  **TODO: Talk about limitations here or in Section 6?**  Further information is provided in Section 6.1, but our final model allows users to run an OpenMP version of the code and an MPI version of the code separately.
 
 **TODO: FFTW comments**
+Along with introducing different levels of parallelism, we also sought to introduce some speedup with ehancements like multithreaded FFT and one-sided FFT. To explore multithreaded FFT (which is included in the FFTW library), we wrote a test script in which we compared the timing of multithreaded FFT against single threaded FFT. We found that over both thread and array size, this lack of speedup was consistent. 
+
+With respect to one-sided FFT, we experimented with more strongly typing certain arrays as real (as physical fields are real) and using Hermitian conjugacy (when computing the Fourier transform of a size N array, only N/2 + 1 of those elements are not redundant). In particular, this change involved both changing array types, sizes, and certain loops meant to be executed in Fourier space. Subroutines swapped out include planning and execution, with the strictly real to complex or complex to real transformations included in the FFTW library. Due to Hermitian conjugacy, we expected a theoretical speedup of 2x for each Fourier transform (originally NlogN), along with additional 2x speedups for Nx loops in Fourier space. 
 
 ### 4.3 Platform and Infrastructure
 - **TODO: add to AWS info** AWS details: t2.2xlarge & m4.4xlarge (@Mike any others? Anything else important to address?)
 
-We planned to use to the FAS RC academic cluster to run our experiments, but ran into several challenges, two of which are captured here.  First, the results were inconsistent depending on the day of the week and the time of day.  Despite using the Slurm commands introduced on the FAS RC documentation and in class, the results were still inconsistent.  Second, the performance of our code on AWS was consistent and also yielded significantly higher speedups.  Running the OpenMP version of our code, at Nx= 1600, Ny=1275, Ra=5000 yielded an 8x speedup on an AWS instance with 16 threads.  Running the same version on the cluster yielded a 2.44x speedup.  These results caused us to switch focus to AWS and abandon using the cluster for performance results.
+We planned to use to the FAS RC academic cluster to run our experiments, but ran into several challenges, two of which are captured here.  First, the results were inconsistent depending on the day of the week and the time of day.  Despite using the Slurm commands introduced on the FAS RC documentation and in class, the results were still inconsistent.  This was likely due to a high degree of device sharing between jobs, introducing variability with respect to how much of the machine we could use.  Second, the performance of our code on AWS was consistent and also yielded significantly higher speedups.  Running the OpenMP version of our code, at Nx= 1600, Ny=1275, Ra=5000 yielded an 8x speedup on an AWS instance with 16 threads.  Running the same version on the cluster yielded a 2.44x speedup.  These results caused us to switch focus to AWS and abandon using the cluster for performance results.
 
 
 ## 5. Source Code
@@ -109,9 +112,16 @@ Detailed examples and performance evaluation test cases can be found in the [exa
 
 ## 8. Advanced Features
 *Description of advanced features like models/platforms not explained in class, advanced functions of modules, techniques to mitigate overheads, challenging parallelization or implementation aspects...*
-- FFTW?
-- Fortran aspects?
 
+We can break some of the advanced features of this project into the following: 
+
+- Fortran
+
+Though this is a programming language widely used in the computational sciences for high performance computing, it was also a language not covered in the course. There were also subtleties when using Fortran with OpenMP, which included injecting variables into subroutine calls even though they were globally scoped. 
+
+- Work in mathematically rich, existing codebase
+
+We also worked in an existing, extensive codebase that relied on relatively complex mathematical methods like FFT and Runge–Kutta methods to solve PDEs. This required us to study the existing code as well as its mathematical methods when necessary. One example of the need to not only understand the code but also the math implemented would be when moving to one-sided FFT. Because this method relied on the symmetry of Fourier transforms of real data, it required allocating less space for complex arrays vs. real arrays. Since we also have multiple loops in Fourier space, this approach also required changing those bounds since we remove the redundant data that standard FFTs would have kept. 
 
 ## 9. Discussion and Future Work
 *Final discussion about goals achieved, improvements suggested, lessons learnt, future work, interesting insights…*
@@ -119,8 +129,18 @@ Detailed examples and performance evaluation test cases can be found in the [exa
 - list of accomplishments
 ### 9.2 Challenges --OR-- Lessons Learned
 - Fluid flow, Fortran, FFTW...AWS > Cluster
+
+Some challenges that we encountered with this particular project include: 
+- Fortran complexities in conjunction with OpenMP, where we needed to inject variables into subroutine calls rather than relying on the global scope of those variables. 
+- Small inconsistencies in values (such as Nu) between runs and whether or not those inconsistencies are due to machine precision or actual code incorrectness. This was particularly a problem when debugging the one-sided FFT approach, as it was difficult to check during intermediate steps whether or not Nu was significantly incorrect.
+- Inconsistencies between runs using the Academic Cluster vs. AWS. Though it would have been appealing to run the entire project using the Academic Cluster from both a cost and (tightly coupled computers?) perspective, we ultimately chose to benchmark using AWS because it offered a more significant, more consistent level of speedup. 
+
 ### 9.3 Future Work
 - Parallel algorithm for a solving a tridiagonal matrix
+
+Future work for this project would include switching to a parallel tridiagonal solver algorithm, as well as fully debugging the Nu inconsistencies between one- and two-sided FFT. Moving to a parallel version of the tridiagonal solve would mitigate a bottleneck in the MPI code version, in which all of the worker nodes send their (TODO: which info?) to the master node. The master node then executes the tridiagonal solve and sends messages to all of the worker nodes. Having to send so many messages to the master node introduces more overhead, and having all worker nodes wait for the master node to receive all the messages would likely introduce additional idle time. Both idle time and overhead would be mitigated by using a parallel version of this tridiagonal solve.  
+
+Though we experimented with implementing one-sided FFT, we were ultimately unable to get it fully working. However, it would be beneficial to get this implementation working since it is compatible with both of the parallel versions (as it is a form of algorithmic speedup) and those speedups would stack multiplicatively. Methods to debug this implementation would include calculating Nu of various arrays as a kind of checksum to ensure that results are consistent between one- and two-sided FFT at each step in computation. 
 
 ## 10. References
 <a id="1">[1]</a> 
