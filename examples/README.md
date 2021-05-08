@@ -224,9 +224,44 @@ This plot demonstrates that the temperature field is correctly divided along the
 0.0 0.0
 ```
 
-which confirms that the two temperature fields are identical (because it is printing the difference between the component parts of the fields). This is how we ensure correctness of the MPI version of the code.
+which confirms that the two temperature fields are identical (because it is printing the difference between the component parts of the fields). This is how we ensure correctness of the MPI version of the code. Also see this notebook [temp_viz.ipynb](./temp_viz.ipynb) for more details about how to plot and visualize the temperature fields.
 
 ### 5. Nusselt number calculation.
+
+The Nusselt number is a measure of the heat transfer within the system. This is the variable of interest in most contexts, and how we assert correctness of the 
+code as we make changes. To demonstrate calculation and plotting of the Nusselt number, we use a small grid of Nx=64 and Ny=48. We iterate for 1000 steps with a 
+time step of 0.1 for three different Rayleigh numbers, (1) 5.0e+02, (2) 5.0e+03, (3) 5.0e+04. We use different Rayleigh numbers to show different Nusselt numbers
+evolving over time. 
+
+To run this example, run the shell script:
+
+```
+./run_nusselt.sh
+```
+
+This will print out a ton of output, but should take fewer than 10 seconds. This script will write 3 new files. Confirm that they are present by running
+
+```
+ls nu*.txt
+```
+
+which should output
+
+```
+nu1.txt nu2.txt nu3.txt
+```
+
+To plot these time series, run the following python script, 
+
+```
+python nusselt.py
+```
+
+which will write the `nusselt.png` figure to this directory. This figure is shown below.
+
+![nusselt](../figs/nusselt.png)
+
+Comparing the Nusselt numbers is how we ensure correctness of the code. Also see this notebook [nusselt.ipynb](./nusselt.ipynb) for more details about how to plot and visualize the nusselt numbers.
 
 ### 6. MPI strong scaling.
 
