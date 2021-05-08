@@ -126,6 +126,9 @@ do ii = 1,Nx
 
    call dgtsv(Ny-2, 2, dl, d, du, FV12, Ny-2, info)
 
+   ! do jj = 2,Ny-1
+   !    write(*,*) jj, FV12(jj,1)
+   ! end do
    V1(2:Ny-1,ii) = FV12(:,1)
    V2(2:Ny-1,ii) = FV12(:,2)
 
@@ -156,11 +159,12 @@ real(dp), allocatable, dimension(:)   :: d, dl, du
 real(dp), allocatable, dimension(:)   :: phi1_b, phi1_t
 real(dp), allocatable, dimension(:)   :: g1_total, g2_total, g3_total
 real(dp), allocatable, dimension(:)   :: recv_col, recv_col2, last_row_recv
+real(dp), allocatable, dimension(:)   :: recv_col3, recv_col4
 real(dp), allocatable, dimension(:)   :: phi2_b, phi2_t
 real(dp), allocatable, dimension(:,:) :: Fphi12, FV12
 
 
-integer                               :: ii, jj, i, total_ny, otherproc, start
+integer                               :: ii, jj, i, total_ny, otherproc, start, j, it
 integer                               :: info, mpierror
 
 ! Only do allocation on main node.
@@ -295,6 +299,10 @@ if(proc_id == 0) then
       V1(2:Ny,ii) = FV12(1:Ny-1,1)
       V2(2:Ny,ii) = FV12(1:Ny-1,2)
 
+      ! do j = 2,total_ny-1
+      !     write(*,*) j, FV12(j,1)
+      ! end do
+
       ! Send V1 and V1 columns to each node.
       do otherproc = 1,num_procs-1 
          start = otherproc * Ny
@@ -319,6 +327,10 @@ else
    call check_alloc_err(alloc_err)
    allocate(recv_col2(Ny), stat=alloc_err)
    call check_alloc_err(alloc_err)
+   allocate(recv_col3(Ny), stat=alloc_err)
+   call check_alloc_err(alloc_err)
+   allocate(recv_col4(Ny), stat=alloc_err)
+   call check_alloc_err(alloc_err)
 
    ! Receive cols of phi1 and phi2.
    do ii = 1,Nx
@@ -330,10 +342,10 @@ else
 
    ! Receive cols of V1 and V2.
    do ii = 1,Nx
-      call MPI_RECV(recv_col-1, Ny, MPI_DOUBLE, 0, 48, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
-      call MPI_RECV(recv_col2-1, Ny, MPI_DOUBLE, 0, 49, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
-      V1(1:Ny, ii) = recv_col
-      V2(1:Ny, ii) = recv_col2
+      call MPI_RECV(recv_col3, Ny, MPI_DOUBLE, 0, 48, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+      call MPI_RECV(recv_col4, Ny, MPI_DOUBLE, 0, 49, MPI_COMM_WORLD, MPI_STATUS_IGNORE, mpierror)
+      V1(1:Ny, ii) = recv_col3
+      V2(1:Ny, ii) = recv_col4
    end do
 
    ! Handle boundary of last processor.
@@ -346,7 +358,6 @@ else
       V1(Ny, 1:Nx)      = 0.0_dp
       V2(Ny, 1:Nx)      = 0.0_dp
    end if 
-
 end if 
 
 
@@ -362,6 +373,37 @@ else if (proc_id == num_procs - 1) then
       dyv2_T(ii) = h1(Ny)*V2(Ny-2,ii) + h2(Ny)*V2(Ny-1,ii) + h3(Ny)*V2(Ny,ii)
    end do
 end if
+
+
+! do it = 1,Nx
+!    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
+!    if (proc_id == 0) then 
+!       do j = 1,Ny
+!             write(*,*) j, V1(j,it)
+!       end do
+!    end if 
+!    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
+!    if (proc_id == 1) then 
+!       do j = 1,Ny
+!             write(*,*) j, V1(j,it)
+!       end do
+!    end if 
+!    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
+!    if (proc_id == 2) then 
+!       do j = 1,Ny
+!             write(*,*) j, V1(j,it)
+!       end do
+!    end if 
+!    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
+!    if (proc_id == 3) then 
+!       do j = 1,Ny
+!             write(*,*) j, V1(j,it)
+!       end do
+!       write(*,*) "sanity"
+!    end if 
+!    call MPI_BARRIER(MPI_COMM_WORLD, mpierror)
+! end do
+
 
 end subroutine init_bc_MPI
 

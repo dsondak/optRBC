@@ -21,7 +21,7 @@ echo "########################"
 
 echo "Serial version running ..."
 export OMP_NUM_THREADS=1
-timeout 30s ./time_loop.exe
+timeout --foreground 30s ./time_loop.exe
 echo "2  processes running ..."
 mpirun --timeout 30 -np 2 ./time_loop_MPI.exe
 echo "3  processes running ..."
