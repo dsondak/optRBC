@@ -19,7 +19,7 @@ axarr[1].set_title('Temp end', size=20)
 for ax in axarr:
     ax.set_xticks([])
     ax.set_yticks([])
-plt.show()
+plt.savefig('single.png')
 
 
 shape = (12, 65)
@@ -69,7 +69,7 @@ axarr[0,1].set_title('Temp end', size=20)
 for ax in axarr.flatten():
     ax.set_xticks([])
     ax.set_yticks([])
-plt.show()
+plt.savefig('multi.png')
 
 
 # The pictures look nice! We can confirm that the data from the distributed memory version matches the original.
