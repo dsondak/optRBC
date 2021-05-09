@@ -364,7 +364,9 @@ Some challenges that we encountered with this particular project include:
 
 ### 8.3 Future Work
 
-Future work for this project would include switching to a parallel tridiagonal solver algorithm, as well as fully debugging the Nu inconsistencies between one-sided and two-sided FFT. Moving to a parallel version of the tridiagonal solve would mitigate a bottleneck in the MPI code version, in which all of the worker nodes send their (**TODO**: which info?) to the master node. The master node then executes the tridiagonal solve and sends messages to all of the worker nodes. Having to send so many messages to the master node introduces more overhead, and having all worker nodes wait for the master node to receive all the messages would likely introduce additional idle time. Both idle time and overhead would be mitigated by using a parallel version of this tridiagonal solve.  
+Future work for this project would include switching to a parallel tridiagonal solver algorithm, as well as fully debugging the Nu inconsistencies between one-sided and two-sided FFT. Moving to a parallel version of the tridiagonal solve would mitigate a communication bottleneck in the MPI code version, in which all of the worker nodes send their components of their global variables to the master node. The master node then executes the tridiagonal solve and sends messages to all of the worker nodes. Having to send so many messages to the master node introduces more overhead, and having all worker nodes wait for the master node to receive all the messages would likely introduce additional idle time. Both idle time and overhead would be mitigated by using a parallel version of this tridiagonal solve.
+For more details on this issue see [tridiagonal solve](README.md#tridiagonal-solves).
+
 
 Though we experimented with implementing one-sided FFT, we were ultimately unable to get it fully working. However, it would be beneficial to get this implementation working since it is compatible with both of the parallel versions (as it is a form of algorithmic speedup) and those speedups would stack multiplicatively. Methods to debug this implementation would include calculating Nu of various arrays as a kind of checksum to ensure that results are consistent between one-sided and two-sided FFT at each step in computation. 
 
@@ -393,7 +395,3 @@ Computing and Visualization in Science, 23, 10.
 Mattor, Nathan, Timothy J. Williams, and Dennis W. Hewett. 
 "Algorithm for solving tridiagonal matrix problems in parallel." 
 Parallel Computing 21.11 (1995): 1769-1782.
-
-**TODO**
-- Parallel tridiagonal solver resources shared by Prof. Sondak? (added)
-- Others?
