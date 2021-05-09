@@ -61,11 +61,11 @@ We planned to use to the FAS RC academic cluster to run our experiments, but ran
 ## 4. Source Code
 *Links to repository with source code, evaluation data sets and test cases*
 
-<span style="color:red">**TODO: MIKE**: Please confirm accuracy</span>
-
 Included on this `parallel_project` branch are the OpenMP and MPI implementations of the time integration step listed below:
 - OpenMP:  `time_integrators.f90` and driver code `time_loop.f90`
 - MPI: `time_integrators_MPI.f90` and driver code `time_loop_MPI.f90`
+
+See Section 5 of this document for a detailed description of the OpenMP and MPI versions of the code.
 
 Modifications were made to several other files, but the majority of changes are found in those files.  FFTW modifications for one-sided computations are found in <span style="color:red">**TODO: KATRINA**: Please add location</span>
 
@@ -211,7 +211,7 @@ This function initializes the boundary conditions. The MPI version of the functi
 
 ##### Time loop
 
-With the above code, the global variables are properly initialized in a distributed manner across the processes. Now we get to the main time loop portion of the code, which starts at [line 158, time_integrators_MPI.f90](./time_integrators_MPI.f90#L158). First, we had to write an MPI version of `calc_explicit`, which is called `calc_explicit_MPI` and is defined at [line 924](./time_integrators_MPI.f90#L924). This subroutine is very similar to `calc_explicit` described in the OpenMP version and in the code description item 6, with a few minor changes. In particular, loops 2 and 4 can no longer be parallelized with OpenMP because they call the `d1y_MPI2` and `d2y_MPI2` functions, which require sending and receiving messages. Sending and receiving messages on multiple threads is difficult because you don't know which thread will be expecting or sending the messages. As a result, only loops 1,3,5,6 of `calc_explicit_MPI` are parallelized with OpenMP. Now we are to the main stage loops of the MPI version (item 7,9,11) of the code description. 
+With the above code, the global variables are properly initialized in a distributed manner accross the processes. Now we get to the main time loop portion of the code, which starts at [line 158, time_integrators_MPI.f90](./time_integrators_MPI.f90#L158). First, we had to write an MPI version of `calc_explicit`, which is called `calc_explicit_MPI` and is defined at [line 924](./time_integrators_MPI.f90#L924). This subroutine is very similar to `calc_explicit` described in the OpenMP version and in the code description item 6, with a few minor changes. In particular, loops 2 and 4 can no longer be parallelized with OpenMP because they call the `d1y_MPI2` and `d2y_MPI2` functions, which require sending and receiving messages. Sending and receiving messages on multiple threads is difficult because you don't know which thread will be expecting or sending the messages. As a result, only loops 1,3,5,6 of `calc_explicit_MPI` are parallelized with OpenMP. Now we are to the main stage loops of the MPI version (item 7,9,11) of the code description. 
 
 ##### Tridiagonal solves
 The main stage loops were the most difficult portion of the MPI implementation. The complications arise from the fact that `calc_vari_mod` and `calc_vi_mod` (as described in the OpenMP section above), solve a tridiagonal matrix equation. That is, they solve `Ax=b` where `A` is a square, tridiagonal matrix of size `(Ny-2,Ny-2)`. In a distributed memory setting, each node has a portion of the matrix `A` and the solution vector `b`.
