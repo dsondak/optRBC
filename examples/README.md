@@ -174,7 +174,7 @@ The figure below shows the runtimes and scalings for each of the 7 configuration
 
 ![hybrid](../figs/hybrid.png)
 
-For a discussion on these results, please refer to the main README.
+Note that this hybrid implementation is still running on a singe node, just multiple processes. We tried running it on the AWS cluster, but it didn't work out of the box, and we didn't have enough time to debug the problem. For a discussion on these results, please refer to the main README.
 
 ### 4. Temperature field visualization.
 
@@ -211,10 +211,24 @@ This will first plot the temperature at the beginning of the integration as well
 
 ![tempsinglecore](../figs/temp_single_core.png)
 
-This shows the temperature field at time t=0 and at t=5. The python script will also write a file called `multi.png`, which is shown below.
+This file can be retrieved from the AWS instance with the following `scp` command in a new terminal on your local machine
+
+```
+scp -i ~/.ssh/<YOUR KEY PAIR> ubuntu@<THE IP OF YOUR INSTANCE>:/home/ubuntu/optRBC/examples/single.png single.png
+```
+
+where the key-pair and ip of the AWS instance need to be filled in. 
+
+`single.png` shows the temperature field at time t=0 and at t=5 for the single core version of the code. The python script will also write a file called `multi.png`, which is shown below.
 
 ![tempmulticore](../figs/temp_multi_core.png)
 
+This file can be retrieved from the AWS instance with the following `scp` command in a a new terminal on your local machine
+
+```
+scp -i ~/.ssh/<YOUR KEY PAIR> ubuntu@<THE IP OF YOUR INSTANCE>:/home/ubuntu/optRBC/examples/multi.png multi.png
+```
+`multi.png` shows the temperature field at time t=0 and at t=5 for the four-core version of the code.
 This plot demonstrates that the temperature field is correctly divided along the y-direction. Lastly, the script will output 
 
 ```
