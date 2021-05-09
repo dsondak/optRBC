@@ -72,7 +72,60 @@ The most complex part of parallelizing the loops described above was understandi
 2. All other variables accessed directly inside that do loop are by default `shared`. 
 3. All variables accessed in subroutines are `private`.
 
-Because of these rules, the main stage loops and the update solutions loop could not simply be surrounded by the compiler directives. The reason for this is that those loops call subroutines which access global variables. Since the variables within the subroutine are all `private` by default, the global variables will be in an undetermined state when they are called. Additionally, it is not possible to simply define these variables as `shared` in the compiler directive, because the OMP compiler will only allow scoping of variables that are directly accessed in the scope of the `do` loop, and since the globals are accessed within the subroutine, they are not visible and thus will throw a compiler error. The workaround we came up with to
+Because of these rules, the main stage loops and the update solutions loop could not simply be surrounded by the compiler directives. The reason for this is that those loops call subroutines which access global variables. Since the variables within the subroutine are all `private` by default, the global variables will be in an undetermined state when they are called. Additionally, it is not possible to simply define these variables as `shared` in the compiler directive, because the OMP compiler will only allow scoping of variables that are directly accessed in the scope of the `do` loop, and since the globals are accessed within the subroutine, they are not visible and thus will throw a compiler error. The workaround we came up with to deal with this was to inject the global variables
+as arguments into the subroutines that accessed them. By doing this, the globals
+became visible in the scope of the `do` loop and thus we shared by default in accordance
+with rule 2 above. This global variable injection required refactoring the subroutine
+interfaces to take many more arguments than were previously required. As an example,
+we can consider the `calc_vari` subroutine. Before we changed the interface, it was defined
+by 
+
+```
+subroutine calc_vari(phiout,Tout, aii, stage)
+```
+
+For the OpenMP version of this function, the signature becomes 
+
+```
+subroutine calc_vari_mod(phiout,Tout, aii, stage, kx_it, phi_in, &
+                         k1hat_phi_in, k2hat_phi_in, k3hat_phi_in,&
+                         k1hat_T_in, k2hat_T_in, k3hat_T_in,&
+                         k1_phi_in, k2_phi_in, k1_T_in, k2_T_in,&
+                         T_in)
+```                
+
+where `phi_in,k1hat_phi_in, k2hat_phi_in, k3hat_phi_in,k1hat_T_in, k2hat_T_in, k3hat_T_in,k1_phi_in, k2_phi_in, k1_T_in, k2_T_in,T_in`
+are global variables accessed within the `calc_vari` function. The call site of the 
+function changes from 
+
+```
+call calc_vari_mod(tmp_phi, tmp_T, acoeffs(1,1), 1)
+```
+
+to 
+
+```
+call calc_vari_mod(tmp_phi, tmp_T, acoeffs(1,1), 1,&
+                   kx(it), phi(2:Ny-1,it),&
+                   K1hat_phi(2:Ny-1,it),K2hat_phi(2:Ny-1,it),K3hat_phi(2:Ny-1,it),&
+                   K1hat_T(2:Ny-1,it),K2hat_T(2:Ny-1,it),K3hat_T(2:Ny-1,it),&
+                   K1_phi(2:Ny-1,it), K2_phi(2:Ny-1,it), K1_T(2:Ny-1,it), K2_T(2:Ny-1,it),&
+                   T(:,it))
+```
+
+We had to do this process for the four functions listed below.
+
+1. `calc_vari` [line 308](./time_integrators.f90#L308) changed to `calc_vari_mod` [line 438](./time_integrators.f90#L438)
+2. `calc_vi` [line 778](./time_integrators.f90#L778) changed to `calc_vi_mod` [line 825](./time_integrators.f90#L825)
+3. `calc_implicit` [line 585](./time_integrators.f90#L585) changed to `calc_implicit_mod` [line 602](./time_integrators.f90#L602)
+4. `update_bcs` [line 873](./time_integrators.f90#L873) changed to `update_bcs_mod` [line 918](./time_integrators.f90#L918)
+
+With this in place, all the 16 loops described above could be parallelized! Section 6 describes the performance of this version of the code. 
+
+#### 5.1.3 MPI Implementation
+
+We also implemented an MPI version of the code. Since this required a larger scale refactor to move from a shared memory setting to a distributed memory setting, we split the MPI version from the OpenMP version and created two new files [time_loop_MPI.f90](./time_loop_MPI.f90) and [time_integrators_MPI.f90](./time_integrators_MPI.f90). Additionally, we created a new executable called `time_loop_MPI.exe` which is defined in the [Makefile, line 16](./Makefile#L16). The MPI implementation required many changes, which we describe below. All of the changes rely on using the process id, retrieved in the `call MPI_Comm_rank(MPI_COMM_WORLD, proc_id, mpierror)` and the number of processes, retrieved in the `call MPI_Comm_size(MPI_COMM_WORLD, num_procs, mpierror)`. The MPI
+initialization takes place at [lines 46-48](./time_loop_MPI.f90#L46)
 
 ### 5.3 Dependencies
 - Anything specific to Fortran or this code base?  FFTW, OpenMP, MPI?
