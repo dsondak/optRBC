@@ -63,6 +63,12 @@ time_integrators.o : time_integrators.f90
 time_integrators_MPI.o : time_integrators_MPI.f90
 	$(FC) -fopenmp -Wno-argument-mismatch  $(FFLAGS) time_integrators_MPI.f90
 
+re_to_comp_test.o : re_to_comp_test.f90
+	$(FC) -fopenmp $(FFLAGS) re_to_comp_test.f90
+
+multithreading_benchmark.o : multithreading_benchmark.f90
+	$(FC) -fopenmp -Wno-argument-mismatch  $(FFLAGS) multithreading_benchmark.f90
+
 jacobians.o : jacobians.f90
 	$(FC) $(FFLAGS) jacobians.f90
 
