@@ -50,7 +50,7 @@ This iterates over various array sizes and thread counts, with thread counts ran
 
 When run on a local machine with a 2.6 GHz Intel Core i5 processor (2 cores, 4 threads) the performance of the multithreaded FFT was as follows: 
 
-![fft_multithread](../../figs/fft_multithread.png)
+![fft_multithread](../../figs/fftw_multithread.png)
 
 Though there is some periodicity in the performance with respect to thread count, there is an overall increase in total execution time as we move to larger thread counts. This reduction in performance then motivates single threaded FFT, in particular because using multithreaded FFT makes OpenMP integration more complex. 
 
