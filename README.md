@@ -364,13 +364,12 @@ The main highlights from this project are
 7. Conducting an analysis of the performance of each implementation on AWS. See [Section 6](./README.md#6-performance-evaluation).
 8. Presenting many examples to demonstrate replicability and usability of the code. See [examples README](./examples/README.md) and [fft examples README](./examples/fft_examples/README.md).
 
-### 8.2 Challenges --OR-- Lessons Learned
-- Fluid flow, Fortran, FFTW...AWS > Cluster
+### 8.2 Challenges 
 
-Some challenges that we encountered with this particular project include: 
-- Fortran complexities in conjunction with OpenMP, where we needed to inject variables into subroutine calls rather than relying on the global scope of those variables. 
-- Small inconsistencies in values (such as Nu) between runs and whether or not those inconsistencies are due to machine precision or actual code incorrectness. This was particularly a problem when debugging the one-sided FFT approach, as it was difficult to check during intermediate steps whether or not Nu was significantly incorrect.
-- Inconsistencies between runs using the Academic Cluster vs. AWS. Though it would have been appealing to run the entire project using the Academic Cluster from both a cost and (tightly coupled computers?) perspective, we ultimately chose to benchmark using AWS because it offered a more significant, more consistent level of speedup. 
+Some of the challenges that we encountered during this project include: 
+- OpenMP complexities, where we needed to inject variables into subroutine calls rather than relying on the global scope of those variables. This was due to the way in which variables used by a subroutine are by default considered private unless explicitly passed through the arguments list. 
+- Small inconsistencies in values (such as Nu) between runs and whether or not those inconsistencies were due to machine precision or actual code incorrectness. This was a problem when debugging the one-sided FFT code, as it was difficult to check during intermediate steps whether or not Nu was off due to machine precision or due to calculation errors. 
+- Inconsistencies between runs using the Academic Cluster vs. AWS. Though it would have been appealing to run the entire project on the Academic Cluster from both a cost and a performance perspective (keeping in mind that clusters are tightly coupled, which would be useful for MPI), we ultimately chose to benchmark using AWS because it offered a more significant, more consistent level of speedup. 
 
 ### 8.3 Future Work
 
