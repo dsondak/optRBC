@@ -343,7 +343,7 @@ See example 3 in the [examples README](./examples/README.md) for details on how 
 
 ### 7.1 Programming in Fortran
 
-Although Fortran is used widely used in the computational sciences for high performance computing, it was also a language not covered in the course. There were also subtleties when using Fortran with OpenMP, which included injecting variables into subroutine calls even though they were globally scoped. 
+Although Fortran is used widely used in the computational sciences for high performance computing, it was also a language not covered in the course. There were also subtleties when using Fortran with OpenMP, which included injecting variables into subroutine calls even though they were globally scoped.
 
 ### 7.2 Working in a mathematically rich, existing codebase
 
