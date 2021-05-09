@@ -61,6 +61,24 @@ We planned to use to the FAS RC academic cluster to run our experiments, but ran
 ## 4. Source Code
 *Links to repository with source code, evaluation data sets and test cases*
 
+The overall directory structure of the `parallel_project` branch is as follows, with shell scripts used to run examples called out specifically: 
+```
+optRBC
+|--- examples
+    |--- README.md
+    |--- run_hybrid.sh
+    |--- run_mpi_strong.sh
+    |--- run_mpi_weak.sh
+    |--- run_nusselt.sh
+    |--- run_omp_strong.sh
+    |--- run_omp_weak.sh
+    |--- run_temp_viz.sh
+    |--- fft_examples
+         |--- run_fft_one_side.sh
+         |--- run_multithread_fft.sh
+|--- figs
+|--- vtkdata
+```
 Included on this `parallel_project` branch are the OpenMP and MPI implementations of the time integration step listed below:
 - OpenMP:  `time_integrators.f90` and driver code `time_loop.f90`
 - MPI: `time_integrators_MPI.f90` and driver code `time_loop_MPI.f90`
