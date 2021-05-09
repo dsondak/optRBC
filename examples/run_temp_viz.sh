@@ -1,8 +1,13 @@
+sudo apt install python3-pip
+pip3 install numpy matplotlib pandas meshio
+
 cd ..
 make
 cp time_loop.exe examples/
 cp time_loop_MPI.exe examples/
 cd examples/
+
+export OMPI_MCA_btl=^openib
 
 mkdir vtkdata
 
