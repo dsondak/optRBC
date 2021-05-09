@@ -6,4 +6,4 @@ cd examples/fft_examples
 echo "Starting"
 ./re_to_comp_test.exe > one_sided.txt
 echo "Done"
-python one_sided_grapher.py
+python3 one_sided_grapher.py
