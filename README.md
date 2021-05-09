@@ -65,7 +65,7 @@ Included on this `parallel_project` branch are the OpenMP and MPI implementation
 - OpenMP:  `time_integrators.f90` and driver code `time_loop.f90`
 - MPI: `time_integrators_MPI.f90` and driver code `time_loop_MPI.f90`
 
-Modifications were made to several other files, but the majority of changes are found in those files.  FFTW modifications for one-sided computations are found on the [real_to_comp](https://github.com/dsondak/optRBC/tree/real_to_comp) branch. Changes to implement one-sided FFT have been kept on that branch because the code modifications touch several different files. Additionally, there is an active bug in the one-sided code in which the Nusselt number is inconsistent between one-sided and two-sided calculations at large grid sizes (on the order of ~1000 elements in Nx and Ny). Examples for benchmarking one-sided FFT and multithreaded FFT are found in [fft examples directory](https://github.com/dsondak/optRBC/tree/parallel_project/examples/fft_examples). General explanations are included in the [fft readme](./examples/fft_examples/README.md)
+Modifications were made to several other files, but the majority of changes are found in those files.  FFTW modifications for one-sided computations are found on the [real_to_comp](https://github.com/dsondak/optRBC/tree/real_to_comp) branch. Changes to implement one-sided FFT have been kept on that branch because the code modifications touch several different files. Additionally, there is an active bug in the one-sided code in which the Nusselt number is inconsistent between one-sided and two-sided calculations at large grid sizes (on the order of ~1000 elements in Nx and Ny). Examples for benchmarking one-sided FFT and multithreaded FFT are found in [fft examples directory](https://github.com/dsondak/optRBC/tree/parallel_project/examples/fft_examples). 
 
 Detailed examples and performance evaluation test cases can be found in the [examples directory](https://github.com/dsondak/optRBC/tree/parallel_project/examples).  The `README` in that directory gives stepwise instructions to compile, run, and replicate our results. 
 
@@ -343,7 +343,7 @@ See example 3 in the [examples README](./examples/README.md) for details on how 
 
 ### 7.1 Programming in Fortran
 
-Although Fortran is used widely used in the computational sciences for high performance computing, it was also a language not covered in the course. There were also subtleties when using Fortran with OpenMP, which included injecting variables into subroutine calls even though they were globally scoped.
+Although Fortran is used widely used in the computational sciences for high performance computing, it was also a language not covered in the course. There were also subtleties when using Fortran with OpenMP, which included injecting variables into subroutine calls even though they were globally scoped. See [Section 5.1.2](./README.md#512-openmp-implementation) for more details.
 
 ### 7.2 Working in a mathematically rich, existing codebase
 
@@ -353,7 +353,17 @@ We worked in an existing, extensive codebase that relied on relatively complex m
 ## 8. Discussion and Future Work
 *Final discussion about goals achieved, improvements suggested, lessons learned, future work, interesting insights…*
 ### 8.1 Summary of Results --OR-- Conclusions
-- list of accomplishments
+The main highlights from this project are
+
+1. Understanding a complex, existing code base written in Fortran. See [Section 5.1.1](./README.md#511-code-baseline)
+2. Profiling this codebase extensively to undestand where the bottlenecks were. See [Section 5.1.1](./README.md#profile)
+3. Implementing an OpenMP version of the code by parallelizing 16 loops. See [Section 5.1.2](./README.md#512-openmp-implementation)
+4. Creating an MPI version of the code by refactoring and restructing it to run in a distributed memory system. See [Section 5.1.3](./README.md#513-mpi-implementation)
+5. Experimenting with one-sided FFTs to understand the potential optimization that they provided. See [Section 3.2](./README.md#32-programming-models).
+6. Exploring the benefit of multithreaded FFTs for various problems sizes. See [Section 3.2](./README.md#32-programming-models).
+7. Conducting an analysis of the performance of each implementation on AWS. See [Section 6](./README.md#6-performance-evaluation).
+8. Presenting many examples to demonstrate replicability and usability of the code. See [examples README](./examples/README.md) and [fft examples README](./examples/fft_examples/README.md).
+
 ### 8.2 Challenges --OR-- Lessons Learned
 - Fluid flow, Fortran, FFTW...AWS > Cluster
 
