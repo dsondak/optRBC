@@ -64,7 +64,7 @@ time_integrators_MPI.o : time_integrators_MPI.f90
 	$(FC) -fopenmp -Wno-argument-mismatch  $(FFLAGS) time_integrators_MPI.f90
 
 re_to_comp_test.o : re_to_comp_test.f90
-	$(FC) -fopenmp --enable-threads $(FFLAGS) re_to_comp_test.f90
+	$(FC) -fopenmp $(FFLAGS) re_to_comp_test.f90
 
 multithreading_benchmark.o : multithreading_benchmark.f90
 	$(FC) -lfftw3_threads --enable-threads -lfftw3 -lm -Wno-argument-mismatch  $(FFLAGS) multithreading_benchmark.f90
