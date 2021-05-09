@@ -221,7 +221,7 @@ This function initializes the boundary conditions. The MPI version of the functi
 ##### Time loop
 
 With the above code, the global variables are properly initialized in a distributed manner accross the processes. Now we get to the main time loop portion of the code, which starts at [line 158, time_integrators_MPI.f90](./time_integrators_MPI.f90#L158). First, we had to write an MPI version of `calc_expicit`, which is called `calc_explicit_MPI` and is defined at [line 924](./time_integrators_MPI.f90#L924). This subroutine is very similar to `calc_explicit` described in the OpenMP version and in the code description item 6, with a few minor changes. In particular, loops 2 and 4 can no longer be parallelized with OpenMP because 
-they call the `d1y_MPI2` and `d2y_MPI2` functions (described in the subsequent section), which require sending and receiving messages. Sending an recieving 
+they call the `d1y_MPI2` and `d2y_MPI2` functions, which require sending and receiving messages. Sending an recieving 
 messages on multiple threads is difficult because you don't know which thread will be expecting or sending the messages. As a result only loops 1,3,5,6 of `calc_explicit_MPI` are parellelized with OpenMP. Now we are to the main stage loops of the MPI version (item 7,9,11) of the code description. 
 
 ##### Tridiagonal solves
