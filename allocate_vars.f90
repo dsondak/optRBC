@@ -45,9 +45,9 @@ subroutine global_allocations
     allocate(yp(Ny), stat=alloc_err)
     allocate(zp(Nz), stat=alloc_err)
 
-    allocate(kx(Nx), stat=alloc_err)
+    allocate(kx(Nx/2+1), stat=alloc_err)
     allocate(kz(Nz), stat=alloc_err)
-    allocate(kx_modes(Nx), stat=alloc_err)
+    allocate(kx_modes(Nx/2+1), stat=alloc_err)
 
     allocate(dynu(Ny-1), stat=alloc_err)
     allocate(g1(Ny), g2(Ny), g3(Ny), stat=alloc_err)

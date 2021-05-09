@@ -296,11 +296,9 @@ else if (refine_y) then
 end if
 
 ! Fourier modes
-do ii = 1,Nx/2
+! Changed range to Nx/2+1, no redundant entries
+do ii = 1,Nx/2+1
    kx_modes(ii) = real(ii,kind=dp) - 1.0_dp
-end do
-do ii = Nx/2+1, Nx
-   kx_modes(ii) = real(ii-Nx,kind=dp) - 1.0_dp
 end do
 kx = alpha*kx_modes
 
@@ -310,8 +308,6 @@ if (wvtk) then
 end if
 
 ! Initialize fields.
-open(unit=7000, file="Debug_data.txt", action="write", status="unknown", position="append")
-
 call init_fields(ex_Tptrb, fTexist, Ra)
 call init_to_fourier(ex_Tptrb)
 
@@ -418,13 +414,11 @@ end subroutine init_fields
 subroutine init_to_fourier(ex_Tptrb)
 
 use global
-use statistics
 
 implicit none
 
 logical, intent(in) :: ex_Tptrb
 integer             :: ii, jj
-real(dp)            :: nusselt_num
 
 ! Bring temperature and velocity to Fourier space.
 do jj = 1,Ny
@@ -461,9 +455,6 @@ if (ex_Tptrb) then
    Tptrb = Tptrb / real(Nx, kind=dp)
 end if
 
-call nusselt(nusselt_num, .true.)
-print *, '("In init_to_fourier after execute fftw")'
-print *, nusselt_num
 ! Calculate phi and ux from uy
 do ii = 1,Nx/2+1
    if (kx(ii) /= 0.0_dp) then
