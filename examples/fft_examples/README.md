@@ -46,7 +46,13 @@ To run and visualize using python, run:
 ```
 ./run_multithread_fft.sh
 ```
-This iterates over various array sizes and thread counts, with thread counts ranging from 1 to 16, and executes a discrete fourier transform. The times how long it takes to execute the dft as a function of array size and thread count when planned. 
+This script takes about 2 minutes to run. This iterates over various array sizes and thread counts, with thread counts ranging from 1 to 16, and executes a discrete fourier transform. The times how long it takes to execute the dft as a function of array size and thread count when planned. 
+
+To bring the plot back to the local machine use the command 
+
+```
+scp -i <YOUR KEY PAIR> ubuntu@<PUBLIC IP OF INSTANCE>:/home/ubuntu/optRBC/examples/fft_examples/multithread.png multithread.png
+```
 
 When run on a local machine with a 2.6 GHz Intel Core i5 processor (2 cores, 4 threads) the performance of the multithreaded FFT was as follows: 
 
@@ -60,10 +66,17 @@ To run and visualize using python, run:
 ```
 ./run_fft_one_side.sh
 ```
-This iterates over various array sizes and compares the execution time of one-sided vs. two-sided forward and backward transformations, with execution times averaged over 5 runs. 
+This script takes about 2 minutes to run. This iterates over various array sizes and compares the execution time of one-sided vs. two-sided forward and backward transformations, with execution times averaged over 5 runs. 
 
 When run on a local machine with a 2.6 GHz Intel Core i5 processor (2 cores, 4 threads) the performance of the one-sided FFT relative to two-sided FFT was as follows: 
 
 ![one-side](../../figs/one_side_speedup_5_avg.png)
+
+
+To bring the plot back to the local machine use the command 
+
+```
+scp -i <YOUR KEY PAIR> ubuntu@<PUBLIC IP OF INSTANCE>:/home/ubuntu/optRBC/examples/fft_examples/onesided.png onesided.png
+```
 
 Even over a large set of array sizes, the speedup for one-sided FFT hovers at roughly 1.6x. At smaller array sizes (closer to the sizes being used) the speedup is closer to the theoretical value of 2x. 
