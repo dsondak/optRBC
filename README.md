@@ -50,7 +50,7 @@ Our design uses both shared memory parallelism (OpenMP) and distributed memory p
 
 Along with introducing different levels of parallelism, we also sought to introduce some speedup with enhancements like multithreaded FFT and one-sided FFT. To explore multithreaded FFT (which is included in the FFTW library), we wrote a test script in which we compared the timing of multithreaded FFT against single threaded FFT. We found that over both thread and array size, there was no meaningful speedup observed.
 
-With respect to one-sided FFT, we experimented with more strongly typing certain arrays as real (as physical fields are real) and using Hermitian conjugacy (when computing the Fourier Transform of a size N array, only N/2 + 1 of those elements are not redundant). In particular, this change involved modifying array types, array sizes, and certain loops meant to be executed in Fourier space. Subroutines swapped out include planning and execution, with the strictly real to complex or complex to real transformations included in the FFTW library. Due to Hermitian conjugacy, we expected a theoretical speedup of 2x for each Fourier transform (originally N*log(N) ), along with additional 2x speedups for Nx loops in Fourier space. 
+With respect to one-sided FFT, we experimented with more strongly typing certain arrays as real (as physical fields are real) and using Hermitian conjugate symmetry (when computing the Fourier Transform of a size N array, only N/2 + 1 of those elements are not redundant). In particular, this change involved modifying array types, array sizes, and certain loops meant to be executed in Fourier space. Subroutines swapped out include planning and execution, with the strictly real to complex or complex to real transformations included in the FFTW library. Due to this symmetry, we expected a theoretical speedup of 2x for each Fourier transform (originally N*log(N) ), along with additional 2x speedups for Nx loops in Fourier space. 
 
 ### 3.3 Platform and Infrastructure
 We used an Amazon Web Services (AWS) t2.2xlarge instance with the Ubuntu 18.04 operating system for our evaluation and performance criteria.  Further details are included in the [examples directory](https://github.com/dsondak/optRBC/tree/parallel_project/examples) README.
@@ -67,7 +67,7 @@ Included on this `parallel_project` branch are the OpenMP and MPI implementation
 - OpenMP:  `time_integrators.f90` and driver code `time_loop.f90`
 - MPI: `time_integrators_MPI.f90` and driver code `time_loop.f90`
 
-Modifications were made to several other files, but the majority of changes are found in those files.  FFTW modifications for one-sided computations are found in <span style="color:red">**TODO: KATRINA**: Please add location</span>
+Modifications were made to several other files, but the majority of changes are found in those files.  FFTW modifications for one-sided computations are found in https://github.com/dsondak/optRBC/tree/real_to_comp. This particular branch and set of code changes are quarantined since one-sided FFT is not fully functional and required changes to multiple sets of files. A benchmarking code for theoretical speedup of one-sided FFT over different array size can be found <span style="color:red">**TODO: KATRINA**: finish this </span>. A benchmarking code for speedup of multithreaded FFT over several array sizes and thread counts can be found <span style="color:red">**TODO: KATRINA**: finish this </span>. 
 
 Detailed examples and performance evaluation test cases can be found in the [examples directory](https://github.com/dsondak/optRBC/tree/parallel_project/examples).  The `README` in that directory gives stepwise instructions to compile, run, and replicate our results. 
 
@@ -80,7 +80,10 @@ Detailed examples and performance evaluation test cases can be found in the [exa
 ### 5.2 Code Baseline
 - Put this as 6.1? Is this talking about profiling ?--if so add the Mathcha profile image. Or skip this because it's covered in section 2?
 ### 5.3 Dependencies
-- Anything specific to Fortran or this code base?  FFTW, OpenMP, MPI?
+- Anything specific to Fortran or this code base?  FFTW, OpenMP, MPI? -> I don't think so
+
+The primary dependencies of this code are on [FFTW](http://www.fftw.org/), OpenMP, and MPI. Paraview is also recommended to visualize temperature and velocity field evolution, but is not required. 
+
 ### 5.4 Compiling and Running the Code
 - Take some/all of Prof. Sondak's description below.
 ### 5.5 Replicability Information
@@ -121,7 +124,7 @@ Some challenges that we encountered with this particular project include:
 
 ### 8.3 Future Work
 
-Future work for this project would include switching to a parallel tridiagonal solver algorithm, as well as fully debugging the Nu inconsistencies between one-sided and two-sided FFT. Moving to a parallel version of the tridiagonal solve would mitigate a bottleneck in the MPI code version, in which all of the worker nodes send their (**TODO**: which info?) to the master node. The master node then executes the tridiagonal solve and sends messages to all of the worker nodes. Having to send so many messages to the master node introduces more overhead, and having all worker nodes wait for the master node to receive all the messages would likely introduce additional idle time. Both idle time and overhead would be mitigated by using a parallel version of this tridiagonal solve.  
+Future work for this project would include switching to a parallel tridiagonal solver algorithm, as well as fully debugging the Nu inconsistencies between one-sided and two-sided FFT. Moving to a parallel version of the tridiagonal solve would mitigate a bottleneck in the MPI code version, in which all of the worker nodes send their (**TODO**: which info?) to the master node. The master node then executes the tridiagonal solve and sends messages to all of the worker nodes. Having to send so many messages to the master node introduces more overhead, and having all worker nodes wait for the master node to receive all the messages introduces additional idle time. Both idle time and overhead would be mitigated by using a parallel version of this tridiagonal solve.  
 
 Though we experimented with implementing one-sided FFT, we were ultimately unable to get it fully working. However, it would be beneficial to get this implementation working since it is compatible with both of the parallel versions (as it is a form of algorithmic speedup) and those speedups would stack multiplicatively. Methods to debug this implementation would include calculating Nu of various arrays as a kind of checksum to ensure that results are consistent between one-sided and two-sided FFT at each step in computation. 
 
