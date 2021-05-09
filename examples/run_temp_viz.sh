@@ -4,6 +4,8 @@ cp time_loop.exe examples/
 cp time_loop_MPI.exe examples/
 cd examples/
 
+export OMPI_MCA_btl=^openib
+
 mkdir vtkdata
 
 text="7.0, 1.5585, 0.1
