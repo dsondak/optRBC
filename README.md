@@ -2,6 +2,21 @@
 
 This `parallel_project` branch captures the results of a semester long project in Harvard's CS205: Computing Foundations for Computational Science. The primary goal was to modify the time integration step of the code to compute calculations in parallel.  The code base and inspiration for the project came from Sondak et al., of the paper below [[1]](#1). Team Members: Katrina Gonzalez, Michael Neuder, Jack Scudder
 
+The sections of this README are organized as follows:
+1. [Problem Description and Need for HPC](README.md#1-problem-description-and-need-for-hpc)
+2. [Description of Solution and Comparison to Existing Work](README.md#2-description-of-solution-and-comparison-to-existing-work)
+3. [Technical Details of Parallel Design](README.md#3-technical-details-of-parallel-design)
+4. [Source Code](README.md#4-source-code)
+5. [Technical Description of Code](README.md#5-technical-description-of-code)
+6. [Performance Evaluation](README.md#6-performance-evaluation)
+7. [Advanced Features](README.md#7-advanced-features)
+8. [Discussion and Future Work](README.md#8-discussion-and-future-work)
+9. [References](README.md#9-references)
+
+A directory structure can be found in [Section 4](README.md#4-source-code).
+
+Our final project presentation slides are located [here](https://github.com/dsondak/optRBC/blob/parallel_project/cs205_project_final_presentation.pdf).
+
 
 ## 1. Problem Description and Need for HPC
 *Description of problem and the need for HPC and/or Big Data*
@@ -43,10 +58,10 @@ As previously stated, our primary project comparison is to the base code from So
 *Technical description of the parallel application, programming models, platform and infrastructure*
 
 ### 3.1 Parallel Application
-As stated in Section 1, this is a High Performance Computing problem.  The original implementation was completely serial, and with a time complexity of O(N^3 * log(N)), it requires a large amount of computing power to achieve its goal of simulating RBC at high Ra.  Our design uses both fine-grained (OpenMP) parallelism at the loop and procedure level, and coarse-grained parallelism (MPI) at the task level discretization at scale.  The types of parallelism match those levels, with OpenMP allowing us to employ function/control parallelism, and MPI allowing us to apply data parallelism.  In our MPI implementation, we make use of the Single Program-Multiple Data (SPMD) as we pass large amount of data between nodes.
+As stated in [Section 1](README.md#1-problem-description-and-need-for-hpc), this is a High Performance Computing problem.  The original implementation was completely serial, and with a time complexity of O(N^3 * log(N)), it requires a large amount of computing power to achieve its goal of simulating RBC at high Ra.  Our design uses both fine-grained (OpenMP) parallelism at the loop and procedure level, and coarse-grained parallelism (MPI) at the task level discretization at scale.  The types of parallelism match those levels, with OpenMP allowing us to employ function/control parallelism, and MPI allowing us to apply data parallelism.  In our MPI implementation, we make use of the Single Program-Multiple Data (SPMD) as we pass large amount of data between nodes.
 
 ### 3.2 Programming Models
-Our design uses both shared memory parallelism (OpenMP) and distributed memory parallelism (MPI).  While we originally intended to create a fully hybrid model, we realized that an important part of the serial code relies on the Basic Linear Algebra Subprograms (BLAS) routine that solves tridiagonal matrices. Further information is provided in Section 5.1, but our final model allows users to run an OpenMP version of the code and an MPI version of the code separately to retain some speedups that were specifically seen by using OpenMP.
+Our design uses both shared memory parallelism (OpenMP) and distributed memory parallelism (MPI).  While we originally intended to create a fully hybrid model, we realized that an important part of the serial code relies on the Basic Linear Algebra Subprograms (BLAS) routine that solves tridiagonal matrices. Further information is provided in [Section 5.1](README.md#51-software-design), but our final model allows users to run an OpenMP version of the code and an MPI version of the code separately to retain some speedups that were specifically seen by using OpenMP.
 
 Along with introducing different levels of parallelism, we also sought to introduce some speedup with enhancements like multithreaded FFT and one-sided FFT. To explore multithreaded FFT (which is included in the FFTW library), we wrote a test script in which we compared the timing of multithreaded FFT against single threaded FFT. We found that over both thread and array size, there was no meaningful speedup observed, or there was actually a degradation in performance.
 
@@ -61,11 +76,13 @@ We planned to use to the FAS RC academic cluster to run our experiments, but ran
 ## 4. Source Code
 *Links to repository with source code, evaluation data sets and test cases*
 
-The overall directory structure of the `parallel_project` branch is as follows, with shell scripts used to run examples called out specifically: 
+The overall directory structure of the `parallel_project` branch is as follows, with shell scripts used to run examples, our final presentation slides, and two READMEs called out specifically: 
 ```
-optRBC
-|--- examples
-    |--- README.md
+optRBC/parallel_project/
+|--- cs205_project_final_presentation.pdf
+|--- README.md (full project description)
+|--- examples/
+    |--- README.md (specific to examples and test cases)
     |--- run_hybrid.sh
     |--- run_mpi_strong.sh
     |--- run_mpi_weak.sh
@@ -73,11 +90,10 @@ optRBC
     |--- run_omp_strong.sh
     |--- run_omp_weak.sh
     |--- run_temp_viz.sh
-    |--- fft_examples
+    |--- fft_examples/
          |--- run_fft_one_side.sh
          |--- run_multithread_fft.sh
-|--- figs
-|--- vtkdata
+|--- figs/
 ```
 Included on this `parallel_project` branch are the OpenMP and MPI implementations of the time integration step listed below:
 - OpenMP:  `time_integrators.f90` and driver code `time_loop.f90`
@@ -200,7 +216,7 @@ We had to do this process for the four functions listed below.
 3. `calc_implicit` [line 585](./time_integrators.f90#L585) changed to `calc_implicit_mod` [line 602](./time_integrators.f90#L602)
 4. `update_bcs` [line 873](./time_integrators.f90#L873) changed to `update_bcs_mod` [line 918](./time_integrators.f90#L918)
 
-With this in place, all the 16 loops described above could be parallelized! Section 6 describes the performance of this version of the code. 
+With this in place, all the 16 loops described above could be parallelized! [Section 6](README.md#6-performance-evaluation) describes the performance of this version of the code. 
 
 #### 5.1.3 MPI Implementation
 
@@ -227,12 +243,12 @@ This function initializes the boundary conditions. The MPI version of the functi
 
 ##### Time loop
 
-With the above code, the global variables are properly initialized in a distributed manner accross the processes. Now we get to the main time loop portion of the code, which starts at [line 158, time_integrators_MPI.f90](./time_integrators_MPI.f90#L158). First, we had to write an MPI version of `calc_explicit`, which is called `calc_explicit_MPI` and is defined at [line 924](./time_integrators_MPI.f90#L924). This subroutine is very similar to `calc_explicit` described in the OpenMP version and in the code description item 6, with a few minor changes. In particular, loops 2 and 4 can no longer be parallelized with OpenMP because they call the `d1y_MPI2` and `d2y_MPI2` functions, which require sending and receiving messages. Sending and receiving messages on multiple threads is difficult because you don't know which thread will be expecting or sending the messages. As a result, only loops 1,3,5,6 of `calc_explicit_MPI` are parallelized with OpenMP. Now we are to the main stage loops of the MPI version (item 7,9,11) of the code description. 
+With the above code, the global variables are properly initialized in a distributed manner across the processes. Now we get to the main time loop portion of the code, which starts at [line 158, time_integrators_MPI.f90](./time_integrators_MPI.f90#L158). First, we had to write an MPI version of `calc_explicit`, which is called `calc_explicit_MPI` and is defined at [line 924](./time_integrators_MPI.f90#L924). This subroutine is very similar to `calc_explicit` described in the OpenMP version and in the code description item 6, with a few minor changes. In particular, loops 2 and 4 can no longer be parallelized with OpenMP because they call the `d1y_MPI2` and `d2y_MPI2` functions, which require sending and receiving messages. Sending and receiving messages on multiple threads is difficult because you don't know which thread will be expecting or sending the messages. As a result, only loops 1,3,5,6 of `calc_explicit_MPI` are parallelized with OpenMP. Now we are to the main stage loops of the MPI version (item 7,9,11) of the code description. 
 
 ##### Tridiagonal solves
 The main stage loops were the most difficult portion of the MPI implementation. The complications arise from the fact that `calc_vari_mod` and `calc_vi_mod` (as described in the OpenMP section above), solve a tridiagonal matrix equation. That is, they solve `Ax=b` where `A` is a square, tridiagonal matrix of size `(Ny-2,Ny-2)`. In a distributed memory setting, each node has a portion of the matrix `A` and the solution vector `b`.
 Since the matrix is split along the y-direction, each node has an overdetermined system, which has infinite solutions. While it is possible to solve the 
-tridiagonal system entirely in parallel, (see  https://web.alcf.anl.gov/~zippy/publications/partrid/partrid.html for example), this was out of scope to implement
+tridiagonal system entirely in parallel, (see [[5]](#5) or https://web.alcf.anl.gov/~zippy/publications/partrid/partrid.html for example), this was out of scope to implement
 in the remaining time we had in the semester. To workaround this issue, we had each process send their portion of the matrix `A` and the solution vector `b` to the main node, which executed the tridiagonal solves and returned the solutions to the auxiliary nodes. This is essentially serializing this portion of the code. The figure below demonstrates this process.
 
 ![mpi](./figs/mpi_implementation.png)
@@ -258,7 +274,7 @@ At this point, each node has the correct data to update their T and phi fields. 
 a call to `calc_vi_mod_MPI` which is one of the tridiagonal solve functions. As a result, the same technique of sending all the data to the main node is used. The
 resulting `ux` and `uy` values are then sent back to the other nodes. These receives happen on [line 885](./time_integrators_MPI.f90#L885). This is item 14 in the code description. 
 
-This is the core idea of the MPI implementation! For performance analysis of this version of the code, see Section 6. 
+This is the core idea of the MPI implementation! For performance analysis of this version of the code, see [Section 6](README.md#6-performance-evaluation). 
 
 ### 5.2 Dependencies
 
@@ -306,7 +322,7 @@ We refer the reader to the [examples README](./examples/README.md) for specifics
 ## 6. Performance Evaluation
 *Performance evaluation (speed-up, throughput, weak and strong scaling) and discussion about overheads and optimizations done*
 
-We divide this section into discussion of performance of each variation of the code as documented in the [examples README](./examples/README.md).  Detailed references to optimizations can be found in [Section 5](README.md#5-technical-description-of-code)
+We divide this section into discussion of performance of each variation of the code as documented in the [examples README](./examples/README.md).  Detailed references to optimizations can be found in [Section 5](README.md#5-technical-description-of-code).
 
 ### 6.1 OpenMP Strong Scaling
 ![omp_strong](./figs/omp_strong_scaling.png)
@@ -367,16 +383,16 @@ Although Fortran is used widely used in the computational sciences for high perf
 
 We worked in an existing, extensive codebase that relied on relatively complex mathematical methods like FFT and Runge–Kutta methods to solve PDEs. This required us to study the existing code as well as its mathematical methods. One example of the need to not only understand the code but also the math implemented was revealed when we attempted to move to a one-sided FFT. Because this method relied on the symmetry of Fourier transforms of real data, it required allocating less space for complex arrays vs. real arrays. Since we also have multiple loops in Fourier space, this approach also required changing those bounds since we remove the redundant data that standard FFTs would have kept. 
 
-**TODO: SECTION 8**
+
 ## 8. Discussion and Future Work
 *Final discussion about goals achieved, improvements suggested, lessons learned, future work, interesting insights…*
-### 8.1 Summary of Results --OR-- Conclusions
-The main highlights from this project are
+### 8.1 Summary of Results
+The main highlights from this project are as follows:
 
 1. Understanding a complex, existing code base written in Fortran. See [Section 5.1.1](./README.md#511-code-baseline)
-2. Profiling this codebase extensively to undestand where the bottlenecks were. See [Section 5.1.1](./README.md#profile)
+2. Profiling this codebase extensively to understand where the bottlenecks were. See [Section 5.1.1](./README.md#profile)
 3. Implementing an OpenMP version of the code by parallelizing 16 loops. See [Section 5.1.2](./README.md#512-openmp-implementation)
-4. Creating an MPI version of the code by refactoring and restructing it to run in a distributed memory system. See [Section 5.1.3](./README.md#513-mpi-implementation)
+4. Creating an MPI version of the code by refactoring and restructuring it to run in a distributed memory system. See [Section 5.1.3](./README.md#513-mpi-implementation)
 5. Experimenting with one-sided FFTs to understand the potential optimization that they provided. See [Section 3.2](./README.md#32-programming-models).
 6. Exploring the benefit of multithreaded FFTs for various problems sizes. See [Section 3.2](./README.md#32-programming-models).
 7. Conducting an analysis of the performance of each implementation on AWS. See [Section 6](./README.md#6-performance-evaluation).
@@ -391,7 +407,7 @@ Some of the challenges that we encountered during this project include:
 
 ### 8.3 Future Work
 
-Future work for this project would include switching to a parallel tridiagonal solver algorithm, as well as fully debugging the Nu inconsistencies between one-sided and two-sided FFT. Moving to a parallel version of the tridiagonal solve would mitigate a communication bottleneck in the MPI code version, in which all of the worker nodes send their components of their global variables to the master node. The master node then executes the tridiagonal solve and sends messages to all of the worker nodes. Having to send so many messages to the master node introduces more overhead, and having all worker nodes wait for the master node to receive all the messages would likely introduce additional idle time. Both idle time and overhead would be mitigated by using a parallel version of this tridiagonal solve.
+Future work for this project would include switching to a parallel tridiagonal solver algorithm, as well as fully debugging the Nu inconsistencies between one-sided and two-sided FFT. Moving to a parallel version of the tridiagonal solve - such as the one shown in [[5]](#5) - would mitigate a communication bottleneck in the MPI code version, in which all of the worker nodes send their components of their global variables to the master node. The master node then executes the tridiagonal solve and sends messages to all of the worker nodes. Having to send so many messages to the master node introduces more overhead, and having all worker nodes wait for the master node to receive all the messages would likely introduce additional idle time. Both idle time and overhead would be mitigated by using a parallel version of this tridiagonal solve.
 For more details on this issue see [tridiagonal solve](README.md#tridiagonal-solves).
 
 
