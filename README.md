@@ -356,8 +356,13 @@ Clarke, A., Davies, C., Ruprecht, D. et al. (2020)
 "Performance of parallel-in-time integration for Rayleigh Bénard convection."
 Computing and Visualization in Science, 23, 10.
 
+<a id="5">[5]</a>
+Mattor, Nathan, Timothy J. Williams, and Dennis W. Hewett. 
+"Algorithm for solving tridiagonal matrix problems in parallel." 
+Parallel Computing 21.11 (1995): 1769-1782.
+
 **TODO**
-- Parallel tridiagonal solver resources shared by Prof. Sondak?
+- Parallel tridiagonal solver resources shared by Prof. Sondak? (added)
 - Others?
 
 
