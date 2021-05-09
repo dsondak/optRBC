@@ -1,7 +1,77 @@
+# Optimal Solutions in Rayleigh-Benard Convection: Parallel Implementation
+
+This `parallel_project` branch captures the results of a semester long project in Harvard's CS205: Computing Foundations for Computational Science. The primary goal was to modify the time integration step of the code to compute calculations in parallel.  The code base and inspiration for the project came from Sondak et al., of the paper below [[1]](#1). Team Members: Katrina Gonzalez, Michael Neuder, Jack Scudder
 
 
+## 1. Problem Description and Need for HPC
+*Description of problem and the need for HPC and/or Big Data*
 
-**TODO: SECTION 5**
+### 1.1 Model Description in Detail
+*Description of your model and/or data in detail: where did it come from, how did you acquire it, what does it mean, etc.*
+
+Rayleigh-Benard convection (RBC) is phenomena that takes place when a liquid is placed between two (approximately) infinite plates held at some temperature difference. When the bottom plate is kept at a higher temperature than the top plate, this creates competing buoyancy and gravitational effects.  A simple and complex example are below.
+
+![rbc_image](figs/rbc_simple.png)
+
+The temperature flow of this liquid can be described by the Oberbeck-Boussinesq partial differential equations. These PDEs can be solved at each location and time step to numerically compute the temperature field and its evolution. The non-dimensional parameters we are primarily focused on are listed with descriptions below:
+- Rayleigh Number (Ra) is a measure of convection. 
+- Prandtl Number (Pr) is a measure of viscosity (eg. Pr=7 for water, Pr=98.31 for engine oil). 
+- Nusselt Number (Nu) is a ratio of convective to conductive heat transfer. 
+
+![nondim_params](figs/ra_pr_nu_eqns.png)
+ \* adapted from a presentation based on the paper in [[1]](#1).
+
+The low Rayleigh number regime in RBC has been studied extensively; therefore, this code was written to simulate problems with high Rayleigh numbers.  Though Rayleigh-Benard convection is a physical and therefore 3D problem, this particular code implements 2D Rayleigh-Benard convection.  This simplification reduces the complexity of the algorithm, allowing for exploration of the ratio between Nu and Ra at high values of Ra up to 10^9. 
+
+### 1.2 Need for HPC
+At high Ra numbers the discretized mesh is finer, and therefore more computationally intensive to run the simulation.  In order to simulate high Ra numbers more quickly, we sought to parallelize the existing code using OpenMP and MPI, and we explored Fast Fourier Transform (FFT) methods to improve algorithmic efficiency.  (*Note*: our particular FFT implementation is FFTW3 [[2]](#2).  We use FFT and FFTW interchangeably to reference the same calculations.)  The serial version of the current algorithm has a time complexity of O(N^3 * log(N)), leading to exceedingly long computation times at large problem sizes.  Since this is a compute-intensive code designed to solve complex PDEs, it is a High Performance Computing (HPC) problem.
+
+
+## 2. Description of Solution and Comparison to Existing Work
+*Description of solution and comparison with existing work on the problem*
+
+Using the Fortran code base from Sondak et al. [[1]](#1), we initially profiled the serial code to determine the primary bottlenecks of the `time_integrators.f90` portion.  In each time step, the code performs updates using an implicit-explicit Runge-Kutta method detailed in [[3]](#3).  In the code, the `imex_rk()` subroutine computes 8 Fast Fourier Transforms per time step, each of which costs O(N * log(N)) computational time.  Details of the code profiling are shown below.
+
+![serial_profile](figs/serial_profile.png)
+
+Values in parenthesis are the percentage of that parent subroutine's runtime spent on the boxed subroutine.  The subroutine `calc_explicit()` performs the FFT calculations and is the clear bottleneck of the code.  Looking at this profile helped us identify our three-step approach to parallelization: (1) use OpenMP to parallelize nested loops at each time step, (2) use MPI to distribute calculations across multiple nodes, and (3) explore FFTW modifications to leverage multithreading capabilities or reduce computation time by using a one-sided FFT.
+
+As previously stated, our primary project comparison is to the base code from Sondak et al. [[1]](#1).  The endstate of our code is the same as the original: to calculate optimal solutions in RBC.  We merely sought to make the process more efficient.  Without doing a full literary review, one particular paper by Clarke et al. (2020) [[4]](#4) sought to parallelize the same problem set.  They applied the same discretization using the Boussinesq approximation to the Navier-Stokes equations for a 2D RBC simulation, but used the Parareal algorithm.  They claimed to achieve speedups of up to 2.4 "with around 20 processors \[...\] for Rayleigh numbers as high as 10^6."  Their code wasn't shared; however, so we were not able to directly compare their implementation with ours.  Additionally, it was both helpful and educational to experiment with Fortran without having to create this robust simulation from scratch.
+
+
+## 3. Technical Details of Parallel Design
+*Technical description of the parallel application, programming models, platform and infrastructure*
+
+### 3.1 Parallel Application
+As stated in Section 1, this is a High Performance Computing problem.  The original implementation was completely serial, and with a time complexity of O(N^3 * log(N)), it requires a large amount of computing power to achieve its goal of simulating RBC at high Ra.  Our design uses both fine-grained (OpenMP) parallelism at the loop and procedure level, and coarse-grained parallelism (MPI) at the task level discretization at scale.  The types of parallelism match those levels, with OpenMP allowing us to employ function/control parallelism, and MPI allowing us to apply data parallelism.  In our MPI implementation, we make use of the Single Program-Multiple Data (SPMD) as we pass large amount of data between nodes.
+
+### 3.2 Programming Models
+Our design uses both shared memory parallelism (OpenMP) and distributed memory parallelism (MPI).  While we originally intended to create a fully hybrid model, we realized that an important part of the serial code relies on the Basic Linear Algebra Subprograms (BLAS) routine that solves tridiagonal matrices. Further information is provided in Section 5.1, but our final model allows users to run an OpenMP version of the code and an MPI version of the code separately to retain some speedups that were specifically seen by using OpenMP.
+
+Along with introducing different levels of parallelism, we also sought to introduce some speedup with enhancements like multithreaded FFT and one-sided FFT. To explore multithreaded FFT (which is included in the FFTW library), we wrote a test script in which we compared the timing of multithreaded FFT against single threaded FFT. We found that over both thread and array size, there was no meaningful speedup observed.
+
+With respect to one-sided FFT, we experimented with more strongly typing certain arrays as real (as physical fields are real) and using Hermitian conjugacy (when computing the Fourier Transform of a size N array, only N/2 + 1 of those elements are not redundant). In particular, this change involved modifying array types, array sizes, and certain loops meant to be executed in Fourier space. Subroutines swapped out include planning and execution, with the strictly real to complex or complex to real transformations included in the FFTW library. Due to Hermitian conjugacy, we expected a theoretical speedup of 2x for each Fourier transform (originally N*log(N) ), along with additional 2x speedups for Nx loops in Fourier space. 
+
+### 3.3 Platform and Infrastructure
+We used an Amazon Web Services (AWS) t2.2xlarge instance with the Ubuntu 18.04 operating system for our evaluation and performance criteria.  Further details are included in the [examples directory](https://github.com/dsondak/optRBC/tree/parallel_project/examples) README.
+
+We planned to use to the FAS RC academic cluster to run our experiments, but ran into several challenges, two of which are captured here.  First, the results were inconsistent depending on the day of the week and the time of day.  Despite using the Slurm commands introduced on the FAS RC documentation and in class, the results were still inconsistent.  This was likely due to a high degree of device sharing between jobs, introducing variability with respect to how much of the machine we could use.  Second, the performance of our code on AWS was consistent and also yielded significantly higher speedups.  Running the OpenMP version of our code, at Nx= 1280, Ny=1080, Ra=5000 yielded a 6x speedup on an AWS instance with 8 threads.  Running the same version on the cluster yielded a ~4.5x speedup.  These results caused us to switch focus to AWS and abandon using the cluster for performance results.
+
+
+## 4. Source Code
+*Links to repository with source code, evaluation data sets and test cases*
+
+<span style="color:red">**TODO: MIKE**: Please confirm accuracy</span>
+
+Included on this `parallel_project` branch are the OpenMP and MPI implementations of the time integration step listed below:
+- OpenMP:  `time_integrators.f90` and driver code `time_loop.f90`
+- MPI: `time_integrators_MPI.f90` and driver code `time_loop_MPI.f90`
+
+Modifications were made to several other files, but the majority of changes are found in those files.  FFTW modifications for one-sided computations are found in <span style="color:red">**TODO: KATRINA**: Please add location</span>
+
+Detailed examples and performance evaluation test cases can be found in the [examples directory](https://github.com/dsondak/optRBC/tree/parallel_project/examples).  The `README` in that directory gives stepwise instructions to compile, run, and replicate our results. 
+
+
 ## 5. Technical Description of Code
 *Technical description of the software design, code baseline, dependencies, how to use the code, and system and environment needed to reproduce your tests*
 ### 5.1 Software Design
@@ -144,7 +214,44 @@ and receiving of boundary values to calculate spacing at the edge of the grid. T
 3. `y_mesh_params` [line 167, mesh_pack.f90](./mesh_pack.f90#L167) changed to `y_mesh_params_MPI` [line 199, mesh_pack.f90](./mesh_pack.f90#L199)
 This function calculates the metric coefficients for the first and second derivative. The MPI version
 requires sending boundary values to calculate boundaries. This function refers to item 2 of the code description.
+4. `init_bc` [line 12, bc_setup.f90](./bc_setup.f90#L12) changed to `init_bc_MPI` [line 148, bc_setup.f90](./bc_setup.f90#L148)
+This function initializes the boundary conditions. The MPI version of the function uses its process and the number of total processes to determine if it is at the boundary. This function refers to item 4 of the code description.
+5. [line 96](./time_integrators_MPI.f90#L96) is the start of an important set of initializations, where the main node, identified by having the process id of 0, initializes many of the global variables that it will need access to. This involves receiving many pieces of data from the other nodes. 
 
+##### Time loop
+
+With the above code, the global variables are properly initialized in a distributed manner accross the processes. Now we get to the main time loop portion of the code, which starts at [line 158, time_integrators_MPI.f90](./time_integrators_MPI.f90#L158). First, we had to write an MPI version of `calc_expicit`, which is called `calc_explicit_MPI` and is defined at [line 924](./time_integrators_MPI.f90#L924). This subroutine is very similar to `calc_explicit` described in the OpenMP version and in the code description item 6, with a few minor changes. In particular, loops 2 and 4 can no longer be parallelized with OpenMP because 
+they call the `d1y_MPI2` and `d2y_MPI2` functions (described in the subsequent section), which require sending and receiving messages. Sending an recieving 
+messages on multiple threads is difficult because you don't know which thread will be expecting or sending the messages. As a result only loops 1,3,5,6 of `calc_explicit_MPI` are parellelized with OpenMP. Now we are to the main stage loops of the MPI version (item 7,9,11) of the code description. 
+
+##### Tridiagonal solves
+The main stage loops were the most difficult porion of the MPI implementation. The complications arise from the fact that `calc_vari_mod` and `calc_vi_mod` (as described in the OpenMP section above), solve a tridiagonal matrix equation. That is, they solve `Ax=b` where `A` is a square, tridiagonal matrix of size `(Ny-1,Ny-1)`. In a distributed memory setting, each node has a portion of the matrix `A` and the solution vector `b`.
+Since the matrix is split along the y-direction, each node has an overdetermined system, which has infinite solutions. While it is possible to solve the 
+tridiagonal system entirely in parallel, (see  https://web.alcf.anl.gov/~zippy/publications/partrid/partrid.html for example), this was out of scope to implement
+in the remaining time we had in the semester. To workaround this issue, we had each process send their portion of the matrix `A` and the solution vector `b` to the main node, which executed the tridiagonal solves and returned the solutions to the auxilary nodes. This is essentially serializing this portion of the code. The figure below demonstrates this process.
+
+![mpi](./figs/mpi_implementation.png)
+
+In this figure, a 2 process MPI run is demonstrated. Each process has half of the matrix and the solution vector, which is shown by the red and blue square respectively. Process 2 sends its data to Process 1, who combines it with their own to get the whole system. Process 1 executes the `dgtsv` function which solves the tridiagonal system, and then the second half of the solution vector
+is sent back to Process 2. In the code, we see that on [line 189](./time_integrators_MPI.f90#L189), the process with `proc_id==0` is used to be the main node. Within that conditional block, the process collects all the global variables needed to call `calc_vari_mod_MPI` and `calc_vi_mod_MPI`.
+The main node then continues on to call `update_bcs_mod_MPI` and `calc_implicit_mod_MPI`. Notice that these four functions are the same ones that we had to
+modify in the OpenMP implementation. At the end of the Stage 1 loop, main node needs to send the results from all the calculations to the other processors. For the first stage, this means sending the appropriate chunks of `K1_phi, K1_T, phii, Ti, uyi,` and `uxi`. These sends happen on [line 275](./time_integrators_MPI.f90#L275). The other nodes receive this data, and save it in their local memeory. The receives for stage 1 happen on [line 340](./time_integrators_MPI.f90#L340).
+
+The subsequent calls to `calc_explicit_MPI` and the stage 2 and 3 main loops are essentially identical to what was just desribed. The following pointers show where
+these portions of the code are for reference:
+
+1. `call calc_explicit_MPI(1, ...)` - [line 183](./time_integrators_MPI.f90#L183) item 6 in code description.
+2. `call calc_explicit_MPI(2, ...)` - [line 360](./time_integrators_MPI.f90#L360) item 8 in code description.
+3. `call calc_explicit_MPI(3, ...)` - [line 573](./time_integrators_MPI.f90#L573) item 10 in code description.
+4. `call calc_explicit_MPI(4, ...)` - [line 809](./time_integrators_MPI.f90#L809) item 12 in code description.
+5. stage 1 main loop - [line 187](./time_integrators_MPI.f90#L187) item 7 in code description.
+6. stage 2 main loop - [line 369](./time_integrators_MPI.f90#L369) item 9 in code description.
+7. stage 3 main loop - [line 582](./time_integrators_MPI.f90#L582) item 11 in code description.
+
+##### Update solutions
+At this point, each node has the correct data to update their T and phi fields. This occurs on [line 816](./time_integrators_MPI.f90#L816), where the processes us their id and the total number of processes to determine exactly which indices to update of their local variables. This is item 13 in the code description. Lastly, the `ux` and `uy` fields need to be updated on each node. This happens in the loop starting on [line 848](./time_integrators_MPI.f90#L848), and again requires
+a call to `calc_vi_mod_MPI` which is one of the tridiagonal solve functions. As a result, the same technique of sending all the data to the main node is used. The
+resulting `ux` and `uy` values are then sent back to the other nodes. These receives happen on [line 885](./time_integrators_MPI.f90#L885). This is item 14 in the code description. 
 
 ### 5.3 Dependencies
 - Anything specific to Fortran or this code base?  FFTW, OpenMP, MPI?
