@@ -275,6 +275,12 @@ which will write the `nusselt.png` figure to this directory. This figure is show
 
 ![nusselt](../figs/nusselt.png)
 
+This file can be retrieved from the AWS instance with the following `scp` command in a new terminal on your local machine
+
+```
+scp -i ~/.ssh/<YOUR KEY PAIR> ubuntu@<THE IP OF YOUR INSTANCE>:/home/ubuntu/optRBC/examples/nusselt.png nusselt.png
+```
+
 Comparing the Nusselt numbers is how we ensure correctness of the code. Also see this notebook [nusselt.ipynb](./nusselt.ipynb) for more details about how to plot and visualize the nusselt numbers.
 
 ### 6. MPI strong scaling.
