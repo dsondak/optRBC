@@ -52,6 +52,100 @@ and the calls to `calc_explicit` subroutine (items 6,8,10,12 above) calculate th
 Now that we have a description of what the baseline code actually does, we can show a profile we created to highlight the performance of each component of the 
 code. 
 
+![profile](./figs/profile.png)
+
+In the figure above we breakdown the components of the `imex_rk` function. Each rectangle represents a chunk of code or a subroutine, and the parenthetical numbers indicate the proportion of the time at that depth that was spent on that piece. For example, at a depth of 1, we break the runtime down into four pieces: (1) stage 1, (2) stage 2, (3) stage 3, (4) update. These portions take up 41%, 26%, 27%, and 6% of the runtime respecitvely, which totals to 100%. From this figure it is clear that the four `calc_explicit` calls consume a majority of the total runtime, which is why we break down the `calc_explicit` subroutine into 6 loops to highlight that loops 3 and 5 consume a majority of that runtime. These two loops execute the fast fourier transforms. 
+
+#### 5.1.2 OpenMP Implementation
+Now that we understand the code organization and profile of the baseline code, we can present the changes required to implement the OpenMP version. Overall there were 16 loops that we were able to parallelize with the `!$OMP PARALLEL DO` compiler directive.
+
+* 12 loops in the `calc_explicit` subroutine, which is defined in [time_integrators.f90, line 620](./time_integrators.f90#L620). 
+    * 4 loops (one for each stage) descibed by Loop 1 in item 6 of the code description. 
+    * 4 loops presented as Loops 2-5 in item 5 of the code description.
+    * 4 loops (one for each stage) descibed by Loop 6 in item 6 of the code description. 
+* 3 loops (one for each stage), which are described in items 7,9,11 of the code description.
+* 1 loop, the update solutions loop, which is described in item 14 of the code description. 
+
+##### Subroutines and the interaction of shared and private variables. 
+The most complex part of parallelizing the loops described above was understanding how FORTRAN handles shared and private variables within the parallel sections of the code. The rules are as follows:
+1. In a `PARALLEL DO` section, the iteration variable is by default `private`.
+2. All other variables accessed directly inside that do loop are by default `shared`. 
+3. All variables accessed in subroutines are `private`.
+
+Because of these rules, the main stage loops and the update solutions loop could not simply be surrounded by the compiler directives. The reason for this is that those loops call subroutines which access global variables. Since the variables within the subroutine are all `private` by default, the global variables will be in an undetermined state when they are called. Additionally, it is not possible to simply define these variables as `shared` in the compiler directive, because the OMP compiler will only allow scoping of variables that are directly accessed in the scope of the `do` loop, and since the globals are accessed within the subroutine, they are not visible and thus will throw a compiler error. The workaround we came up with to deal with this was to inject the global variables
+as arguments into the subroutines that accessed them. By doing this, the globals
+became visible in the scope of the `do` loop and thus we shared by default in accordance
+with rule 2 above. This global variable injection required refactoring the subroutine
+interfaces to take many more arguments than were previously required. As an example,
+we can consider the `calc_vari` subroutine. Before we changed the interface, it was defined
+by 
+
+```
+subroutine calc_vari(phiout,Tout, aii, stage)
+```
+
+For the OpenMP version of this function, the signature becomes 
+
+```
+subroutine calc_vari_mod(phiout,Tout, aii, stage, kx_it, phi_in, &
+                         k1hat_phi_in, k2hat_phi_in, k3hat_phi_in,&
+                         k1hat_T_in, k2hat_T_in, k3hat_T_in,&
+                         k1_phi_in, k2_phi_in, k1_T_in, k2_T_in,&
+                         T_in)
+```                
+
+where `phi_in,k1hat_phi_in, k2hat_phi_in, k3hat_phi_in,k1hat_T_in, k2hat_T_in, k3hat_T_in,k1_phi_in, k2_phi_in, k1_T_in, k2_T_in,T_in`
+are global variables accessed within the `calc_vari` function. The call site of the 
+function changes from 
+
+```
+call calc_vari_mod(tmp_phi, tmp_T, acoeffs(1,1), 1)
+```
+
+to 
+
+```
+call calc_vari_mod(tmp_phi, tmp_T, acoeffs(1,1), 1,&
+                   kx(it), phi(2:Ny-1,it),&
+                   K1hat_phi(2:Ny-1,it),K2hat_phi(2:Ny-1,it),K3hat_phi(2:Ny-1,it),&
+                   K1hat_T(2:Ny-1,it),K2hat_T(2:Ny-1,it),K3hat_T(2:Ny-1,it),&
+                   K1_phi(2:Ny-1,it), K2_phi(2:Ny-1,it), K1_T(2:Ny-1,it), K2_T(2:Ny-1,it),&
+                   T(:,it))
+```
+
+We had to do this process for the four functions listed below.
+
+1. `calc_vari` [line 308](./time_integrators.f90#L308) changed to `calc_vari_mod` [line 438](./time_integrators.f90#L438)
+2. `calc_vi` [line 778](./time_integrators.f90#L778) changed to `calc_vi_mod` [line 825](./time_integrators.f90#L825)
+3. `calc_implicit` [line 585](./time_integrators.f90#L585) changed to `calc_implicit_mod` [line 602](./time_integrators.f90#L602)
+4. `update_bcs` [line 873](./time_integrators.f90#L873) changed to `update_bcs_mod` [line 918](./time_integrators.f90#L918)
+
+With this in place, all the 16 loops described above could be parallelized! Section 6 describes the performance of this version of the code. 
+
+#### 5.1.3 MPI Implementation
+
+We also implemented an MPI version of the code. Since this required a larger scale refactor to move from a shared memory setting to a distributed memory setting, we split the MPI version from the OpenMP version and created two new files [time_loop_MPI.f90](./time_loop_MPI.f90) and [time_integrators_MPI.f90](./time_integrators_MPI.f90). Additionally, we created a new executable called `time_loop_MPI.exe` which is defined in the [Makefile, line 16](./Makefile#L16). The MPI implementation required many changes, which we describe below. All of the changes rely on using the process id, retrieved in the `call MPI_Comm_rank(MPI_COMM_WORLD, proc_id, mpierror)` and the number of processes, retrieved in the `call MPI_Comm_size(MPI_COMM_WORLD, num_procs, mpierror)`. The MPI
+initialization takes place at [lines 46-48](./time_loop_MPI.f90#L46)
+
+##### Initialization
+
+This code relies on many global matrices to keep track of the updates to the 
+variables as the time integration progresses. In a distributed memory setting, 
+we had to change many of the initialization subroutines. These are described in 
+following list.
+
+1. `cosine_mesh` [line 8, mesh_pack.f90](./mesh_pack.f90#L8) changed to `cosine_mesh_MPI` [line 47, mesh_pack.f90](./mesh_pack.f90#L47)
+This function initializes the mesh grid used for the integration. This is a non-uniform grid.
+The MPI version of the function uses its process and the number of total processes to determine 
+the grid locations. This function refers to item 2 of the code description.
+2. `dxdydz` [line 91, mesh_pack.f90](./mesh_pack.f90#L91) changed to `dxdydz_MPI` [line 118, mesh_pack.f90](./mesh_pack.f90#L118)
+This function calculates the y spacing for the grid. The MPI version requires sending 
+and receiving of boundary values to calculate spacing at the edge of the grid. This function refers to item 2 of the code description.
+3. `y_mesh_params` [line 167, mesh_pack.f90](./mesh_pack.f90#L167) changed to `y_mesh_params_MPI` [line 199, mesh_pack.f90](./mesh_pack.f90#L199)
+This function calculates the metric coefficients for the first and second derivative. The MPI version
+requires sending boundary values to calculate boundaries. This function refers to item 2 of the code description.
+
+
 ### 5.3 Dependencies
 - Anything specific to Fortran or this code base?  FFTW, OpenMP, MPI?
 ### 5.4 Compiling and Running the Code
