@@ -287,7 +287,6 @@ To replicate performance results, the reader should use a `t2.2xlarge` instance 
 
 We refer the reader to the [examples README](./examples/README.md) for specifics of how to run the code.
 
-
 ## 6. Performance Evaluation
 *Performance evaluation (speed-up, throughput, weak and strong scaling) and discussion about overheads and optimizations done*
 
@@ -296,32 +295,49 @@ We divide this section into discussion of performance of each variation of the c
 ### 6.1 OpenMP Strong Scaling
 ![omp_strong](./figs/omp_strong_scaling.png)
 
-In this figure, we see the OpenMP version of the code performing in accordance with Amdahl's law - analyzing performance of the same problem size with an increasing number of threads.  The max speedup seen in this case was approximately 6x, with the speedups improving at higher problem sizes, denoted by the different colored lines in the plots.  There were 16 loops optimized in the code with OpenMP, detailed in [Section 5.1.2](README.md#512-openmp-implementation). We see slightly less than linear speedup due to increased communication as calculations within loops are divided across more threads.
+In this figure, we see the OpenMP version of the code performing in accordance with Amdahl's law - analyzing performance of the same problem size with an increasing number of threads.  The max speedup seen in this case was approximately 6x, with the speedups improving at higher problem sizes, denoted by the different colored lines in the plots.  There were 16 loops optimized in the code with OpenMP, detailed in [Section 5.1.2](README.md#512-openmp-implementation). We see slightly less than linear speedup due to increased communication as calculations within loops are divided across more threads. 
+The main overheads in the OpenMP version are synchronization which has to happen between each loop and load balancing to ensure that each thread is getting 
+approximately the same amount of work. We offset these overheads by using the dynamic thread scheduler provided by OpenMP. 
+
+See example 1 in the [examples README](./examples/README.md) for details on how to replicate this result. 
 
 
 ### 6.2 OpenMP Weak Scaling
 ![omp_weak](./figs/omp_weak_scaling.png)
 
-In this figure, we see the OpenMP version of the code performing in accordance with Gustafson's law - analyzing performance of larger problem sizes (more threads) in a fixed amount of time.  We used 100s as the baseline for comparison, measuring the number of timestep iterations completed in that amount of time.  The max speedup seen in this case was just short of 6x, with the speedups slightly lower at higher grid sizes for each additional thread added.  The different grid sizes are denoted by the blue and black lines in the plots.  There were 16 loops optimized in the code with OpenMP, detailed in [Section 5.1.2](README.md#512-openmp-implementation). We see slightly less than linear speedup due to increased communication as calculations within loops are divided across more threads.
+In this figure, we see the OpenMP version of the code performing in accordance with Gustafson's law - analyzing performance of larger problem sizes (more threads) in a fixed amount of time.  We used 100s as the baseline for comparison, measuring the number of timestep iterations completed in that amount of time. In this way, the problem size grows because more iterations are being done in the same amount of time. The max speedup seen in this case was just short of 6x, with the speedups slightly lower at higher grid sizes for each additional thread added.  The different grid sizes are denoted by the blue and black lines in the plots.  There were 16 loops optimized in the code with OpenMP, detailed in [Section 5.1.2](README.md#512-openmp-implementation). We see slightly less than linear speedup due to increased communication as calculations within loops are divided across more threads. 
+The overheads are the same as described in the previous section. 
+
+See example 2 in the [examples README](./examples/README.md) for details on how to replicate this result. 
 
 
 ### 6.3 MPI Strong Scaling
 ![mpi_strong](./figs/mpi_strong_scaling.png)
 
-In this figure, we see the MPI version of the code performing in accordance with Amdahl's law - analyzing performance of the same problem size with an increasing number of processors.  The max speedup seen in this case was between 1.8x-2.1x at 6 processors.  Speedups varied across problems of different grid sizes, seen in the right-most plot.   These inconsistencies and generally poor speedup resulted from massive communication overhead.  In summary, the original code used a BLAS tridiagonal solver that was not parallelizable, so all information for that solve was passed from worker processors to the primary processor for calculation. Further details are explained in [Section 5.1.3 - Tridiagonal Solves](README.md#tridiagonal-solves).  Optimizations performed are described in detail in [Section 5.1.3](README.md#513-mpi-implementation)
+In this figure, we see the MPI version of the code performing in accordance with Amdahl's law - analyzing performance of the same problem size with an increasing number of processors.  The max speedup seen in this case was between 1.8x-2.1x at 6 processors.  Speedups varied across problems of different grid sizes, seen in the right-most plot.   These inconsistencies and generally poor speedup resulted from massive communication overhead.  In summary, the original code used a BLAS tridiagonal solver that was not parallelizable, so all information for that solve was passed from worker processors to the primary processor for calculation. Further details are explained in [Section 5.1.3 - Tridiagonal Solves](README.md#tridiagonal-solves).  Optimizations performed are described in detail in [Section 5.1.3](README.md#513-mpi-implementation). 
+The main overhead is obviously communication, but there is also a synchronization overhead all the nodes need to wait for the messages containing the solutions to the tridiagonal solves to be sent to them through the MPI interface. Additionally, there is a load balancing overhead because one node is doing the tridiagonal solve, and thus has much more work than the other nodes.
+All of these overheads explain the relatively modest speedup seen.
+
+See example 6 in the [examples README](./examples/README.md) for details on how to replicate this result. 
 
 
 ### 6.4 MPI Weak Scaling
 ![mpi_weak](./figs/mpi_weak_scaling.png)
 
 In this figure, we see the MPI version of the code performing in accordance with Gustafson's law - analyzing performance of larger problem sizes (more processors) in a fixed amount of time.  We used 30s as the baseline for comparison, measuring the number of timestep iterations completed in that amount of time.  Again, the max speedup was between 1.8x - 2.1x at 6 processors.  The communication overhead from the [tridiagonal solve](README.md#tridiagonal-solves) was the culprit for smaller speedups.  Code optimizations are described in detail in [Section 5.1.3](README.md#513-mpi-implementation).
+The same overheads described in the previous example are present in this example.
+
+See example 7 in the [examples README](./examples/README.md) for details on how to replicate this result. 
 
 
 ### 6.5 Hybrid OpenMP + MPI performance
 ![hybrid](./figs/hybrid.png)
 
-For the hybrid case with both OpenMP and MPI, this figure illustrates different combinations of processors and threads denoted on the horizontal axis with "p" and "t", respectively.  Each color corresponds to the multiplicatively similar cases (e.g. 2t2p ~ 4t ~ 4p).  The problem grid size was set at Nx=1289 and Ny=960 with a step size of 0.01 for 10 steps.  Of note, this hybrid implementation is running on a singe node with multiple processes due to debugging time constraints with Fortran on an AWS instance.  A key takewaway from this comparison are that the speedups from the OpenMP (4t and 8t) are superior to the similar thread/processor combinations.  This occurrence results from the reduced efficiency of MPI due to the tridiagonal solver used (discussed above). Communication between all worker nodes and the master node causes large communication slowdowns any time multiple processors are used.  However, all cases still show improvement over the serial case.
+For the hybrid case with both OpenMP and MPI, this figure illustrates different combinations of processors and threads denoted on the horizontal axis with "p" and "t", respectively.  Each color corresponds to the multiplicatively similar cases (e.g. 2t2p ~ 4t ~ 4p).  The problem grid size was set at Nx=1280 and Ny=960 with a step size of 0.01 for 10 steps.  Of note, this hybrid implementation is running on a singe node with multiple processes due to debugging time constraints with Fortran on an AWS cluster. 
+A key takewaway from this comparison are that the speedups from the OpenMP (4t and 8t) are superior to the similar thread/processor combinations.  This occurrence results from the reduced efficiency of MPI due to the tridiagonal solver used (discussed above). Communication between all worker nodes and the master node causes large communication slowdowns any time multiple processors are used.  However, all cases still show improvement over the serial case.
+The overheads of both the OpenMP code and the MPI code compound to make the speedups modest. Those overheads are described in the previous examples.
 
+See example 3 in the [examples README](./examples/README.md) for details on how to replicate this result. 
 
 
 ## 7. Advanced Features
