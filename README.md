@@ -56,6 +56,24 @@ code.
 
 In the figure above we breakdown the components of the `imex_rk` function. Each rectangle represents a chunk of code or a subroutine, and the parenthetical numbers indicate the proportion of the time at that depth that was spent on that piece. For example, at a depth of 1, we break the runtime down into four pieces: (1) stage 1, (2) stage 2, (3) stage 3, (4) update. These portions take up 41%, 26%, 27%, and 6% of the runtime respecitvely, which totals to 100%. From this figure it is clear that the four `calc_explicit` calls consume a majority of the total runtime, which is why we break down the `calc_explicit` subroutine into 6 loops to highlight that loops 3 and 5 consume a majority of that runtime. These two loops execute the fast fourier transforms. 
 
+#### 5.1.2 OpenMP Implementation
+Now that we understand the code organization and profile of the baseline code, we can present the changes required to implement the OpenMP version. Overall there were 16 loops that we were able to parallelize with the `!$OMP PARALLEL DO` compiler directive.
+
+* 12 loops in the `calc_explicit` subroutine, which is defined in [time_integrators.f90, line 620](./time_integrators.f90#L620). 
+    * 4 loops (one for each stage) descibed by Loop 1 in item 6 of the code description. 
+    * 4 loops presented as Loops 2-5 in item 5 of the code description.
+    * 4 loops (one for each stage) descibed by Loop 6 in item 6 of the code description. 
+* 3 loops (one for each stage), which are described in items 7,9,11 of the code description.
+* 1 loop, the update solutions loop, which is described in item 14 of the code description. 
+
+##### Subroutines and the interaction of shared and private variables. 
+The most complex part of parallelizing the loops described above was understanding how FORTRAN handles shared and private variables within the parallel sections of the code. The rules are as follows:
+1. In a `PARALLEL DO` section, the iteration variable is by default `private`.
+2. All other variables accessed directly inside that do loop are by default `shared`. 
+3. All variables accessed in subroutines are `private`.
+
+Because of these rules, the main stage loops and the update solutions loop could not simply be surrounded by the compiler directives. The reason for this is that those loops call subroutines which access global variables. Since the variables within the subroutine are all `private` by default, the global variables will be in an undetermined state when they are called. Additionally, it is not possible to simply define these variables as `shared` in the compiler directive, because the OMP compiler will only allow scoping of variables that are directly accessed in the scope of the `do` loop, and since the globals are accessed within the subroutine, they are not visible and thus will throw a compiler error. The workaround we came up with to
+
 ### 5.3 Dependencies
 - Anything specific to Fortran or this code base?  FFTW, OpenMP, MPI?
 ### 5.4 Compiling and Running the Code
