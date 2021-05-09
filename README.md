@@ -127,6 +127,25 @@ With this in place, all the 16 loops described above could be parallelized! Sect
 We also implemented an MPI version of the code. Since this required a larger scale refactor to move from a shared memory setting to a distributed memory setting, we split the MPI version from the OpenMP version and created two new files [time_loop_MPI.f90](./time_loop_MPI.f90) and [time_integrators_MPI.f90](./time_integrators_MPI.f90). Additionally, we created a new executable called `time_loop_MPI.exe` which is defined in the [Makefile, line 16](./Makefile#L16). The MPI implementation required many changes, which we describe below. All of the changes rely on using the process id, retrieved in the `call MPI_Comm_rank(MPI_COMM_WORLD, proc_id, mpierror)` and the number of processes, retrieved in the `call MPI_Comm_size(MPI_COMM_WORLD, num_procs, mpierror)`. The MPI
 initialization takes place at [lines 46-48](./time_loop_MPI.f90#L46)
 
+##### Initialization
+
+This code relies on many global matrices to keep track of the updates to the 
+variables as the time integration progresses. In a distributed memory setting, 
+we had to change many of the initialization subroutines. These are described in 
+following list.
+
+1. `cosine_mesh` [line 8, mesh_pack.f90](./mesh_pack.f90#L8) changed to `cosine_mesh_MPI` [line 47, mesh_pack.f90](./mesh_pack.f90#L47)
+This function initializes the mesh grid used for the integration. This is a non-uniform grid.
+The MPI version of the function uses its process and the number of total processes to determine 
+the grid locations. This function refers to item 2 of the code description.
+2. `dxdydz` [line 91, mesh_pack.f90](./mesh_pack.f90#L91) changed to `dxdydz_MPI` [line 118, mesh_pack.f90](./mesh_pack.f90#L118)
+This function calculates the y spacing for the grid. The MPI version requires sending 
+and receiving of boundary values to calculate spacing at the edge of the grid. This function refers to item 2 of the code description.
+3. `y_mesh_params` [line 167, mesh_pack.f90](./mesh_pack.f90#L167) changed to `y_mesh_params_MPI` [line 199, mesh_pack.f90](./mesh_pack.f90#L199)
+This function calculates the metric coefficients for the first and second derivative. The MPI version
+requires sending boundary values to calculate boundaries. This function refers to item 2 of the code description.
+
+
 ### 5.3 Dependencies
 - Anything specific to Fortran or this code base?  FFTW, OpenMP, MPI?
 ### 5.4 Compiling and Running the Code
