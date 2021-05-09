@@ -48,10 +48,22 @@ To run and visualize using python, run:
 ```
 This iterates over various array sizes and thread counts, with thread counts ranging from 1 to 16, and executes a discrete fourier transform. The times how long it takes to execute the dft as a function of array size and thread count when planned. 
 
+When run on a local machine with a 2.6 GHz Intel Core i5 processor (2 cores, 4 threads) the performance of the multithreaded FFT was as follows: 
+
+![fft_multithread](../../figs/fft_multithread.png)
+
+Though there is some periodicity in the performance with respect to thread count, there is an overall increase in total execution time as we move to larger thread counts. This reduction in performance then motivates single threaded FFT, in particular because using multithreaded FFT makes OpenMP integration more complex. 
+
 ## 2. One-sided FFT
 
 To run and visualize using python, run: 
 ```
 ./run_fft_one_side.sh
 ```
-This iterates over various array sizes and compares the execution time of a one-sided vs. two-sided forward and backward transformation. 
+This iterates over various array sizes and compares the execution time of one-sided vs. two-sided forward and backward transformations, with execution times averaged over 5 runs. 
+
+When run on a local machine with a 2.6 GHz Intel Core i5 processor (2 cores, 4 threads) the performance of the one-sided FFT relative to two-sided FFT was as follows: 
+
+![one-side](../../figs/one_side_speedup_5_avg.png)
+
+Even over a large set of array sizes, the speedup for one-sided FFT hovers at roughly 1.6x. At smaller array sizes (closer to the sizes being used) the speedup is closer to the theoretical value of 2x. 
