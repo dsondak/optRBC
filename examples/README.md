@@ -1,20 +1,20 @@
 # Examples.
 
 This directory contains a number of examples and test cases for our parallelization of the optRBC code. The examples demonstrate performance results, 
-how to visualize the temperature field, and how to calculate the nusselt number. 
+how to visualize the temperature field, and how to calculate the nusselt number. At the very end of this examples README, there is a section with instructions to run [custom configurations](./README.md#running-on-custom-configurations).
 
 Each example will be composed of 3 parts:
 
 1. A shell script to execute.
 2. A description in this file of what is happening.
-3. A sample output file showing what the standard output of each shell sript should look like. 
+3. A sample output file showing what the standard output of each shell script should look like. 
 
 We strongly recommend that the examples are run on a `t2.2xlarge` instance on AWS with the Ubuntu 18.04 operating system, because these are the results that are presented and documented in the
-sample output files. Before we jump in, a few notes.
+sample output files. Further replicability information is included in [Section 5.4](../README.md) of the main README. Before we jump in, a few notes:
 
-1. In general we have found that the OpenMP results are much easier to replicate and have much more consistent runtimes.
-2. We had one strange experience where a `t2.2xlarge` instance with a public ip starting in the 100 range gave very poor performance. Even though the hardware specs looked the same. If when spinning up an instance, the public IP is in that range, consider relaunching to try to get on that starts in the 30s, e.g., `35.175.132.17`.
-3. These examples were run in the US East 1 (N. Virginia) region, so we enourage the reader to use that region.
+1. In general we found that the OpenMP results are much easier to replicate and have much more consistent runtimes.
+2. We had one strange experience where a `t2.2xlarge` instance with a public ip starting in the 100 range gave very poor performance, even though the hardware specs looked the same. If when spinning up an instance the public IP is in that range, consider relaunching to try to get on that starts in the 30s, e.g., `35.175.132.17`.
+3. These examples were run in the US East 1 (N. Virginia) region, so we encourage the reader to use that region.
 4. We have noticed that the overall performance of the OpenMP code degrades after the MPI versions are run. This is very strange and tough to debug, but for the meantime we encourage the reader to run the examples in the order that they are presented, and keep in mind that once the MPI examples are run, results might be worse than before for OpenMP. Before the MPI versions are run, the OpenMP results should be extremely stable and replicable.
 
 
@@ -285,7 +285,7 @@ Comparing the Nusselt numbers is how we ensure correctness of the code. Also see
 
 ### 6. MPI strong scaling.
 
-NOTE: From this example onward, the performance results are much harder to replicate in our experience, and we have found that running these examples degrades the performance of the machine overall. We aren't sure what exactly could be causing this, but in the meantime this is just a heads up!
+*NOTE*: From this example onward, the performance results are much harder to replicate in our experience, and we have found that running these examples degrades the performance of the machine overall. We aren't sure what exactly could be causing this, but in the meantime this is just a heads up!
 
 This example demonstrates strong scaling according to Amdahl's law for the MPI multi-process version of the code. The problem size is
 fixed to a grid of size Nx=1280 and Ny=960. With a timestep of 0.1, we iterate for 10 steps and time the entire execution. Since the problem
@@ -393,7 +393,7 @@ All of the other values should be set to match the example above, e.g.,
 where the `#` denotes a user specified input. Generally speaking, higher Rayleigh numbers require a finer grid (meaning larger values of Nx and Ny) and a smaller timestep. One easy way to confirm that a configuration works, is to flip on the nusselt number calculation flag (row=7,col=3), and confirm that the nusselt number does
 not become a NaN. The performance of the code will change dramatically when turning on the Save to vtk flag (row=7,col=1), and outputs will be written to the `vtkdata/` directory that is created where ever the executable is being run. If the nusselt number calculation flag is set (row=7,col=3), then the nusselt number will be 
 written at each time step, and also will be written to a file called `Nu_data.txt`, which will also be created in the directory that the executable is running in.
-The vtkdata can be viewd in a few ways. The easiest is to use [paraview](https://www.paraview.org/), which is an open source visualization tool. Alternatively, the data can be read into python using the [meshio](https://github.com/nschloe/meshio) library. See [temp_viz.py](./temp_viz.py) in this directory for an example of how to load the data. 
+The vtkdata can be viewed in a few ways. The easiest is to use [paraview](https://www.paraview.org/), which is an open source visualization tool. Alternatively, the data can be read into python using the [meshio](https://github.com/nschloe/meshio) library. See [temp_viz.py](./temp_viz.py) in this directory for an example of how to load the data. 
 
 ### Running OpenMP and MPI
 
