@@ -22,7 +22,7 @@ re_to_comp_test.exe : $(OBJECTS_FFT_RE)
 	$(FC) -fopenmp -Wno-argument-mismatch $(LDFLAGS) -o re_to_comp_test.exe $(OBJECTS_FFT_RE) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
 
 multithreading_benchmark.exe : $(OBJECTS_FFT_THREAD)
-	$(FC) --enable-threads -Wno-argument-mismatch $(LDFLAGS) -o multithreading_benchmark.exe $(OBJECTS_FFT_THREAD) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3_omp -lm --enable-threads -lfftw3 --enable-threads
+	$(FC) -Wno-argument-mismatch $(LDFLAGS) -o multithreading_benchmark.exe $(OBJECTS_FFT_THREAD) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm -lfftw3_threads --enable-threads
 
 fftw.o : fftw.f90
 	$(FC) $(FFLAGS) fftw.f90
@@ -67,7 +67,7 @@ re_to_comp_test.o : re_to_comp_test.f90
 	$(FC) -fopenmp --enable-threads $(FFLAGS) re_to_comp_test.f90
 
 multithreading_benchmark.o : multithreading_benchmark.f90
-	$(FC) --enable-threads -lfftw3 -lm -Wno-argument-mismatch  $(FFLAGS) multithreading_benchmark.f90
+	$(FC) -lfftw3_threads --enable-threads -lfftw3 -lm -Wno-argument-mismatch  $(FFLAGS) multithreading_benchmark.f90
 
 jacobians.o : jacobians.f90
 	$(FC) $(FFLAGS) jacobians.f90
