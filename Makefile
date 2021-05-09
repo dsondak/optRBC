@@ -7,14 +7,18 @@ LDFLAGS   = -I/usr/local/fftw/include
 
 OBJECTS = fftw.o global.o allocate_vars.o precmod.o stringmod.o write_pack.o interpolation_pack.o mesh_pack.o imod.o bc_setup.o statistics.o time_integrators.o time_integrators_MPI.o jacobians.o gmres_pack.o nonlinear_solvers.o time_loop.o
 OBJECTS_MPI = fftw.o global.o allocate_vars.o precmod.o stringmod.o write_pack.o interpolation_pack.o mesh_pack.o imod.o bc_setup.o statistics.o time_integrators.o time_integrators_MPI.o jacobians.o gmres_pack.o nonlinear_solvers.o time_loop_MPI.o
-
-all : time_loop.exe time_loop_MPI.exe
+OBJECTS_FFTs = fftw.o global.o allocate_vars.o precmod.o stringmod.o write_pack.o interpolation_pack.o mesh_pack.o imod.o bc_setup.o statistics.o jacobians.o gmres_pack.o nonlinear_solvers.o time_loop.o
+all : time_loop.exe time_loop_MPI.exe re_to_comp_test.exe
+# all : re_to_comp_test.exe
 
 time_loop.exe : $(OBJECTS)
 	$(FC) -fopenmp -Wno-argument-mismatch $(LDFLAGS) -o time_loop.exe $(OBJECTS) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
 
 time_loop_MPI.exe : $(OBJECTS_MPI)
 	$(FC) -fopenmp -Wno-argument-mismatch $(LDFLAGS) -o time_loop_MPI.exe $(OBJECTS_MPI) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
+
+re_to_comp_test.exe : $(OBJECTS_FFTW)
+	gfortran -fopenmp -Wno-argument-mismatch $(LDFLAGS) -o re_to_comp_test.exe $(OBJECTS) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
 
 fftw.o : fftw.f90
 	$(FC) $(FFLAGS) fftw.f90

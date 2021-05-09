@@ -3,14 +3,7 @@ program re_to_comp_test
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     
-        use global
-        use strings
-        use write_pack
-        use interpolation_pack
-        use allocate_vars
-        use statistics
-        use mesh_pack
-        use time_integrators
+        ! use global
     
         implicit none
     
@@ -18,7 +11,7 @@ program re_to_comp_test
     
     integer :: N_points
     ! go from real -> complex -> real
-    real(C_DOUBLE), allocatable :: tu_in_real(:), tu_out_real(:)
+    real(dp), allocatable :: tu_in_real(:), tu_out_real(:)
     complex(C_DOUBLE_COMPLEX), allocatable :: tu_comp(:)
     real :: start, finish
     type(C_PTR) :: planre, planc
