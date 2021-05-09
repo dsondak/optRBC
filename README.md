@@ -253,14 +253,50 @@ At this point, each node has the correct data to update their T and phi fields. 
 a call to `calc_vi_mod_MPI` which is one of the tridiagonal solve functions. As a result, the same technique of sending all the data to the main node is used. The
 resulting `ux` and `uy` values are then sent back to the other nodes. These receives happen on [line 885](./time_integrators_MPI.f90#L885). This is item 14 in the code description. 
 
+This is the core idea of the MPI implemenation! For performance analysis of this version of the code, see Section 6. 
+
 ### 5.3 Dependencies
-- Anything specific to Fortran or this code base?  FFTW, OpenMP, MPI?
+
+There are several dependencies to run this code. We *strongly* encourage the reader to use AWS to replicate the results. We used `t2.2xlarge` instances, and the Ubuntu 18.04 operating system. The script called [aws_setup.sh](./aws_setup.sh) handles installing all the necessary packages to run the code. At the time of writing this script installs the following versions of the packages.
+
+* `make` - GNU Make 4.1. Built for x86_64-pc-linux-gnu.
+* `gcc` - gcc (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0
+* `gfortran` - GNU Fortran (Ubuntu 7.5.0-3ubuntu1~18.04) 7.5.0
+* `libblas-dev` - libblas-dev: Installed: 3.7.1-4ubuntu1
+* `liblapack-dev` - liblapack-dev: Installed: 3.7.1-4ubuntu1
+* `libblacs-mpi-dev` - libblacs-mpi-dev: Installed: 1.1-40build1, (Open MPI) 2.1.1
+* `python3` - version 3.6.9
+* `pip3` - pip 9.0.1
+* `matplotlib` - matplotlib==3.3.4
+* `numpy` - numpy==1.19.5
+* `meshio` - meshio==4.4.3
+* `pandas` - pandas==1.1.5
+
+Again, all of these will be installed automatically when running the [aws_setup.sh](./aws_setup.sh) script. Note that the python packages are only used in Examples 4 and 5 as documented in the [examples README](./examples/README.md), so those packages will only be installed when running those scripts. 
+
 ### 5.4 Compiling and Running the Code
-- Take some/all of Prof. Sondak's description below.
+
+We refer the reader to the [examples README](./examples/README.md) for several examples of how to run the code. That README documents exactly the steps required to get the code running on an AWS instance, which is how we encourage the reader to replicate the results.
+
 ### 5.5 Replicability Information
-- Table? 
-- Input File, AWS specs, Compiler, Libraries, (Cluster Info?)
-- Need a set Ra, Nx, Ny series to run.
+
+To replicate performance results, the reader should use a `t2.2xlarge` instance on AWS. The specifications of this system are shown below
+
+- `Operating system:` Ubuntu Server 18.04 LTS (HVM), SSD Volume Type, 64-bit (x86)
+- `Instance type:` t2.2xlarge
+- `CPU model:` Intel(R) Xeon(R) CPU E5-2686 v4 @ 2.30GHz
+- `CPU(s):` 8
+- `Thread(s) per core:` 1
+- `Core(s) per socket:` 8
+- `Clock rate:` 2.3 GHz
+- `L1d cache:` 32 KiB
+- `L1i cache:` 32 KiB
+- `L2 cache:` 256 KiB
+- `L3 cache:` 46080 KiB
+- `Memory (RAM):` 32 GiB
+
+
+We refer the reader to the [examples README](./examples/README.md) for specifics of how to run the code.
 
 **TODO: SECTION 6**
 ## 6. Performance Evaluation (aka. Results?)
