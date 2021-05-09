@@ -26,5 +26,5 @@ for line in f:
 plt.legend()
 plt.xlabel("Num Threads")
 plt.ylabel("Execution time (s)")
-plt.show()
+plt.savefig("multithread.png")
 f.close()
