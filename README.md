@@ -431,6 +431,11 @@ Though we experimented with implementing one-sided FFT, we were ultimately unabl
 ![one_side_small](./figs/64_by_51_Nu.png)
 ![one_side_large](./figs/1280_by_1020_Nu.png)
 
+The above plots show two things:
+
+1. For small grid sizes, the error of the nusselt number is on the order of magnitude of machine precision, thus is not easily distinguishable from numerical precision errors. For larger grids, however, the error grows up to the order of 10^-4, which is too large to be numerical precision related.
+2. The error in the nusselt number does not seem to be growing as time progresses. This means that the error is a function of the grid size, but not necessarily the number of integration steps. This is strange, and something we still are working on understanding.
+
 However, it would be beneficial to get this implementation working since it is compatible with both of the parallel versions (as it is a form of algorithmic speedup) and those speedups would stack multiplicatively. Methods to debug this implementation would include calculating Nu of various arrays as a kind of checksum to ensure that results are consistent between one-sided and two-sided FFT at each step in computation. A preliminary implementation is, again, on the `real_to_comp` branch. 
 
 ## 9. References
