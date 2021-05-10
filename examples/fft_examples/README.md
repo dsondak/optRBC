@@ -33,6 +33,18 @@ Run the `aws_setup.sh` script with
 ./aws_setup.sh
 ```
 
+Change into this directory
+
+```
+cd examples/fft_examples/
+```
+
+Lastly, run the install python script with 
+
+```
+./install_python.sh
+```
+
 ## Contents.
 
 FFT examples consists of: 
