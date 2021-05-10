@@ -387,6 +387,11 @@ Although Fortran is used widely used in the computational sciences for high perf
 
 We worked in an existing, extensive codebase that relied on relatively complex mathematical methods like FFT and Runge–Kutta methods to solve PDEs. This required us to study the existing code as well as its mathematical methods. One example of the need to not only understand the code but also the math implemented was revealed when we attempted to move to a one-sided FFT. Because this method relied on the symmetry of Fourier transforms of real data, it required allocating less space for complex arrays vs. real arrays. Since we also have multiple loops in Fourier space, this approach also required changing those bounds since we remove the redundant data that standard FFTs would have kept. 
 
+### 7.3 Implementing a distributed memory version of the code
+
+The MPI implementation was complex. Because the code base relies heavily on global variables and has specific handling for boundary conditions, we had to carefully handle all the edge cases. Additionally, because of the tridiagonal solve issue presented in [the tridiagonal solve section](README.md#tridiagonal-solves), we had to sort out large amounts of data sending and receiving 
+which resulted in many subtle bugs arising. 
+
 
 ## 8. Discussion and Future Work
 *Final discussion about goals achieved, improvements suggested, lessons learned, future work, interesting insights…*
