@@ -39,13 +39,14 @@ The temperature flow of this liquid can be described by the Oberbeck-Boussinesq 
 The low Rayleigh number regime in RBC has been studied extensively; therefore, this code was written to simulate problems with high Rayleigh numbers.  Though Rayleigh-Benard convection is a physical and therefore 3D problem, this particular code implements 2D Rayleigh-Benard convection.  This simplification reduces the complexity of the algorithm, allowing for exploration of the ratio between Nu and Ra at high values of Ra up to 10^9. 
 
 ### 1.2 Need for HPC
-At high Ra numbers the discretized mesh is finer, and therefore it is more computationally intensive to run the simulation.  In order to simulate high Ra numbers more quickly, we sought to parallelize the existing code using OpenMP and MPI, and we explored Fast Fourier Transform (FFT) methods to improve algorithmic efficiency.  (*Note*: our particular FFT implementation is FFTW3 [[2]](#2).  We use FFT and FFTW interchangeably to reference the same calculations.)  The serial version of the current algorithm has a time complexity of O(N^3 * log(N)), leading to exceedingly long computation times at large problem sizes.  Since this is a compute-intensive code designed to solve complex PDEs, it is a High Performance Computing (HPC) problem.
+At high Ra numbers the discretized mesh is finer, and therefore it is more computationally intensive to run the simulation.  In order to simulate high Ra numbers more quickly, we sought to parallelize the existing code using OpenMP and MPI, and we explored Fast Fourier Transform (FFT) methods to improve algorithmic efficiency.  (*Note*: our particular FFT implementation is FFTW3 [[2]](#2).  We use FFT and FFTW interchangeably to reference the same calculations.)  The serial version of the current algorithm has a time complexity of O(Nt * Ny * Nx * log(Nx)), where Nt is the number of time steps, Nx is the number of x points in the mesh and Ny is the number of y points in the mesh.
+This leads to exceedingly long computation times at large problem sizes and long integration runs.  Since this is a compute-intensive code designed to solve complex PDEs, it is a High Performance Computing (HPC) problem.
 
 
 ## 2. Description of Solution and Comparison to Existing Work
 *Description of solution and comparison with existing work on the problem*
 
-Using the Fortran code base from Sondak et al. [[1]](#1), we initially profiled the serial code to determine the primary bottlenecks of the `time_integrators.f90` portion.  In each time step, the code performs updates using an implicit-explicit Runge-Kutta method detailed in [[3]](#3).  In the code, the `imex_rk()` subroutine computes 8 Fast Fourier Transforms per time step, each of which costs O(N * log(N)) computational time.  Details of the code profiling are shown below.
+Using the Fortran code base from Sondak et al. [[1]](#1), we initially profiled the serial code to determine the primary bottlenecks of the `time_integrators.f90` portion.  In each time step, the code performs updates using an implicit-explicit Runge-Kutta method detailed in [[3]](#3).  In the code, the `imex_rk()` subroutine computes 8*Ny Fast Fourier Transforms per time step, each of which costs O(Nx * log(Nx)) computational time.  Details of the code profiling are shown below.
 
 ![serial_profile](figs/serial_profile.png)
 
