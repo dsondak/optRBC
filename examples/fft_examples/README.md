@@ -58,7 +58,7 @@ To run and visualize using python, run:
 ```
 ./run_multithread_fft.sh
 ```
-This script takes about 2 minutes to run. This iterates over various array sizes and thread counts, with thread counts ranging from 1 to 16, and executes a discrete fourier transform. The times how long it takes to execute the dft as a function of array size and thread count when planned. 
+This script takes about 2 minutes to run and will create a plot called `multithread.png`. This iterates over various array sizes and thread counts, with thread counts ranging from 1 to 16, and executes a discrete fourier transform. The times how long it takes to execute the dft as a function of array size and thread count when planned. 
 
 To bring the plot back to the local machine use the command 
 
@@ -70,7 +70,7 @@ When run on a local machine with a 2.6 GHz Intel Core i5 processor (2 cores, 4 t
 
 ![fft_multithread](../../figs/fftw_multithread.png)
 
-Though there is some periodicity in the performance with respect to thread count, there is an overall increase in total execution time as we move to larger thread counts. This reduction in performance then motivates single threaded FFT, in particular because using multithreaded FFT makes OpenMP integration more complex. 
+Though there is some periodicity in the performance with respect to thread count, there is an overall increase in total execution time as we move to larger thread counts. This reduction in performance then motivates single threaded FFT. Additionally using multithreaded FFT makes OpenMP integration more complex. For these reasons, we decided to not use multithreaded FFT in the main implementation. 
 
 ## 2. One-sided FFT
 
@@ -78,7 +78,7 @@ To run and visualize using python, run:
 ```
 ./run_fft_one_side.sh
 ```
-This script takes about 2 minutes to run. This iterates over various array sizes and compares the execution time of one-sided vs. two-sided forward and backward transformations, with execution times averaged over 5 runs. 
+This script takes about 2 minutes to run and will create a plot called `onesided.png`. This iterates over various array sizes and compares the execution time of one-sided vs. two-sided forward and backward transformations, with execution times averaged over 5 runs. 
 
 When run on a local machine with a 2.6 GHz Intel Core i5 processor (2 cores, 4 threads) the performance of the one-sided FFT relative to two-sided FFT was as follows: 
 
