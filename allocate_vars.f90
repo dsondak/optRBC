@@ -34,6 +34,9 @@ subroutine global_allocations
     allocate(tnlT(Nx), stat=alloc_err)
     allocate(tnlphi(Nx), stat=alloc_err)
     allocate(tphi(Nx), stat=alloc_err)
+    !allocate(tkdx(Nx), stat=alloc_err)
+    !allocate(tkdy(Nx), stat=alloc_err)
+
 
     allocate(xp(Nx), stat=alloc_err)
     allocate(yp(Ny), stat=alloc_err)

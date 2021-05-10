@@ -141,6 +141,23 @@ iplannlT = fftw_plan_dft_1d(Nx,tnlT,tnlT, FFTW_BACKWARD,FFTW_ESTIMATE)
 plannlphi = fftw_plan_dft_1d(Nx,tnlphi,tnlphi, FFTW_FORWARD,FFTW_ESTIMATE)
 iplannlphi = fftw_plan_dft_1d(Nx,tnlphi,tnlphi, FFTW_BACKWARD,FFTW_ESTIMATE)
 
+!!!!!!!!!!!!!
+!Need to add plan for Fourier transform of  kappa(T)*F^{-1}(i*alpha*kx*F(T))
+!planKappaDiffusivx = fftw_plan_dft_1d(Nx,tkdx,tkdx,FFTW_FORWARD,FFTW_ESTIMATE)
+!iplanKappaDiffusivx = fftw_plan_dft_1d(Nx,tkdx,tkdx,FFTW_BACKWARD,FFTW_ESTIMATE)
+!here tkdx is for 'temporary kappa diffusivity in x'
+!!!!!!!!!!!!!
+
+!!!!!!!!!!!!!
+!Need to add plan for Fourier transform of partial_y(kappa(T)*T_y)
+!planKappaDiffusivy = fftw_plan_dft_1d(Nx,tkdy,tkdy,FFTW_FORWARD,FFTW_ESTIMATE)
+!iplanKappaDiffusivy = fftw_plan_dft_1d(Nx,tkdy,tkdy,FFTW_BACKWARD,FFTW_ESTIMATE)
+!here tkdy is for "temporary kappa diffusivity in y"
+!!!!!!!!!!!!!
+
+
+
+
 call global_params
 call global_allocations
 

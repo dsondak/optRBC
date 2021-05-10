@@ -362,7 +362,9 @@ Kphi = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
 KT   = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
 
 Kphi = nu0   *(-kx(it)**2.0_dp*phiin + d2y(phiin))
-KT   = kappa0*(-kx(it)**2.0_dp*Tin   + d2y(Tin))
+!Should comment out below line or set it to 0 since we are doing temperature fully explicitly
+!KT   = kappa0*(-kx(it)**2.0_dp*Tin   + d2y(Tin))
+KT = 0.0_dp*Tin
 
 end subroutine calc_implicit
 
@@ -422,21 +424,25 @@ do j = 1,Ny
    phii(j,:) = tphi
 end do
 
-write(*,*) "Initial T"
-write(*,*) T(10,:)
-write(*,*) "-------------"
-write(*,*) "Tkappa"
-call calc_kappa
-write(*,*) Tkappa(10,:)
-write(*,*) "----------"
-stop
+!!Testing calc_kappa
+!write(*,*) "Initial T"
+!write(*,*) T(10,:)
+!write(*,*) "-------------"
+!write(*,*) "Tkappa"
+!call calc_kappa
+!write(*,*) Tkappa(10,:)
+!write(*,*) "----------"
+!stop
 
 
 ! Calculate nonlinear term
 do i = 1,Nx
    ! Temperature
    tmp_T = Ti(:,i)
-   nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T)
+   !! Need to add the diffusivity terms here. kappa(T)T_x and d_y(kappa(T)*T_y)
+   call calc_kappa 
+   nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T) + Tkappa(:,i)*nlT(:,i) + d1y(Tkappa(:,i)*d1y(tmp_T)) 
+   !nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T) 
    ! phi
    nlphi(:,i) = uxi(:,i)*phii(:,i) - uyi(:,i)*nlphi(:,i) 
 end do
@@ -641,8 +647,9 @@ subroutine calc_kappa()
 real(dp) :: kappa_top
 
 kappa_top = 1.0
-Tkappa = kappa_top*(1+49*T+450*T**6)
+!Tkappa = kappa_top*(1+49*T+450*T**6)
 !Tkappa = kappa_top*T**2
+Tkappa = 0.0_dp*T + 1
 
 end subroutine calc_kappa
 
