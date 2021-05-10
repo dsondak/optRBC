@@ -190,7 +190,7 @@ Note that this hybrid implementation is still running on a singe node, just mult
 
 This example demonstrates how to visualize the temperature fields produced from the the convection equations. A small grid of Nx=64 and Ny=48 is used and we iterate for 50 steps with a step size of 0.1 and a Rayleigh number of 5.0e+04. We run the shared memory version (OpenMP) as well as the distributed memory version (MPI) to demonstrate how we assert correctness of the MPI code. 
 
-To run this example, run the shell script (note that you will have to confirm installation of required python packages):
+To run this example, run the shell script:
 
 ```
 ./run_temp_viz.sh
