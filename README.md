@@ -74,6 +74,11 @@ We used an Amazon Web Services (AWS) t2.2xlarge instance with the Ubuntu 18.04 o
 
 We planned to use to the FAS RC academic cluster to run our experiments, but ran into several challenges, two of which are captured here.  First, the results were inconsistent depending on the day of the week and the time of day.  Despite using the Slurm commands introduced on the FAS RC documentation and in class, the results were still inconsistent.  This was likely due to a high degree of device sharing between jobs, introducing variability with respect to how much of the machine we could use.  Second, the performance of our code on AWS was consistent and also yielded significantly higher speedups.  Running the OpenMP version of our code, at Nx= 1280, Ny=1080, Ra=5000 yielded a 6x speedup on an AWS instance with 8 threads.  Running the same version on the cluster yielded a ~4.5x speedup.  These results caused us to switch focus to AWS and abandon using the cluster for performance results. 
 
+The figure below demonstrates this by showing the runtime and speedup for the same problem on AWS and the academic cluster. 
+![cluster](./figs/cluster.png)
+
+We see that not only is the raw runtime over 2x slower on the cluster, but the speedups also are much smaller at higher numbers of threads. This along with the difficulty to replicate performance results on the cluster led us to rely on AWS exclusively for performance evaluation. All of the examples presented in the [examples README](./examples/README.md) were collected on a `t2.2xlarge` instance on AWS.
+
 
 ## 4. Source Code
 *Links to repository with source code, evaluation data sets and test cases*
