@@ -46,7 +46,9 @@ Run the `aws_setup.sh` script with
 ./aws_setup.sh
 ```
 
-This script will require you to hit enter a few times to confirm the packages being added to the instance. Once all the packages are installed run 
+This script will require you to hit enter a few times to confirm the packages being added to the instance. 
+
+Once all the packages are installed run 
 
 ```
 make
@@ -58,6 +60,14 @@ to build the binary, and
 cd examples
 ```
 to enter this directory.
+
+Lastly, run 
+
+```
+./install_python.sh
+```
+
+to install the required python packages. 
 
 ## Contents.
 
