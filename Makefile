@@ -5,8 +5,10 @@ LIBFLAGS2 = -L/usr/local/fftw/lib
 LDFLAGS   = -I/usr/local/fftw/include
 
 
-OBJECTS = fftw.o global.o allocate_vars.o precmod.o stringmod.o write_pack.o interpolation_pack.o mesh_pack.o imod.o bc_setup.o statistics.o time_integrators.o time_integrators_MPI.o jacobians.o gmres_pack.o nonlinear_solvers.o time_loop.o
-OBJECTS_MPI = fftw.o global.o allocate_vars.o precmod.o stringmod.o write_pack.o interpolation_pack.o mesh_pack.o imod.o bc_setup.o statistics.o time_integrators.o time_integrators_MPI.o jacobians.o gmres_pack.o nonlinear_solvers.o time_loop_MPI.o
+OBJECTS =            fftw.o global.o allocate_vars.o precmod.o stringmod.o write_pack.o interpolation_pack.o mesh_pack.o imod.o bc_setup.o statistics.o time_integrators.o time_integrators_MPI.o jacobians.o gmres_pack.o nonlinear_solvers.o time_loop.o
+OBJECTS_MPI =        fftw.o global.o allocate_vars.o precmod.o stringmod.o write_pack.o interpolation_pack.o mesh_pack.o imod.o bc_setup.o statistics.o time_integrators.o time_integrators_MPI.o jacobians.o gmres_pack.o nonlinear_solvers.o time_loop_MPI.o
+OBJECTS_FFT_THREAD = fftw.o global.o multithreading_benchmark.o
+OBJECTS_FFT_RE =     fftw.o global.o re_to_comp_test.o
 all : time_loop.exe time_loop_MPI.exe re_to_comp_test.exe multithreading_benchmark.exe
 # all : re_to_comp_test.exe multithreading_benchmark.exe
 
@@ -16,11 +18,11 @@ time_loop.exe : $(OBJECTS)
 time_loop_MPI.exe : $(OBJECTS_MPI)
 	$(FC) -fopenmp -Wno-argument-mismatch $(LDFLAGS) -o time_loop_MPI.exe $(OBJECTS_MPI) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
 
-re_to_comp_test.exe : $(OBJECTS)
-	$(FC) -fopenmp -Wno-argument-mismatch $(LDFLAGS) -o re_to_comp_test.exe $(OBJECTS) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
+re_to_comp_test.exe : $(OBJECTS_FFT_RE)
+	$(FC) -fopenmp -Wno-argument-mismatch $(LDFLAGS) -o re_to_comp_test.exe $(OBJECTS_FFT_RE) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm
 
-multithreading_benchmark.exe : $(OBJECTS)
-	$(FC) -fopenmp -Wno-argument-mismatch $(LDFLAGS) -o multithreading_benchmark.exe $(OBJECTS) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm --enable-threads
+multithreading_benchmark.exe : $(OBJECTS_FFT_THREAD)
+	$(FC) -Wno-argument-mismatch $(LDFLAGS) -o multithreading_benchmark.exe $(OBJECTS_FFT_THREAD) $(LIBFLAGS1) -llapack -lblas $(LIBFLAGS2) -lfftw3 -lm -lfftw3_threads --enable-threads
 
 fftw.o : fftw.f90
 	$(FC) $(FFLAGS) fftw.f90
@@ -60,6 +62,12 @@ time_integrators.o : time_integrators.f90
 
 time_integrators_MPI.o : time_integrators_MPI.f90
 	$(FC) -fopenmp -Wno-argument-mismatch  $(FFLAGS) time_integrators_MPI.f90
+
+re_to_comp_test.o : re_to_comp_test.f90
+	$(FC) $(FFLAGS) re_to_comp_test.f90
+
+multithreading_benchmark.o : multithreading_benchmark.f90
+	$(FC) $(FFLAGS) multithreading_benchmark.f90
 
 jacobians.o : jacobians.f90
 	$(FC) $(FFLAGS) jacobians.f90

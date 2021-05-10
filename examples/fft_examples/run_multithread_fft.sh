@@ -6,4 +6,4 @@ cd examples/fft_examples
 echo "Starting"
 ./multithreading_benchmark.exe > multithread.txt
 echo "Done"
-python multithread_grapher.py
+python3 multithread_grapher.py
