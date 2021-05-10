@@ -13,7 +13,7 @@ We strongly recommend that the examples are run on a `t2.2xlarge` instance on AW
 sample output files. Further replicability information is included in [Section 5.4](../README.md) of the main README. Before we jump in, a few notes:
 
 1. In general we found that the OpenMP results are much easier to replicate and have much more consistent runtimes.
-2. We had one strange experience where a `t2.2xlarge` instance with a public ip starting in the 100 range gave very poor performance, even though the hardware specs looked the same. If when spinning up an instance the public IP is in that range, consider relaunching to try to get on that starts in the 30s, e.g., `35.175.132.17`.
+2. We had one strange experience where a `t2.2xlarge` instance with a public ip starting in the 100 range gave very poor performance, even though the hardware specs looked the same. If when spinning up an instance the public IP is in that range, consider relaunching to try to get on that starts in the 30s, e.g., `35.175.132.17` or in the 50s, e.g., `54.236.30.52`.
 3. These examples were run in the US East 1 (N. Virginia) region, so we encourage the reader to use that region.
 4. We have noticed that the overall performance of the OpenMP code degrades after the MPI versions are run. This is very strange and tough to debug, but for the meantime we encourage the reader to run the examples in the order that they are presented, and keep in mind that once the MPI examples are run, results might be worse than before for OpenMP. Before the MPI versions are run, the OpenMP results should be extremely stable and replicable.
 
