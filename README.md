@@ -1,6 +1,6 @@
 # Optimal Solutions in Rayleigh-Benard Convection: Parallel Implementation
 
-This `parallel_project` branch captures the results of a semester long project in Harvard's CS205: Computing Foundations for Computational Science. The primary goal was to modify the time integration step of the code to compute calculations in parallel.  The code base and inspiration for the project came from Sondak et al., of the paper below [[1]](#1). Team Members: Katrina Gonzalez, Michael Neuder, Jack Scudder
+This `parallel_project` branch captures the results of a semester long project in Harvard's CS205: Computing Foundations for Computational Science. The primary goal was to modify the time integration to run in parallel.  The code base and inspiration for the project came from Sondak et al., of the paper below [[1]](#1). Team Members: Katrina Gonzalez, Michael Neuder, Jack Scudder
 
 The sections of this README are organized as follows:
 1. [Problem Description and Need for HPC](README.md#1-problem-description-and-need-for-hpc)
