@@ -421,7 +421,12 @@ Future work for this project would include switching to a parallel tridiagonal s
 For more details on this issue see [tridiagonal solve](README.md#tridiagonal-solves).
 
 
-Though we experimented with implementing one-sided FFT, we were ultimately unable to get it fully working. However, it would be beneficial to get this implementation working since it is compatible with both of the parallel versions (as it is a form of algorithmic speedup) and those speedups would stack multiplicatively. Methods to debug this implementation would include calculating Nu of various arrays as a kind of checksum to ensure that results are consistent between one-sided and two-sided FFT at each step in computation. 
+Though we experimented with implementing one-sided FFT, we were ultimately unable to get it fully working for large grid sizes. The current results of one-sided FFT with respect to Nusselt number error, for small and for larger grid sizes is summarized in the two following plots: 
+
+![one_side_small](./figs/64_by_51_Nu.png)
+![one_side_large](./figs/1280_by_1020_Nu.png)
+
+However, it would be beneficial to get this implementation working since it is compatible with both of the parallel versions (as it is a form of algorithmic speedup) and those speedups would stack multiplicatively. Methods to debug this implementation would include calculating Nu of various arrays as a kind of checksum to ensure that results are consistent between one-sided and two-sided FFT at each step in computation. A preliminary implementation is, again, on the `real_to_comp` branch. 
 
 ## 9. References
 <a id="1">[1]</a> 
