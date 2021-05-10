@@ -413,6 +413,7 @@ Some of the challenges that we encountered during this project include:
 - OpenMP complexities, where we needed to inject variables into subroutine calls rather than relying on the global scope of those variables. This was due to the way in which variables used by a subroutine are by default considered private unless explicitly passed through the arguments list. 
 - Small inconsistencies in values (such as Nu) between runs and whether or not those inconsistencies were due to machine precision or actual code incorrectness. This was a problem when debugging the one-sided FFT code, as it was difficult to check during intermediate steps whether or not Nu was off due to machine precision or due to calculation errors. 
 - Inconsistencies between runs using the Academic Cluster vs. AWS. Though it would have been appealing to run the entire project on the Academic Cluster from both a cost and a performance perspective (keeping in mind that clusters are tightly coupled, which would be useful for MPI), we ultimately chose to benchmark using AWS because it offered a more significant, more consistent level of speedup. 
+- Code complexity of MPI. The MPI implementation required a big refactor of almost the entire codebase, which consumed a lot of our time on the project and required extensive testing and debugging. 
 
 ### 8.3 Future Work
 
