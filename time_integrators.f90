@@ -440,8 +440,11 @@ do i = 1,Nx
    ! Temperature
    tmp_T = Ti(:,i)
    !! Need to add the diffusivity terms here. kappa(T)T_x and d_y(kappa(T)*T_y)
+   !! Need a new plan
+   
    call calc_kappa 
-   nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T) + Tkappa(:,i)*nlT(:,i) + d1y(Tkappa(:,i)*d1y(tmp_T)) 
+   diffFlux_x(:,i) = Tkappa(:,i)*nlT(:,i)
+   nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T) - d1y(Tkappa(:,i)*d1y(tmp_T)) 
    !nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T) 
    ! phi
    nlphi(:,i) = uxi(:,i)*phii(:,i) - uyi(:,i)*nlphi(:,i) 
@@ -451,46 +454,56 @@ end do
 do j = 1,Ny
    tnlT   = nlT(j,:)
    tnlphi = nlphi(j,:)
+   tkdx = diffFlux_x(j,:)
    call fftw_execute_dft(plannlT, tnlT, tnlT)
    call fftw_execute_dft(plannlphi, tnlphi, tnlphi)
+   call fftw_execute_dft(planKappaDiffusivx,tkdx,tkdx)
    ! Dealias
    do i = 1,Nx
       if (abs(kx(i))/alpha >= Nf/2) then
          tnlT(i)   = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
          tnlphi(i) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
+         tkdx(i) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
       end if
    end do
    nlT(j,:)   = tnlT
    nlphi(j,:) = tnlphi
+   diffFlux_x(j,:) = tkdx
 end do
 nlT   = nlT   / real(Nx,kind=dp)
 nlphi = nlphi / real(Nx,kind=dp)
+diffFlux_x = diffFlux_x / real(Nx,kind=dp)
 
 select case (stage)
    case (1)
       do i = 1,Nx
         !K1hat_phi(:,i) = K1hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K1hat_phi(:,i) = K1hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+        K1hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
       end do
-      K1hat_T = -nlT
+      !K1hat_T = -nlT
    case (2)
       do i = 1,Nx
         !K2hat_phi(:,i) = K2hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K2hat_phi(:,i) = K2hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+        K2hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
       end do
-      K2hat_T = -nlT
+      !K2hat_T = -nlT 
    case (3)
       do i = 1,Nx
         !K3hat_phi(:,i) = K3hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K3hat_phi(:,i) = K3hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+        K3hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
       end do
-      K3hat_T = -nlT
+      !K3hat_T = -nlT 
    case (4)
       do i = 1,Nx
         !K4hat_phi(:,i) = K4hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K4hat_phi(:,i) = K4hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
+        K4hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
       end do
-      K4hat_T = -nlT
+      !check that this multiplication actually works
+      !K4hat_T = -nlT 
 end select
 
 end subroutine calc_explicit
@@ -649,7 +662,7 @@ real(dp) :: kappa_top
 kappa_top = 1.0
 !Tkappa = kappa_top*(1+49*T+450*T**6)
 !Tkappa = kappa_top*T**2
-Tkappa = 0.0_dp*T + 1
+Tkappa = 0.0_dp*T + kappa0
 
 end subroutine calc_kappa
 

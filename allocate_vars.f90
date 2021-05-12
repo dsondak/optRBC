@@ -21,6 +21,7 @@ subroutine global_allocations
     allocate(nlT(Ny,Nx), stat=alloc_err)
     allocate(nlphi(Ny,Nx), stat=alloc_err)
     allocate(Tkappa(Ny,Nx), stat=alloc_err)
+    allocate(diffFlux_x(Ny,Nx), stat=alloc_err)
 
     allocate(phi1(Ny,Nx), phi2(Ny,Nx), stat=alloc_err)
     allocate(V1(Ny,Nx), V2(Ny,Nx), stat=alloc_err)
@@ -34,7 +35,7 @@ subroutine global_allocations
     allocate(tnlT(Nx), stat=alloc_err)
     allocate(tnlphi(Nx), stat=alloc_err)
     allocate(tphi(Nx), stat=alloc_err)
-    !allocate(tkdx(Nx), stat=alloc_err)
+    allocate(tkdx(Nx), stat=alloc_err)
     !allocate(tkdy(Nx), stat=alloc_err)
 
 

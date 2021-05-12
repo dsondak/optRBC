@@ -16,7 +16,7 @@ type(C_PTR)            :: planT, planPhi, planux, planuy
 type(C_PTR)            :: iplanT, iplanPhi, iplanux, iplanuy
 type(C_PTR)            :: plannlT, plannlphi
 type(C_PTR)            :: iplannlT, iplannlphi
-!type(C_PTR)            :: planKappaDiffusivx, iplanKappaDiffusivx
+type(C_PTR)            :: planKappaDiffusivx
 !type(C_PTR)            :: planKappaDiffusivy, iplanKappaDiffusivy
 
 ! Set characters
@@ -64,9 +64,9 @@ integer  :: nli_global
 
 ! Allocatable variables
 complex(C_DOUBLE_COMPLEX), allocatable :: T(:,:), uy(:,:), phi(:,:), ux(:,:)
-complex(C_DOUBLE_COMPLEX), allocatable :: nlT(:,:), nlphi(:,:)
+complex(C_DOUBLE_COMPLEX), allocatable :: nlT(:,:), nlphi(:,:), diffFlux_x(:,:)
 complex(C_DOUBLE_COMPLEX), allocatable :: tT(:), tuy(:), tux(:), tnlT(:), tnlphi(:)
-complex(C_DOUBLE_COMPLEX), allocatable :: tkdx(:), tkdy(:)
+complex(C_DOUBLE_COMPLEX), allocatable :: tkdx(:)
 complex(C_DOUBLE_COMPLEX), allocatable :: tphi(:)
 complex(C_DOUBLE_COMPLEX), allocatable, dimension(:,:) :: Tptrb
 

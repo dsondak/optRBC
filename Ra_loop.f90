@@ -143,7 +143,7 @@ iplannlphi = fftw_plan_dft_1d(Nx,tnlphi,tnlphi, FFTW_BACKWARD,FFTW_ESTIMATE)
 
 !!!!!!!!!!!!!
 !Need to add plan for Fourier transform of  kappa(T)*F^{-1}(i*alpha*kx*F(T))
-!planKappaDiffusivx = fftw_plan_dft_1d(Nx,tkdx,tkdx,FFTW_FORWARD,FFTW_ESTIMATE)
+planKappaDiffusivx = fftw_plan_dft_1d(Nx,tkdx,tkdx,FFTW_FORWARD,FFTW_ESTIMATE)
 !iplanKappaDiffusivx = fftw_plan_dft_1d(Nx,tkdx,tkdx,FFTW_BACKWARD,FFTW_ESTIMATE)
 !here tkdx is for 'temporary kappa diffusivity in x'
 !!!!!!!!!!!!!
