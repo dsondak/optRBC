@@ -141,6 +141,8 @@ iplannlT = fftw_plan_dft_1d(Nx,tnlT,tnlT, FFTW_BACKWARD,FFTW_ESTIMATE)
 plannlphi = fftw_plan_dft_1d(Nx,tnlphi,tnlphi, FFTW_FORWARD,FFTW_ESTIMATE)
 iplannlphi = fftw_plan_dft_1d(Nx,tnlphi,tnlphi, FFTW_BACKWARD,FFTW_ESTIMATE)
 
+planKappaDiffusivx = fftw_plan_dft_1d(Nx,tkdx,tkdx,FFTW_FORWARD,FFTW_ESTIMATE)
+
 call global_params
 call global_allocations
 

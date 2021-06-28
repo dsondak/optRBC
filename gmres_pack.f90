@@ -188,6 +188,9 @@ gmres_outer: do outiter = 1,outer
                     r = b - Ax
                  else
                     r = b - infunc(x)
+                    write(*,*) "------------------"
+                    write(*,*) "residual norm:"
+                    write(*,*) norm(r)
                  end if 
                  P(:,1) = r / norm(r)
                  s(1:rows) = norm(r) * e1
@@ -277,6 +280,9 @@ gmres_outer: do outiter = 1,outer
                     r = b - Ax
                  else
                     r = b - infunc(x)
+                    write(*,*) "---------------"
+                    write(*,*) "residual norm:"
+                    write(*,*) norm(r)
                  end if
                  s(inner+1) = norm(r)
                  error = s(inner+1) / bnrm2

@@ -64,7 +64,7 @@ integer  :: nli_global
 
 ! Allocatable variables
 complex(C_DOUBLE_COMPLEX), allocatable :: T(:,:), uy(:,:), phi(:,:), ux(:,:)
-complex(C_DOUBLE_COMPLEX), allocatable :: nlT(:,:), nlphi(:,:), diffFlux_x(:,:)
+complex(C_DOUBLE_COMPLEX), allocatable :: nlT(:,:), nlphi(:,:), diffFlux_x(:,:), diffFlux_y(:,:)
 complex(C_DOUBLE_COMPLEX), allocatable :: tT(:), tuy(:), tux(:), tnlT(:), tnlphi(:)
 complex(C_DOUBLE_COMPLEX), allocatable :: tkdx(:)
 complex(C_DOUBLE_COMPLEX), allocatable :: tphi(:)

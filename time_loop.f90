@@ -128,6 +128,8 @@ iplannlT = fftw_plan_dft_1d(Nx,tnlT,tnlT, FFTW_BACKWARD,FFTW_ESTIMATE)
 plannlphi = fftw_plan_dft_1d(Nx,tnlphi,tnlphi, FFTW_FORWARD,FFTW_ESTIMATE)
 iplannlphi = fftw_plan_dft_1d(Nx,tnlphi,tnlphi, FFTW_BACKWARD,FFTW_ESTIMATE)
 
+planKappaDiffusivx = fftw_plan_dft_1d(Nx,tkdx,tkdx,FFTW_FORWARD,FFTW_ESTIMATE)
+
 call global_params
 call global_allocations
 
@@ -358,8 +360,18 @@ open(unit=8000, file="Nu_data.txt", action="write", status="unknown", position="
 ! Get nu0 and kappa0
 call global_params_Ra(Ra)
 
+
 ! Get solution with time integration
-call imex_rk(1, .true.) ! true causes writing of nusselt number.
+call imex_rk(1, .false.) ! true causes writing of nusselt number.
+
+open(unit=7890, file="time_loop_temp.txt", action="write", status="unknown")
+
+do ii = 1,Ny
+  write(7890,*) real(T(:,ii))
+end do
+
+close(unit=7890)
+
 
 write(*,*) " "
 flush(6)

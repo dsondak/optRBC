@@ -344,6 +344,21 @@ do ii = Nx/2+1, Nx
 end do
 kx = alpha*kx_modes
 
+!do ii=1,Nx
+!   tkdx(ii) = sin(2*alpha*xp(ii))
+!end do
+
+!tkdx   = cmplx(sin(2*alpha*xp), 0.0_dp, kind=C_DOUBLE_COMPLEX)
+
+!write(*,*) "tkdx in physical space:"
+!write(*,*) tkdx
+
+!call fftw_execute_dft(planKappaDiffusivx,tkdx,tkdx)
+!write(*,*) "tkdx in Fourier space:"
+!write(*,*) tkdx
+
+!stop
+
 ! Initialize fields.
 call init_fields(ex_Tptrb, fTexist, Ra)
 call init_to_fourier(ex_Tptrb)

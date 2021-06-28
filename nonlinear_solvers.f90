@@ -35,7 +35,6 @@ integer               :: ri, rf
 
 procedure(func), pointer :: infunc
 
-!write(*,*) "got to here 5"
 n = size(x0)
 gmres_it = 500
 
@@ -47,31 +46,24 @@ if (alloc_err /= 0) then
 end if
 xT = 0.0_dp
 Delta_x = 0.0_dp
-!write(*,*) "got to here 6"
 call init_random_seed()
 call random_number(Delta_x)
-!write(*,*) "got to here 7"
 ! Make sure Delta_x is zero at the boundaries.
 do ii = 1,size(b_pntr)
    ri = b_pntr(ii)*Nx - (Nx-1)
    rf = b_pntr(ii)*Nx
    Delta_x(ri:rf) = 0.0_dp
 end do
-!write(*,*) "got to here 8"
 ! Point to function for approximating the jacobian based on the flow map
 infunc => jac_approx_flow_map
-!write(*,*) "got to here 9"
 iter_gmres_ave = 0.0_dp
 norm_x0 = dnrm2(n,x0,incx)
 do nli = 1,nl_max
    nli_global = nli
    ! Get solution at time T
-   !write(*,*) "got to here 10"
    call imex_rk
-   !write(*,*) "got to here 11"
    !  Form xT
    call packx(xT)
-   !write(*,*) "got to here 12"
    ! Get flow map
    GT = (xT - x0) / t_final
    ! Compute norm of GT to see if we're at steady state

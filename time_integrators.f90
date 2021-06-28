@@ -363,8 +363,8 @@ KT   = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
 
 Kphi = nu0   *(-kx(it)**2.0_dp*phiin + d2y(phiin))
 !Should comment out below line or set it to 0 since we are doing temperature fully explicitly
-!KT   = kappa0*(-kx(it)**2.0_dp*Tin   + d2y(Tin))
-KT = 0.0_dp*Tin
+KT   = kappa0*(-kx(it)**2.0_dp*Tin   + d2y(Tin))
+!KT = 0.0_dp*Tin
 
 end subroutine calc_implicit
 
@@ -444,8 +444,9 @@ do i = 1,Nx
    
    call calc_kappa 
    diffFlux_x(:,i) = Tkappa(:,i)*nlT(:,i)
-   nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T) - d1y(Tkappa(:,i)*d1y(tmp_T)) 
-   !nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T) 
+   diffFlux_y(:,i) = Tkappa(:,i)*d1y(tmp_T)
+   !nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T) - d1y(diffFlux_y(:,i)) 
+   nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T) 
    ! phi
    nlphi(:,i) = uxi(:,i)*phii(:,i) - uyi(:,i)*nlphi(:,i) 
 end do
@@ -468,7 +469,7 @@ do j = 1,Ny
    end do
    nlT(j,:)   = tnlT
    nlphi(j,:) = tnlphi
-   diffFlux_x(j,:) = tkdx
+   !diffFlux_x(j,:) = tkdx
 end do
 nlT   = nlT   / real(Nx,kind=dp)
 nlphi = nlphi / real(Nx,kind=dp)
@@ -479,31 +480,30 @@ select case (stage)
       do i = 1,Nx
         !K1hat_phi(:,i) = K1hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K1hat_phi(:,i) = K1hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
-        K1hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
+        !K1hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
       end do
-      !K1hat_T = -nlT
+      K1hat_T = -nlT
    case (2)
       do i = 1,Nx
         !K2hat_phi(:,i) = K2hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K2hat_phi(:,i) = K2hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
-        K2hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
+        !K2hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
       end do
-      !K2hat_T = -nlT 
+      K2hat_T = -nlT 
    case (3)
       do i = 1,Nx
         !K3hat_phi(:,i) = K3hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K3hat_phi(:,i) = K3hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
-        K3hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
+        !K3hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
       end do
-      !K3hat_T = -nlT 
+      K3hat_T = -nlT 
    case (4)
       do i = 1,Nx
         !K4hat_phi(:,i) = K4hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K4hat_phi(:,i) = K4hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
-        K4hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
+        !K4hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
       end do
-      !check that this multiplication actually works
-      !K4hat_T = -nlT 
+      K4hat_T = -nlT 
 end select
 
 end subroutine calc_explicit
