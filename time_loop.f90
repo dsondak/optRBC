@@ -110,6 +110,9 @@ end do
 close(unit=2)
 
 ! Create FFT plans
+! Need both r2c and c2r since it strictly defines types and allows
+! the calculation to use symmetry
+
 planuy = fftw_plan_dft_r2c_1d(Nx,tuy_real,tuy_comp,FFTW_ESTIMATE)
 iplanuy = fftw_plan_dft_c2r_1d(Nx,tuy_comp,tuy_real,(FFTW_ESTIMATE+FFTW_PRESERVE_INPUT))
 
@@ -296,6 +299,7 @@ else if (refine_y) then
 end if
 
 ! Fourier modes
+! NOTE: 
 ! Changed range to Nx/2+1, no redundant entries
 do ii = 1,Nx/2+1
    kx_modes(ii) = real(ii,kind=dp) - 1.0_dp
@@ -427,6 +431,8 @@ do jj = 1,Ny
    call fftw_execute_dft_r2c(planT, tT_real, tT_comp)
    call fftw_execute_dft_r2c(planuy, tuy_real, tuy_comp)
    ! Truncate modes
+   ! NOTE: 
+   ! Up to what modes should be truncated? 
    do ii = 1,Nx/2+1
       if (abs(kx(ii))/alpha >= Nf/2) then
          tT_comp(ii)  = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)

@@ -10,6 +10,14 @@ steady solution for a given $Ra$ and $Pr$. At each $(Ra, Pr)$ pair, steady solut
 $L$. The size of the domain (box) in $x$ is given by $L=2\pi/\alpha$ where $\alpha$ is the wavenumber that sets the scale of
 the solution in $x$. The solution in box size $L$ that maximizes the Nusselt number is referred to as the optimal solution. 
 
+### Branch Overview
+
+This branch was created to leverage the real nature of the physical fields being used. Because these fields (including temperature, velocity) are real, their Fourier transforms can be computed more effeciently through Hermitian conjugate symmetry. This allows for a theoretical 2x speedup of each transform calculation. 
+
+Compared to the mainline time integrators code, this branch has a set of real variables and complex variables (ex. there is a real version of the temperature field (physical space) and a complex version (Fourier space)). The real variables have n entries, while the complex ones have n/2 + 1 entries (http://www.fftw.org/fftw3_doc/One_002dDimensional-DFTs-of-Real-Data.html#One_002dDimensional-DFTs-of-Real-Data). The plans created in time_loop.f90 are either explicitly from real to complex or from complex to real. These plans are then used in time_integrators when doing the Fourier transforms. 
+
+Note for debugging: In the current iteration of the code, the Nusselt number is consistently the same between the one- and two-sided code versions during the first time step. After, there is a consistent divergence that appears to scale with grid size rather than number of time steps. To aid in debugging the steps between temperature field updates, another method called nusselt_var() has been added to statistics.f90. This takes in an array and computes a nusselt-like number. It omits using h1, h2, and h3 to be solely dependent on the input array. 
+
 ### Input File Structure
 | Line #   | Column 1      | Column 2                  | Column 3                          |
 | :------: | :--------:    | :--------:                | :--------:                        |

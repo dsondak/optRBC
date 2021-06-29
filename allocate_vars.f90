@@ -27,7 +27,7 @@ subroutine global_allocations
     allocate(dyv1_B(Nx), dyv1_T(Nx), stat=alloc_err)
     allocate(dyv2_B(Nx), dyv2_T(Nx), stat=alloc_err)
 
-    allocate(tT_real (Nx), stat=alloc_err)
+    allocate(tT_real(Nx), stat=alloc_err)
     allocate(tux_real(Nx), stat=alloc_err)
     allocate(tuy_real(Nx), stat=alloc_err)
     allocate(tnlT_real(Nx), stat=alloc_err)

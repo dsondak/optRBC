@@ -89,6 +89,8 @@ do ! while (time < t_final)
 
    call calc_explicit(1)
 
+   ! NOTE: 
+   ! Consider whether this and all kx loops should go from 1 to Nx/2 or 1 to Nx/2 + 1
    do it = 1,Nx/2+1 ! kx loop
       ! Compute phi1 and T1
       call calc_vari(tmp_phi, tmp_T, acoeffs(1,1), 1)
@@ -182,6 +184,7 @@ do ! while (time < t_final)
    ! UPDATE SOLUTIONS
 
    ! Get phi
+   ! NOTE: Consider how the following arrays are sliced
    phi(2:Ny-1,1:Nx/2+1) = phi(2:Ny-1,1:Nx/2+1) + dt*(b(1)*(K1_phi(2:Ny-1,1:Nx/2+1) + K2hat_phi(2:Ny-1,1:Nx/2+1)) + &
                   &                    b(2)*(K2_phi(2:Ny-1,1:Nx/2+1) + K3hat_phi(2:Ny-1,1:Nx/2+1)) + &
                   &                    b(3)*(K3_phi(2:Ny-1,1:Nx/2+1) + K4hat_phi(2:Ny-1,1:Nx/2+1)))
@@ -218,6 +221,11 @@ do ! while (time < t_final)
    end if
 
    ! Calculate nusselt number.
+   ! NOTE: 
+   ! Saving the nusselt number is an easy way to check for consistency between 
+   ! two- and one-sided fft versions. In the current code iteration, Nusselt number is 
+   ! consistent between the two after a single time step. 
+
    if (save_nusselt) then
       call nusselt(nusselt_num, .true.) ! true = Fourier space
       write(8000, fmt=1000) nusselt_num
@@ -381,6 +389,8 @@ subroutine calc_explicit(stage)
 integer             :: i, j
 integer, intent(in) :: stage
 
+! NOTE: 
+! Consider whether these loops should go from 1 to Nx/2 or to Nx/2 + 1
 select case(stage)
    case (1)
       do i = 1,Nx/2+1
@@ -425,6 +435,7 @@ do j = 1,Ny
    call fftw_execute_dft_c2r(iplanuy, tuy_comp, tuy_real)
    call fftw_execute_dft_c2r(iplanphi, tphi_comp, tphi_real)
 
+   ! Cast real to complex with 0 imaginary component to do intermediate calculation
    nlT(j,:)   = cmplx(tnlT_real, kind=C_DOUBLE_COMPLEX)
    nlphi(j,:) = cmplx(tnlphi_real, kind=C_DOUBLE_COMPLEX) 
    Ti(j,:)   = cmplx(tT_real, kind=C_DOUBLE_COMPLEX) 
@@ -434,7 +445,7 @@ do j = 1,Ny
 end do
 
 ! Calculate nonlinear term
-! Done in physical space
+! Done in physical space, so should go up to Nx
 do i = 1,Nx
    ! Temperature
    tmp_T = Ti(:,i)
@@ -449,7 +460,7 @@ do j = 1,Ny
    tnlphi_real = real(nlphi(j,:), kind=C_DOUBLE)
    call fftw_execute_dft_r2c(plannlT, tnlT_real, tnlT_comp)
    call fftw_execute_dft_r2c(plannlphi, tnlphi_real, tnlphi_comp)
-   ! Dealias
+   ! Dealias ()
    do i = 1,Nx/2+1
       if (abs(kx(i))/alpha >= Nf/2) then
          tnlT_comp(i)   = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
@@ -591,8 +602,8 @@ uyi = uy
 
 do jj = 1,Ny
    ! Bring everything to physical space
-   tux_comp    = uxi(jj,:)
-   tuy_comp    = uyi(jj,:)
+   tux_comp    = uxi(jj,1:Nx/2 + 1)
+   tuy_comp    = uyi(jj,1:Nx/2 + 1)
    call fftw_execute_dft_c2r(iplanux, tux_comp, tux_real)
    call fftw_execute_dft_c2r(iplanuy, tuy_comp, tuy_real)
    uxi(jj,:)  = cmplx(tux_real, kind=C_DOUBLE_COMPLEX) 
@@ -601,6 +612,7 @@ end do
 
 dt_old = dt
 
+! Done in real space, should go up to Nx
 do jj = 1,Ny
    do ii = 1,Nx
       tmp = real(uxi(jj,ii)) / dxmin + real(uyi(jj,ii)) / dymin

@@ -127,37 +127,7 @@ write(*,*) "Nu = ", Nuave
 
 end subroutine nusselt
 
-subroutine nusselt_Ti(Nuave, in_fourier)
-
-   use global
-   use write_pack
-   
-   implicit none
-   
-   real(dp), intent(out) :: Nuave
-   logical, intent(in) :: in_fourier
-   real(dp) :: dyT_wall
-   integer :: ii
-   
-   write(*,*) "Computing Nu (Ti)..."
-   
-   
-   ! Compute Nu at walls!
-   if (in_fourier) then
-      dyT_wall = real(Ti(1,1)) + real(Ti(2,1)) + real(Ti(3,1))
-      Nuave = -dyT_wall
-   else
-      Nuave = 0.0_dp
-      do ii = 1,Nx
-         ! Compute temperature gradients at the walls
-         dyT_wall = real(Ti(1,ii)) + real(Ti(2,ii)) + real(Ti(3,ii))
-         Nuave = Nuave - dyT_wall ! Nu = -dy(T)
-      end do
-      Nuave = Nuave / Nx
-   end if
-   write(*,*) "Nu (Ti) = ", Nuave
-   
-end subroutine nusselt_Ti
+! Subroutine added to calculate "nusselt-like" number of any given array
 
 subroutine nusselt_var(Nuave, comp_array, in_fourier)
 
