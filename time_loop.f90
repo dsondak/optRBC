@@ -32,6 +32,8 @@ character(10)                                          :: citer
 character(9)                                           :: fiter
 character(80)                                          :: line
 character(80)                                          :: tokens(80)
+complex(C_DOUBLE_COMPLEX), allocatable, dimension(:,:) :: implicit_T, explicit_T, implicit_ux, explicit_ux
+
 
 open(2,file="input.data", status="old")
 do ii = 1,7
@@ -355,23 +357,31 @@ write(*,'(A70)')                  '                                             
 
 flush(6)
 
+allocate(implicit_T(Ny,Nx),explicit_T(Ny,Nx), implicit_ux(Ny,Nx), explicit_ux(Ny,Nx),stat=alloc_err)
+
 open(unit=8000, file="Nu_data.txt", action="write", status="unknown", position="append")
 
 ! Get nu0 and kappa0
 call global_params_Ra(Ra)
 
+fully_explicit = .true.
 
 ! Get solution with time integration
 call imex_rk(1, .false.) ! true causes writing of nusselt number.
 
 open(unit=7890, file="time_loop_temp.txt", action="write", status="unknown")
+open(unit=7891, file="time_loop_ux.txt"  , action="write", status="unknown")
 
 do ii = 1,Ny
   write(7890,*) real(T(:,ii))
+  write(7891,*) real(ux(:,ii))
 end do
 
 close(unit=7890)
+close(unit=7891)
 
+implicit_T = T
+implicit_ux = ux
 
 write(*,*) " "
 flush(6)
@@ -379,6 +389,8 @@ close(unit=8000)
 
 write(*,*) " "
 write(*,*) "Done."
+
+
 
 1000 format(E25.16E3                           )
 2000 format(E25.16E3,E25.16E3                  )

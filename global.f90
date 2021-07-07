@@ -27,6 +27,7 @@ character(len=4)  :: gtype=".vtk"
 
 ! Set boolean parameters
 logical :: no_slip = .true.
+logical :: fully_explicit
 
 ! Set physical parameters
 real(dp) :: Pr

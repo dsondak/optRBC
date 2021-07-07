@@ -363,7 +363,11 @@ KT   = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
 
 Kphi = nu0   *(-kx(it)**2.0_dp*phiin + d2y(phiin))
 !Should comment out below line or set it to 0 since we are doing temperature fully explicitly
-KT   = kappa0*(-kx(it)**2.0_dp*Tin   + d2y(Tin))
+if (fully_explicit) then
+  KT = 0.0_dp*Tin
+else
+  KT   = kappa0*(-kx(it)**2.0_dp*Tin   + d2y(Tin))
+end if
 !KT = 0.0_dp*Tin
 
 end subroutine calc_implicit
@@ -441,12 +445,14 @@ do i = 1,Nx
    tmp_T = Ti(:,i)
    !! Need to add the diffusivity terms here. kappa(T)T_x and d_y(kappa(T)*T_y)
    !! Need a new plan
-   
-   call calc_kappa 
-   diffFlux_x(:,i) = Tkappa(:,i)*nlT(:,i)
-   diffFlux_y(:,i) = Tkappa(:,i)*d1y(tmp_T)
-   !nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T) - d1y(diffFlux_y(:,i)) 
-   nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T) 
+   if (fully_explicit) then 
+     call calc_kappa 
+     diffFlux_x(:,i) = Tkappa(:,i)*nlT(:,i)
+     diffFlux_y(:,i) = Tkappa(:,i)*d1y(tmp_T)
+     nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T) - d1y(diffFlux_y(:,i)) 
+   else
+     nlT(:,i) = uxi(:,i)*nlT(:,i) + uyi(:,i)*d1y(tmp_T) 
+   end if
    ! phi
    nlphi(:,i) = uxi(:,i)*phii(:,i) - uyi(:,i)*nlphi(:,i) 
 end do
@@ -455,55 +461,87 @@ end do
 do j = 1,Ny
    tnlT   = nlT(j,:)
    tnlphi = nlphi(j,:)
-   tkdx = diffFlux_x(j,:)
+   
+   if (fully_explicit) then
+     tkdx = diffFlux_x(j,:)
+   end if
+   
    call fftw_execute_dft(plannlT, tnlT, tnlT)
    call fftw_execute_dft(plannlphi, tnlphi, tnlphi)
-   call fftw_execute_dft(planKappaDiffusivx,tkdx,tkdx)
+   
+   if (fully_explicit) then
+     call fftw_execute_dft(planKappaDiffusivx,tkdx,tkdx)
+   end if
+
    ! Dealias
    do i = 1,Nx
       if (abs(kx(i))/alpha >= Nf/2) then
          tnlT(i)   = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
          tnlphi(i) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
-         tkdx(i) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
+         if (fully_explicit) then
+           tkdx(i) = cmplx(0.0_dp, 0.0_dp, kind=C_DOUBLE_COMPLEX)
+         end if
       end if
    end do
    nlT(j,:)   = tnlT
    nlphi(j,:) = tnlphi
-   !diffFlux_x(j,:) = tkdx
+   if (fully_explicit) then
+     diffFlux_x(j,:) = tkdx
+   end if
 end do
+
 nlT   = nlT   / real(Nx,kind=dp)
 nlphi = nlphi / real(Nx,kind=dp)
-diffFlux_x = diffFlux_x / real(Nx,kind=dp)
+
+if (fully_explicit) then
+  diffFlux_x = diffFlux_x / real(Nx,kind=dp)
+end if
 
 select case (stage)
    case (1)
       do i = 1,Nx
         !K1hat_phi(:,i) = K1hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K1hat_phi(:,i) = K1hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
-        !K1hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
+        if (fully_explicit) then
+          K1hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
+        else
+          K1hat_T(:,i) = -nlT(:,i)
+        end if
       end do
-      K1hat_T = -nlT
+      !K1hat_T = -nlT
    case (2)
       do i = 1,Nx
         !K2hat_phi(:,i) = K2hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K2hat_phi(:,i) = K2hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
-        !K2hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
+        if (fully_explicit) then
+          K2hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
+        else
+          K2hat_T(:,i) = -nlT(:,i)
+        end if
       end do
-      K2hat_T = -nlT 
+      !K2hat_T = -nlT 
    case (3)
       do i = 1,Nx
         !K3hat_phi(:,i) = K3hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K3hat_phi(:,i) = K3hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
-        !K3hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
+        if (fully_explicit) then
+          K3hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
+        else
+          K3hat_T(:,i) = -nlT(:,i)
+        end if
       end do
-      K3hat_T = -nlT 
+      !K3hat_T = -nlT 
    case (4)
       do i = 1,Nx
         !K4hat_phi(:,i) = K4hat_phi(:,i) + CI*kx(i)*nlphi(:,i)
         K4hat_phi(:,i) = K4hat_phi(:,i) - CI*kx(i)*nlphi(:,i)
-        !K4hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
+        if (fully_explicit) then
+          K4hat_T(:,i) = -nlT(:,i) + CI*kx(i)*diffFlux_x(:,i)
+        else
+          K4hat_T(:,i) = -nlT(:,i)
+        end if
       end do
-      K4hat_T = -nlT 
+      !K4hat_T = -nlT 
 end select
 
 end subroutine calc_explicit
